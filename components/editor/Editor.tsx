@@ -14,7 +14,7 @@ const Plugins = () => {
           contentEditable={
             <ContentEditable className='ContentEditable__root' />
           }
-          placeholder={<div className='editor-placeholder'>Placeholder</div>}
+          placeholder={<div className='editor-placeholder'>Type here!</div>}
         />
       </div>
       <HistoryPlugin />
@@ -34,7 +34,7 @@ const Editor = () => {
   };
 
   return (
-    <div>
+    <div className='editor-container'>
       <LexicalComposer initialConfig={initialConfig}>
         <Plugins />
       </LexicalComposer>
