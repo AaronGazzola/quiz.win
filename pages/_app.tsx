@@ -1,8 +1,15 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+import { AlertContextProvider } from "../context/alertContext";
+import AlertModal from "../components/AlertModal";
 
 function MyApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />
+  return (
+    <AlertContextProvider>
+      <AlertModal />
+      <Component {...pageProps} />
+    </AlertContextProvider>
+  );
 }
 
-export default MyApp
+export default MyApp;

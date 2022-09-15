@@ -5,6 +5,8 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { useContext, useEffect, useState } from "react";
+import AlertContext from "../../context/alertContext";
 
 const Plugins = () => {
   return (
@@ -24,7 +26,8 @@ const Plugins = () => {
 };
 
 const Editor = () => {
-  const onError = (error: Error) => console.error(error);
+  const { onShowAlert } = useContext(AlertContext);
+  const onError = (error: Error) => onShowAlert({ message: error.message });
 
   const initialConfig = {
     theme,
