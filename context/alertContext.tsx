@@ -23,11 +23,7 @@ const AlertContext = createContext<AlertContextData>({
   onHideAlert: function () {},
 });
 
-export interface AlertContextProviderProps {
-  children: React.ReactNode;
-}
-
-export function AlertContextProvider(props: AlertContextProviderProps) {
+export function AlertContextProvider(props: { children: React.ReactNode }) {
   const [alert, setAlert] = useState<AlertData | null>(null);
 
   function onHideAlert() {
