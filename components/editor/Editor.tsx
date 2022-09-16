@@ -5,8 +5,9 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import AlertContext from "../../context/alertContext";
+import AutoSavePlugin from "./plugins/AutoSavePlugin";
 
 const Plugins = () => {
   return (
@@ -21,6 +22,7 @@ const Plugins = () => {
       </div>
       <HistoryPlugin />
       <ListPlugin />
+      <AutoSavePlugin />
     </>
   );
 };
