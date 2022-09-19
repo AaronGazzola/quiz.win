@@ -1,0 +1,1 @@
+export const LOCAL_STORAGE_EDITOR_KEY = "QUIZ_WIN_EDITOR";
