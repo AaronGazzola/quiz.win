@@ -8,6 +8,7 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { useContext } from "react";
 import AlertContext from "../../context/alertContext";
 import AutoSavePlugin from "./plugins/AutoSavePlugin";
+import FloatingToolbarPlugin from "./plugins/FloatingToolbarPlugin";
 
 const Plugins = () => {
   return (
@@ -19,6 +20,7 @@ const Plugins = () => {
           }
           placeholder={<div className='editor-placeholder'>Type here!</div>}
         />
+        <FloatingToolbarPlugin />
       </div>
       <HistoryPlugin />
       <ListPlugin />

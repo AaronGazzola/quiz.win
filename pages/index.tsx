@@ -10,7 +10,9 @@ const Home: NextPage = () => {
       <div className='w-1/2 p-5'>
         <Editor />
       </div>
-      <div className='w-1/2 p-5'>{JSON.stringify(editorState)}</div>
+      <div className='w-1/2 p-5'>
+        <p className='break-words'>{JSON.stringify(editorState)}</p>
+      </div>
     </div>
   );
 };
