@@ -6,13 +6,11 @@ import {
   useEffect,
   useState,
 } from "react";
-import SVG, { IconType } from "../../SVG";
-import ToolTip from "../../ui/ToolTip";
 import { ToolbarButtonData } from "./ToolbarButtons";
 import {
   TEXT_NODE_TOOLBAR_BUTTONS,
-  TOOLBAR_BUTTON_TAGS,
   TextNodeToolbarButtonType,
+  TOOLBAR_BUTTON_TAGS,
 } from "../../../lib/constants";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -21,10 +19,7 @@ import {
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
 } from "lexical";
-import {
-  $getSelectionStyleValueForProperty,
-  $patchStyleText,
-} from "@lexical/selection";
+import { $patchStyleText } from "@lexical/selection";
 import {
   $createHeadingNode,
   $createQuoteNode,
@@ -39,26 +34,17 @@ import {
   REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { $getNearestNodeOfType } from "@lexical/utils";
-import { TOGGLE_LINK_COMMAND } from "@lexical/link";
-import useRunOnce from "../../../hooks/useRunOnce";
-import { HexColorInput, HexColorPicker } from "react-colorful";
-import usePauseCampaignAlert from "../../../hooks/usePauseCampaignAlert";
 import { useMounted } from "../../../hooks/useMounted";
-import { $isMergeTagNode } from "../nodes/MergeTagNode";
-import { $getSelectedNode } from "../lib/shared";
 import { $wrapAncestorElements } from "../lib/text";
+import useOnce from "../../../hooks/useOnce";
+import ToolTip from "../../ui/ToolTip";
 
 export const TextNodeToolbarButton = ({
   toolbarButton: { tooltip, type, icon },
-  colorPickerSide = "right",
 }: {
   toolbarButton: ToolbarButtonData<TextNodeToolbarButtonType>;
   activeButtons?: { [index: string]: boolean };
-  colorPickerSide?: "left" | "right";
 }) => {
-  const { campaignIsDraft } = usePauseCampaignAlert();
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [fontColor, setFontColor] = useState("000000");
   const [editor] = useLexicalComposerContext();
   const [blockType, setBlockType] = useState("paragraph");
   const [activeButtons, setActiveButtons] = useState(
@@ -67,15 +53,10 @@ export const TextNodeToolbarButton = ({
       return res;
     }, {} as { [index: string]: boolean })
   );
-  const [mergeTagIsSelected, setMergeTagIsSelected] = useState(false);
   const [isFirstUpdate, setIsFirstUpdate] = useState(true);
   const mounted = useMounted();
-  const active =
-    activeButtons[type] ||
-    (type === TEXT_NODE_TOOLBAR_BUTTONS.FONT_COLOR && showColorPicker);
   const isOl = type === TEXT_NODE_TOOLBAR_BUTTONS.ORDERED_LIST;
   const isUl = type === TEXT_NODE_TOOLBAR_BUTTONS.UNORDERED_LIST;
-  const isLink = type === TEXT_NODE_TOOLBAR_BUTTONS.LINK;
 
   const formatQuote = () => {
     if (blockType === "quote") {
@@ -85,34 +66,10 @@ export const TextNodeToolbarButton = ({
     editor.update(() => $wrapAncestorElements(() => $createQuoteNode()));
   };
 
-  const applyStyleText = useCallback(
-    (styles: Record<string, string>) => {
-      editor.update(() => {
-        const selection = $getSelection();
-        if ($isRangeSelection(selection)) {
-          $patchStyleText(selection, styles);
-        }
-      });
-    },
-    [editor]
-  );
-
-  const onFontColorSelect = useCallback(
-    (value: string) => {
-      if (value.length < 7) return;
-      applyStyleText({ color: value });
-    },
-    [applyStyleText]
-  );
-
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
     if (!$isRangeSelection(selection) || (!mounted && !isFirstUpdate)) return;
     setIsFirstUpdate(false);
-    setMergeTagIsSelected(
-      selection.getNodes().some(node => $isMergeTagNode(node)) ||
-        $isMergeTagNode($getSelectedNode()?.getParent())
-    );
     const anchorNode = selection.anchor.getNode();
     const element =
       anchorNode.getKey() === "root"
@@ -150,9 +107,6 @@ export const TextNodeToolbarButton = ({
         type === TOOLBAR_BUTTON_TAGS[TEXT_NODE_TOOLBAR_BUTTONS.ORDERED_LIST],
       quote: type === TEXT_NODE_TOOLBAR_BUTTONS.QUOTE,
     }));
-    setFontColor(
-      $getSelectionStyleValueForProperty(selection, "color", "#000")
-    );
   }, [editor, mounted, isFirstUpdate]);
 
   const formatParagraph = () => {
@@ -189,12 +143,7 @@ export const TextNodeToolbarButton = ({
   const clickHandler: MouseEventHandler<HTMLButtonElement> = (
     e: MouseEvent
   ) => {
-    if (!campaignIsDraft) return null;
     switch (type) {
-      case TEXT_NODE_TOOLBAR_BUTTONS.LINK:
-        return mergeTagIsSelected
-          ? null
-          : editor.dispatchCommand(TOGGLE_LINK_COMMAND, "");
       case TEXT_NODE_TOOLBAR_BUTTONS.BOLD:
       case TEXT_NODE_TOOLBAR_BUTTONS.ITALIC:
       case TEXT_NODE_TOOLBAR_BUTTONS.UNDERLINE:
@@ -209,8 +158,6 @@ export const TextNodeToolbarButton = ({
       case TEXT_NODE_TOOLBAR_BUTTONS.UNORDERED_LIST:
       case TEXT_NODE_TOOLBAR_BUTTONS.ORDERED_LIST:
         return formatList(type);
-      case TEXT_NODE_TOOLBAR_BUTTONS.FONT_COLOR:
-        return setShowColorPicker(prev => !prev);
       default:
         return null;
     }
@@ -224,38 +171,18 @@ export const TextNodeToolbarButton = ({
     });
   }, [editor, updateToolbar]);
 
-  useRunOnce(() => {
+  useOnce(() => {
     editor.update(() => updateToolbar());
   }, [updateToolbar, editor]);
 
   return (
     <div key={icon} className={cx("flex items-center justify-center")}>
-      {showColorPicker && (
-        <div
-          className={cx(
-            "absolute z-10",
-            colorPickerSide === "right" ? "left-full ml-2" : "right-full mr-2"
-          )}
-        >
-          <HexColorPicker
-            color={fontColor}
-            onChange={hex => onFontColorSelect(hex)}
-          />
-          <HexColorInput
-            className='w-full rounded-lg color-picker'
-            color={fontColor}
-            onChange={hex => onFontColorSelect(hex)}
-          />
-        </div>
-      )}
       <ToolTip
         side='top'
         triggerAsChild
         content={
           <span className={cx("tooltip-single-line", !tooltip && "hidden")}>
-            {isLink && mergeTagIsSelected
-              ? "Link cannot contain merge tag"
-              : tooltip}
+            {tooltip}
           </span>
         }
       >
@@ -274,25 +201,7 @@ export const TextNodeToolbarButton = ({
             isUl && "border-l"
           )}
           onClick={clickHandler}
-        >
-          <SVG
-            icon={icon as IconType}
-            className={cx(
-              "fill-current text-gray-500 w-5 h-5 z-10",
-              !isOl && !isUl && !isLink && "w-4 h-4",
-              isUl &&
-                css`
-                  margin-left: -0.05rem;
-                `,
-              isOl &&
-                css`
-                  margin-right: 0.15rem;
-                `,
-              active && "text-black",
-              isLink && mergeTagIsSelected && "fill-current text-gray-300"
-            )}
-          />
-        </button>
+        ></button>
       </ToolTip>
     </div>
   );

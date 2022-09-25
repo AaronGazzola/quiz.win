@@ -1,11 +1,7 @@
-import { $isListItemNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $isAtNodeEnd } from "@lexical/selection";
 import {
   $getSelection,
-  $isElementNode,
   $isRangeSelection,
-  $isRootNode,
   $isTextNode,
   LexicalEditor,
   LexicalNode,
@@ -13,7 +9,9 @@ import {
 import { useCallback, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import AlertContext from "../../../context/alertContext";
+import { EDITOR_ID } from "../../../lib/constants";
 import { $getSelectedNode } from "../lib/shared";
+import FloatingToolbar from "../ui/FloatingToolbar";
 
 const useFloatingToolbar = (
   editor: LexicalEditor,

@@ -14,6 +14,7 @@ import { useMounted } from "../../../hooks/useMounted";
 import useOnce from "../../../hooks/useOnce";
 import useOnChange from "../../../hooks/useOnChange";
 import { $getDOMRect } from "../lib/shared";
+import TextNodeToolbar from "./TextNodeToolbar";
 
 export const INSERT_INLINE_COMMAND: LexicalCommand<void> = createCommand();
 
@@ -38,11 +39,6 @@ const FloatingToolbar = ({
   });
 
   const updateToolbarHandler = useCallback(() => {
-    const selection = $getSelection();
-    const isAtNodeStart =
-      $isRangeSelection(selection) &&
-      selection.isCollapsed() &&
-      selection.focus.offset === 0;
     let rect: DOMRect | null | undefined = $getDOMRect(editor);
     const editorShell = editorShellRef?.current;
     if (!rect || !editorShell || (!mounted && !isFirstUpdate)) return;
@@ -50,9 +46,12 @@ const FloatingToolbar = ({
     const toolbarWidth = toolbarRef.current?.offsetWidth || 366;
     const toolbarHeight = toolbarRef.current?.offsetHeight || 36;
     const positionLeft = rect.left - 6;
+    const editorShellRect = editorShell.getBoundingClientRect();
+    if (!editorShellRect) return;
+
     const left = Math.max(
-      Math.min(positionLeft, window.innerWidth - toolbarWidth - 24),
-      editorShell.offsetLeft + 64
+      Math.min(positionLeft, editorShellRect.right - toolbarWidth),
+      editorShellRect.left - 4
     );
     const top = rect.top - toolbarHeight + window.scrollY;
     setToolbarStyles({
@@ -116,7 +115,7 @@ const FloatingToolbar = ({
         `
       )}
     >
-      <TextNodeToolbar colorPickerSide={colorPickerSide} />
+      <TextNodeToolbar />
     </div>
   );
 };

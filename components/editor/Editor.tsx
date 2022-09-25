@@ -5,22 +5,23 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import AlertContext from "../../context/alertContext";
 import AutoSavePlugin from "./plugins/AutoSavePlugin";
 import FloatingToolbarPlugin from "./plugins/FloatingToolbarPlugin";
 
 const Plugins = () => {
+  const editorShellRef = useRef<HTMLDivElement | null>(null);
   return (
     <>
-      <div id='editor-shell' className='editor-shell'>
+      <div id='editor-shell' className='editor-shell' ref={editorShellRef}>
         <RichTextPlugin
           contentEditable={
             <ContentEditable className='ContentEditable__root' />
           }
           placeholder={<div className='editor-placeholder'>Type here!</div>}
         />
-        <FloatingToolbarPlugin />
+        <FloatingToolbarPlugin editorShellRef={editorShellRef} />
       </div>
       <HistoryPlugin />
       <ListPlugin />

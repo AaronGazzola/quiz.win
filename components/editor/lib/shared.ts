@@ -3,6 +3,7 @@ import {
   $getSelection,
   $isNodeSelection,
   $isRangeSelection,
+  $isRootNode,
   LexicalEditor,
   LexicalNode,
 } from "lexical";
@@ -53,4 +54,17 @@ export const $getDOMRect = (editor: LexicalEditor): DOMRect | null => {
     }
   }
   return null;
+};
+
+export const $getAncestorNode = (
+  node?: LexicalNode | null
+): LexicalNode | null => {
+  if (!node) return null;
+  let ancestor = node;
+  let parent = node.getParent();
+  while (parent && !$isRootNode(parent)) {
+    ancestor = parent;
+    parent = ancestor.getParent();
+  }
+  return ancestor;
 };
