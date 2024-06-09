@@ -1,6 +1,6 @@
 // TODO(aaron): update default return type to be {data: null, error: null}
 
-import { ActionResponse } from "@/app/types/action.types";
+import { ActionResponse } from "@/types/action.types";
 
 const getActionResponse = <T = null>({
   data,

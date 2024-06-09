@@ -1,4 +1,4 @@
-import { Notification } from "@/app/types/notification.types";
+import { Notification } from "@/types/notification.types";
 import { createContext } from "react";
 
 interface NotificationContext {

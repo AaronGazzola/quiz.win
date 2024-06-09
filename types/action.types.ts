@@ -1,4 +1,4 @@
-import { Notification } from "@/app/types/notification.types";
+import { Notification } from "@/types/notification.types";
 
 export interface UseActionOptions {
   successNotification?: Partial<Notification> | null;

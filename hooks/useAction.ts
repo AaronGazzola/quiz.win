@@ -7,9 +7,9 @@ import {
   NotificationStyle,
   NotificationVariant,
   Notifications,
-} from "@/app/types/notification.types";
-import { ActionResponse, UseActionOptions } from "@/app/types/action.types";
-import getActionResponse from "@/app/actions/getActionResponse";
+} from "@/types/notification.types";
+import { ActionResponse, UseActionOptions } from "@/types/action.types";
+import getActionResponse from "@/actions/getActionResponse";
 
 const defaultOptions = {
   successNotification: {

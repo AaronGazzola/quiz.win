@@ -8,8 +8,8 @@ import {
   NotificationStyle,
   NotificationVariant,
   Notification,
-} from "@/app/types/notification.types";
-import NotificationContext from "@/app/context/NotificationContext";
+} from "@/types/notification.types";
+import NotificationContext from "@/context/NotificationContext";
 
 const getToast = (style: NotificationStyle) =>
   ({
