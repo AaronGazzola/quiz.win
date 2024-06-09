@@ -1,5 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "./globals.css";
+import NotificationProvider from "@/app/providers/NotificationProvider";
+import ProgressProvider from "@/app/providers/ProgressProvider";
 
 export const metadata: Metadata = {
   title: "Quiz.Win",
@@ -7,9 +10,7 @@ export const metadata: Metadata = {
     "Play, Learn, Win! Create and complete gamified quizzes at Quiz.Win",
   authors: { name: "Aaron Gazzola" },
   keywords: "quiz, gamified learning, play, learn, win, education, games",
-  viewport: "width=device-width, initial-scale=1.0",
   robots: "index, follow",
-  themeColor: "#ffffff",
   openGraph: {
     title: "Quiz.Win",
     description:
@@ -22,6 +23,15 @@ export const metadata: Metadata = {
   },
 };
 
+// TODO: update theme color
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,7 +39,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ProgressProvider>
+          <NotificationProvider>
+            <AntdRegistry>{children}</AntdRegistry>
+          </NotificationProvider>
+        </ProgressProvider>
+      </body>
     </html>
   );
 }
