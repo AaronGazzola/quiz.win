@@ -1,7 +1,7 @@
 "use client";
 
 import cn from "classnames";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 import {
   NotificationPosition,
@@ -10,6 +10,8 @@ import {
   Notification,
 } from "@/types/notification.types";
 import NotificationContext from "@/context/NotificationContext";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import useUpdateSearchParams from "@/hooks/useUpdateSearchParams";
 
 const getToast = (style: NotificationStyle) =>
   ({
@@ -22,10 +24,10 @@ const getToast = (style: NotificationStyle) =>
 export const DEFAULT_NOTIFICATION_DURATION = 3000;
 
 const NotificationProvider = (props: React.PropsWithChildren<{}>) => {
-  //   const searchParams = useSearchParams();
-  //   const router = useRouter();
-  //   const updateSearchParams = useUpdateSearchParams();
-  //   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const updateSearchParams = useUpdateSearchParams();
+  const pathname = usePathname();
   const [position, setPosition] = useState<NotificationPosition | null>(null);
 
   const showNotification = useCallback(
@@ -53,18 +55,18 @@ const NotificationProvider = (props: React.PropsWithChildren<{}>) => {
 
   // TODO: replace this functionality in another component where suspense is used
   // TODO: test if multiple notifications are shown when one is set in query param
-  //   useEffect(() => {
-  //     Object.values(NotificationStyle).forEach((style) => {
-  //       const styleParam = searchParams.get(style);
-  //       if (styleParam) {
-  //         showNotification({
-  //           message: styleParam,
-  //           style,
-  //         });
-  //         updateSearchParams({ key: style });
-  //       }
-  //     });
-  //   }, [searchParams, updateSearchParams, pathname, router, showNotification]);
+  useEffect(() => {
+    Object.values(NotificationStyle).forEach((style) => {
+      const styleParam = searchParams.get(style);
+      if (styleParam) {
+        showNotification({
+          message: styleParam,
+          style,
+        });
+        updateSearchParams({ key: style });
+      }
+    });
+  }, [searchParams, updateSearchParams, pathname, router, showNotification]);
 
   return (
     <>

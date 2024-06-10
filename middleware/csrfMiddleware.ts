@@ -1,6 +1,6 @@
-import { createCsrfMiddleware } from "@edge-csrf/nextjs";
 import configuration from "@/lib/configuration";
 import { HttpStatusCode } from "@/types/http.types";
+import { CsrfError, createCsrfProtect } from "@edge-csrf/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
 const CSRF_SECRET_COOKIE = "csrfSecret";
@@ -8,7 +8,6 @@ const NEXT_ACTION_HEADER = "next-action";
 
 function isServerAction(request: NextRequest) {
   const headers = new Headers(request.headers);
-
   return headers.has(NEXT_ACTION_HEADER);
 }
 
@@ -17,7 +16,7 @@ const csrffMiddleware = async (
   response: NextResponse
 ) => {
   // set up CSRF protection
-  const middleware = createCsrfMiddleware({
+  const csrfProtect = createCsrfProtect({
     cookie: {
       secure: configuration.production,
       name: CSRF_SECRET_COOKIE,
@@ -29,16 +28,17 @@ const csrffMiddleware = async (
         ["GET", "HEAD", "OPTIONS"],
   });
 
-  const csrfError = await middleware(request);
-
-  // if there is a CSRF error, return a 403 response
-  if (csrfError) {
-    return NextResponse.json("Invalid CSRF token", {
-      status: HttpStatusCode.Forbidden,
-    });
+  try {
+    await csrfProtect(request, response);
+  } catch (err) {
+    if (err instanceof CsrfError)
+      return new NextResponse("invalid csrf token", {
+        status: HttpStatusCode.Forbidden,
+      });
+    throw err;
   }
 
-  // otherwise, return the response
   return response;
 };
+
 export default csrffMiddleware;
