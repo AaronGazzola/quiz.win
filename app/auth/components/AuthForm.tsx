@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { AuthFormType } from "@/types/auth.types";
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams";
 import cn from "classnames";
+import CollapseContainer from "@/components/CollapseContainer";
 
 const { SignIn, SignUp, ForgotPassword } = AuthFormType;
 
@@ -57,16 +58,18 @@ const AuthForm: React.FC = () => {
           placeholder="Email"
         />
       </Form.Item>
-      <Form.Item
-        name="password"
-        rules={[{ required: true, message: "Please input your Password." }]}
-      >
-        <Input
-          prefix={<LockOutlined className="site-form-item-icon mr-1" />}
-          type="password"
-          placeholder="Password"
-        />
-      </Form.Item>
+      <CollapseContainer isCollapsed={isForgotPassword}>
+        <Form.Item
+          name="password"
+          rules={[{ required: true, message: "Please input your Password." }]}
+        >
+          <Input
+            prefix={<LockOutlined className="site-form-item-icon mr-1" />}
+            type="password"
+            placeholder="Password"
+          />
+        </Form.Item>
+      </CollapseContainer>
       <Form.Item>
         <Form.Item
           name="remember"
