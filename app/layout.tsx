@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import "@/styles/global.css";
 import NotificationProvider from "@/providers/NotificationProvider";
 import ProgressProvider from "@/providers/ProgressProvider";
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Quiz.Win",
