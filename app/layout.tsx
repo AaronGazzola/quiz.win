@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import "./globals.css";
+import "@/styles/global.css";
 import NotificationProvider from "@/providers/NotificationProvider";
 import ProgressProvider from "@/providers/ProgressProvider";
 
