@@ -5,6 +5,8 @@ import ProgressProvider from "@/providers/ProgressProvider";
 import "@/styles/globals.css";
 
 import { Poppins } from "next/font/google";
+import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
+import SuspendedSearchParamsProvider from "@/providers/SearchParamsProvider";
 
 const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -54,7 +56,11 @@ export default function RootLayout({
       <body className={poppins.className}>
         <ProgressProvider>
           <NotificationProvider>
-            <AntdRegistry>{children}</AntdRegistry>
+            <AntdRegistry>
+              <SuspendedSearchParamsProvider>
+                {children}
+              </SuspendedSearchParamsProvider>
+            </AntdRegistry>
           </NotificationProvider>
         </ProgressProvider>
       </body>

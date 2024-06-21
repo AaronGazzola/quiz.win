@@ -1,20 +1,20 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Button, Checkbox, Form, Input } from "antd";
-import { useSearchParams } from "next/navigation";
 import { AuthFormType } from "@/types/auth.types";
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams";
 import cn from "classnames";
 import CollapseContainer from "@/components/CollapseContainer";
 import Image from "next/image";
+import { useSearchParamsContext } from "@/providers/SearchParamsProvider";
 
 const { SignIn, SignUp, ForgotPassword } = AuthFormType;
 
 const AuthForm: React.FC = () => {
   const [form] = Form.useForm();
-  const searchParams = useSearchParams();
-  const formTypeParam = searchParams.get("form");
+  const searchParams = useSearchParamsContext();
+  const formTypeParam = searchParams.searchParams?.get("form");
   const formType = (formTypeParam || SignIn) as AuthFormType;
 
   const isSignUp = formType === SignUp;
@@ -55,7 +55,7 @@ const AuthForm: React.FC = () => {
   }, [formType]);
 
   return (
-    <main className="flex flex-col items-center h-full min-h-screen justify-center space-y-4">
+    <>
       <Image
         alt="Quick.Win logo"
         height={738}
@@ -129,7 +129,7 @@ const AuthForm: React.FC = () => {
           </button>
         </Form.Item>
       </Form>
-    </main>
+    </>
   );
 };
 
