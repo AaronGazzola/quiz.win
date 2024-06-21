@@ -4,6 +4,18 @@ import NotificationProvider from "@/providers/NotificationProvider";
 import ProgressProvider from "@/providers/ProgressProvider";
 import "@/styles/globals.css";
 
+import { Poppins } from "next/font/google";
+
+const poppins = Poppins({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  style: ["normal", "italic"],
+  display: "swap", // or other values for Display if applicable
+  preload: true,
+  fallback: ["Arial", "sans-serif"], // add more fallback fonts if needed
+  adjustFontFallback: true,
+  subsets: ["latin", "latin-ext"],
+});
+
 export const metadata: Metadata = {
   title: "Quiz.Win",
   description:
@@ -39,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={poppins.className}>
         <ProgressProvider>
           <NotificationProvider>
             <AntdRegistry>{children}</AntdRegistry>
