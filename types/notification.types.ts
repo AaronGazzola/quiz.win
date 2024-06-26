@@ -1,5 +1,6 @@
 export enum Notifications {
   SignInSuccess = "Sign in successful!",
+  SignUpSuccess = "Sign up successful!",
   Success = "Success!",
   Error = "Error!",
   ResetPasswordSuccess = "Password reset!",

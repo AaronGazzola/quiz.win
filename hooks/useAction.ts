@@ -25,10 +25,10 @@ const defaultOptions = {
   endPendingOnSuccess: true,
 };
 
-type Action<T, R> = (args: T) => Promise<ActionResponse<R>>;
+type Action<Targs, TData> = (args: Targs) => Promise<ActionResponse<TData>>;
 
-const useAction = <T, R = null>(
-  action: Action<T, R>,
+const useAction = <Targs, TData = null>(
+  action: Action<Targs, TData>,
   {
     successNotification = defaultOptions.successNotification,
     errorNotification = defaultOptions.errorNotification,
@@ -42,7 +42,7 @@ const useAction = <T, R = null>(
   const [isError, setIsError] = useState(false);
   const { showNotification } = useNotification();
 
-  const onAction = async (args: T) => {
+  const onAction = async (args: Targs) => {
     setIsPending(true);
     setIsSuccess(false);
     setIsError(false);

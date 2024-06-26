@@ -13,10 +13,10 @@ const configuration = {
   },
   paths: {
     appHome: "/",
-    signIn: "/auth",
-    forgotPassword: "/forgot-password",
+    signIn: "/auth?form=sign-in",
+    forgotPassword: "/auth?form=forgot-password",
     resetPassword: "/reset-password",
-    authCallback: "/callback",
+    authCallback: "/auth/callback",
     resetPasswordCallback: "/reset-password/callback",
     pricing: "/pricing",
     privacy: "/privacy",
