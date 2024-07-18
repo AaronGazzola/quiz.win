@@ -1,12 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { AntdRegistry } from "@ant-design/nextjs-registry";
-import NotificationProvider from "@/providers/NotificationProvider";
-import ProgressProvider from "@/providers/ProgressProvider";
 import "@/styles/globals.css";
 
 import { Poppins } from "next/font/google";
-import { SearchParamsContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
-import SuspendedSearchParamsProvider from "@/providers/SearchParamsProvider";
+import Providers from "@/providers/Providers";
 
 const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -54,15 +50,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <ProgressProvider>
-          <NotificationProvider>
-            <AntdRegistry>
-              <SuspendedSearchParamsProvider>
-                {children}
-              </SuspendedSearchParamsProvider>
-            </AntdRegistry>
-          </NotificationProvider>
-        </ProgressProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

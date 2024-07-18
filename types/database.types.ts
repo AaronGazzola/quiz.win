@@ -12,37 +12,44 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null;
-          full_name: string | null;
+          bio: string | null;
+          created_at: string | null;
           id: string;
-          updated_at: string | null;
+          user_id: string | null;
           username: string | null;
-          website: string | null;
         };
         Insert: {
           avatar_url?: string | null;
-          full_name?: string | null;
-          id: string;
-          updated_at?: string | null;
+          bio?: string | null;
+          created_at?: string | null;
+          id?: string;
+          user_id?: string | null;
           username?: string | null;
-          website?: string | null;
         };
         Update: {
           avatar_url?: string | null;
-          full_name?: string | null;
+          bio?: string | null;
+          created_at?: string | null;
           id?: string;
-          updated_at?: string | null;
+          user_id?: string | null;
           username?: string | null;
-          website?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey";
-            columns: ["id"];
-            isOneToOne: true;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          }
-        ];
+        Relationships: [];
+      };
+      sessions: {
+        Row: {
+          created_at: string;
+          id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+        };
+        Relationships: [];
       };
     };
     Views: {

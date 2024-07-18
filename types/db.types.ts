@@ -6,6 +6,9 @@ export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
 
 export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
+export type SessionRow = Database["public"]["Tables"]["sessions"]["Row"];
+
 export enum Table {
   Profiles = "profiles",
+  Sessions = "sessions",
 }

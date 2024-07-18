@@ -5,6 +5,7 @@ export enum Notifications {
   Error = "Error!",
   ResetPasswordSuccess = "Password reset!",
   ForgotPasswordSuccess = "Password reset link sent!",
+  GetSessionError = "Error getting session.",
 }
 
 export interface Notification {
