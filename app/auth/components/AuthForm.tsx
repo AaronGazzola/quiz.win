@@ -104,7 +104,7 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
   useEffect(() => {
     // TODO: only reset empty fields
     form.resetFields();
-  }, [formType]);
+  }, [formType, form]);
 
   return (
     <>

@@ -2,7 +2,7 @@
 
 import getActionResponse from "@/actions/getActionResponse";
 import getSupabaseServerActionClient from "@/clients/action-client";
-import { ActionResponse, Profile } from "@/types/action.types";
+import { ActionResponse } from "@/types/action.types";
 import { AuthFormValues } from "@/types/auth.types";
 import "server-only";
 
