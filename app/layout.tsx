@@ -1,18 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 
-import { Poppins } from "next/font/google";
 import Providers from "@/providers/Providers";
-
-const poppins = Poppins({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-  display: "swap", // or other values for Display if applicable
-  preload: true,
-  fallback: ["Arial", "sans-serif"], // add more fallback fonts if needed
-  adjustFontFallback: true,
-  subsets: ["latin", "latin-ext"],
-});
+import cn from "classnames";
+import Footer from "@/components/Layout/Footer";
+import Header from "@/components/Layout/Header";
+import { poppins } from "@/styles/fonts";
 
 export const metadata: Metadata = {
   title: "Quiz.Win",
@@ -49,8 +42,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={poppins.className}>
-        <Providers>{children}</Providers>
+      <body
+        className={
+          (cn(poppins.className),
+          "min-h-screen flex flex-col border border-black relative dark:bg-slate-900 antialiased")
+        }
+      >
+        <Providers>
+          <Header />
+
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
