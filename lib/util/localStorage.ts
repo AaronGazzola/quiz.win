@@ -16,7 +16,7 @@ export const setLocalSessionId = (userId: string): void => {
   if (storageKey) setToLocalStorage(storageKey, userId);
 };
 
-export const getLocalSessionId = (): string | null => {
+export const getLocalSession = (): string | null => {
   const storageKey = getIdStorageKey();
   if (storageKey) return getFromLocalStorage(storageKey);
   return null;
