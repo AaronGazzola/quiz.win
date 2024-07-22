@@ -1,9 +1,9 @@
 "use server";
 
 import getActionResponse from "@/actions/getActionResponse";
+import { AuthFormValues } from "@/app/auth/components/AuthForm";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import { ActionResponse } from "@/types/action.types";
-import { AuthFormValues } from "@/types/auth.types";
 import "server-only";
 
 /**

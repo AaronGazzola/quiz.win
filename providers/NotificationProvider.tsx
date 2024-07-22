@@ -1,6 +1,5 @@
 "use client";
 
-import cn from "classnames";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { Toaster, toast } from "sonner";
 import {
@@ -12,6 +11,7 @@ import {
 import NotificationContext from "@/context/NotificationContext";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams";
+import { cn } from "@/lib/utils";
 
 const getToast = (style: NotificationStyle) =>
   ({

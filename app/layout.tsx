@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 
 import Providers from "@/providers/Providers";
-import cn from "classnames";
 import Footer from "@/components/Layout/Footer";
 import Header from "@/components/Layout/Header";
 import { poppins } from "@/styles/fonts";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Quiz.Win",
@@ -45,11 +45,10 @@ export default function RootLayout({
       <body
         className={
           (cn(poppins.className),
-          "min-h-screen flex flex-col border border-black relative dark:bg-slate-800 antialiased")
+          "flex flex-col border border-black relative dark:bg-slate-800 antialiased min-h-screen")
         }
       >
         <Providers>
-          <Header />
           {children}
           <Footer />
         </Providers>

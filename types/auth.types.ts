@@ -4,8 +4,3 @@ export enum AuthFormType {
   ForgotPassword = "forgot-password",
   ResetPassword = "reset-password",
 }
-
-export interface AuthFormValues {
-  email: string;
-  password: string;
-}

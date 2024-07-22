@@ -1,10 +1,25 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Button, Checkbox, Form, Input } from "antd";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
+
 import { AuthFormType } from "@/types/auth.types";
 import useUpdateSearchParams from "@/hooks/useUpdateSearchParams";
-import cn from "classnames";
 import CollapseContainer from "@/components/CollapseContainer";
 import Image from "next/image";
 import { useSearchParamsContext } from "@/providers/SearchParamsProvider";
@@ -18,14 +33,22 @@ import {
   NotificationStyle,
   Notifications,
 } from "@/types/notification.types";
-
-// TODO: add other auths
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const { SignIn, SignUp, ForgotPassword, ResetPassword } = AuthFormType;
 
+const AuthFormSchema = z.object({
+  email: z.string().email("Please input a valid Email."),
+  password: z.string().min(6, "Please input your Password."),
+  remember: z.boolean().optional(),
+});
+
+export type AuthFormValues = z.infer<typeof AuthFormSchema>;
+
 const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
-  const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
+  const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParamsContext();
   const formTypeParam = searchParams.searchParams?.get("form");
   const [formType, setFormType] = useState<AuthFormType>(
@@ -40,10 +63,10 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
   const isResetPassword = formType === ResetPassword;
 
   const headerText = isSignUp
-    ? SignUp
+    ? "Sign up"
     : isForgotPassword
-    ? ForgotPassword
-    : SignIn;
+    ? "Forgot password"
+    : "Sign in";
 
   const submitButtonText = isSignUp
     ? "Sign up"
@@ -61,15 +84,32 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
     });
   };
 
-  const onFinish = async (values: any) => {
-    setLoading(true);
+  const form = useForm<z.infer<typeof AuthFormSchema>>({
+    resolver: zodResolver(AuthFormSchema),
+  });
+
+  const onSubmit = async (values: z.infer<typeof AuthFormSchema>) => {
+    setIsLoading(true);
 
     let res = null;
-    if (isResetPassword) res = await resetPasswordAction(values);
-    if (isSignIn) res = await signInWithEmailAction(values);
-    if (isSignUp) res = await signUpWithEmailAction(values);
-    if (isForgotPassword) res = await forgotPasswordAction(values);
-    setLoading(false);
+    let successMessage = Notifications.Success;
+    if (isResetPassword) {
+      res = await resetPasswordAction(values);
+      successMessage = Notifications.ResetPasswordSuccess;
+    }
+    if (isSignIn) {
+      res = await signInWithEmailAction(values);
+      successMessage = Notifications.SignInSuccess;
+    }
+    if (isSignUp) {
+      res = await signUpWithEmailAction(values);
+      successMessage = Notifications.SignUpSuccess;
+    }
+    if (isForgotPassword) {
+      res = await forgotPasswordAction(values);
+      successMessage = Notifications.ForgotPasswordSuccess;
+    }
+    setIsLoading(false);
     if (res?.error) {
       console.error(res.error);
       showNotification({
@@ -79,11 +119,6 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
       });
       return;
     }
-    let successMessage = Notifications.Success;
-    if (isResetPassword) successMessage = Notifications.ResetPasswordSuccess;
-    if (isForgotPassword) successMessage = Notifications.ForgotPasswordSuccess;
-    if (isSignIn) successMessage = Notifications.SignInSuccess;
-    if (isSignUp) successMessage = Notifications.SignUpSuccess;
 
     showNotification({
       message: successMessage,
@@ -101,13 +136,8 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
     });
   }, [formTypeParam, updateSearchParams, formTypeProp]);
 
-  useEffect(() => {
-    // TODO: only reset empty fields
-    form.resetFields();
-  }, [formType, form]);
-
   return (
-    <>
+    <main className="flex flex-col items-center flex-grow justify-center py-10 sm:py-16 ">
       <Image
         alt="Quick.Win logo"
         height={738}
@@ -115,75 +145,113 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
         src="/images/logo.png"
         className="w-16 h-16"
       />
-      <h1 className="capitalize text-xl py-2">{headerText}</h1>
-      <Form
-        form={form}
-        name="normal_login"
-        className="w-full max-w-[320px]"
-        initialValues={{ remember: true }}
-        onFinish={onFinish}
-      >
-        <Form.Item
-          name="username"
-          rules={[{ required: true, message: "Please input your Email." }]}
+      <h1 className="capitalize text-xl py-2 my-6">{headerText}</h1>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="w-full max-w-[320px] space-y-6"
         >
-          <Input
-            prefix={<UserOutlined className="site-form-item-icon mr-1" />}
-            placeholder="Email"
-          />
-        </Form.Item>
-        <CollapseContainer isCollapsed={isForgotPassword}>
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: "Please input your Password." }]}
-          >
-            <Input
-              prefix={<LockOutlined className="site-form-item-icon mr-1" />}
-              type="password"
-              placeholder="Password"
-            />
-          </Form.Item>
-        </CollapseContainer>
-        <Form.Item>
-          <Form.Item
-            name="remember"
-            valuePropName="checked"
-            noStyle
-          >
-            <Checkbox>Remember me</Checkbox>
-          </Form.Item>
-
-          <button
-            className={cn(
-              "float-right text-blue-500 transition-opacity",
-              isForgotPassword && "opacity-0"
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            onClick={() => onChangeForm(ForgotPassword)}
-          >
-            Forgot password
-          </button>
-        </Form.Item>
+          />
+          <CollapseContainer isCollapsed={isForgotPassword}>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CollapseContainer>
+          <FormItem className="space-y-4">
+            <div className="flex justify-between items-center ">
+              <FormField
+                control={form.control}
+                name="remember"
+                render={({ field }) => (
+                  <FormItem className="">
+                    <div className="h-full w-full flex items-center">
+                      <Checkbox
+                        id="remember-me"
+                        checked={field.value}
+                        onChange={field.onChange}
+                      />
+                      <FormLabel
+                        htmlFor="remember-me"
+                        className="p-1 px-3 cursor-pointer"
+                      >
+                        Remember me
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <button
+                className={cn(
+                  `text-blue-500 transition-opacity text-sm font-semibold`,
+                  isForgotPassword ? "opacity-0" : ""
+                )}
+                onClick={() => onChangeForm(ForgotPassword)}
+              >
+                Forgot password
+              </button>
+            </div>
 
-        <Form.Item>
-          <Button
-            loading={loading}
-            type="primary"
-            htmlType="submit"
-            className="w-full mb-1"
-          >
-            {submitButtonText}
-          </Button>
-          Or{" "}
-          <button
-            type="button"
-            onClick={() => onChangeForm(isSignIn ? SignUp : SignIn)}
-            className="text-blue-500 mt-5"
-          >
-            {isSignIn ? "sign up!" : "sign in?"}
-          </button>
-        </Form.Item>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full "
+            >
+              <div
+                className={cn(
+                  "transition-all duration-1000 origin-center",
+                  !isLoading && "opacity-0 scale-0 w-0 -mr-4"
+                )}
+              >
+                <Loader2 className={cn("mr-2 h-4 w-4 animate-spin")} />
+              </div>
+              {submitButtonText}
+            </Button>
+
+            <div className="flex">
+              <button
+                type="button"
+                className="text-sm font-semibold"
+                onClick={() => onChangeForm(isSignIn ? SignUp : SignIn)}
+              >
+                Or{" "}
+                <span className="text-blue-500">
+                  {isSignIn ? "sign up!" : "sign in?"}
+                </span>
+              </button>
+            </div>
+          </FormItem>
+        </form>
       </Form>
-    </>
+    </main>
   );
 };
 

@@ -1,11 +1,10 @@
 "use server";
 
 import getActionResponse from "@/actions/getActionResponse";
+import { AuthFormValues } from "@/app/auth/components/AuthForm";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import { ActionResponse } from "@/types/action.types";
-import { AuthFormValues } from "@/types/auth.types";
 import "server-only";
-
 /**
  * @name signInWithEmailAction
  * @description Signs in the user using email and password credentials.
@@ -16,7 +15,6 @@ async function signInWithEmailAction(
 ): Promise<ActionResponse<null>> {
   const client = getSupabaseServerActionClient();
   // TODO(aaron): handle stay signed in option
-
   try {
     const { error } = await client.auth.signInWithPassword(credentials);
     if (error) throw error;
