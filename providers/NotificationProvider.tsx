@@ -41,7 +41,7 @@ const SearchParamsNotificaitonProvider = ({
           message: styleParam,
           style,
         });
-        updateSearchParams({ key: style });
+        updateSearchParams({ style: null });
       }
     });
   }, [searchParams, updateSearchParams, pathname, router, showNotification]);

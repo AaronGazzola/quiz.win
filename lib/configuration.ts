@@ -13,6 +13,7 @@ const configuration = {
   },
   paths: {
     appHome: "/",
+    auth: "/auth",
     signIn: "/auth?form=sign-in",
     forgotPassword: "/auth?form=forgot-password",
     resetPassword: "/reset-password",

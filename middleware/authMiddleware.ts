@@ -5,10 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 async function authMiddleware(request: NextRequest, response: NextResponse) {
   // TODO: update paths
   const authPaths = [configuration.paths.resetPassword];
-  const guestPaths = [
-    configuration.paths.signIn,
-    configuration.paths.forgotPassword,
-  ];
+  const guestPaths = [configuration.paths.auth];
   const pathname = request.nextUrl.pathname;
   const isAuthPath = authPaths.includes(pathname);
   const isGuestPath = guestPaths.includes(pathname);

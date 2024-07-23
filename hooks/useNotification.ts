@@ -1,3 +1,5 @@
+"use context";
+
 import NotificationContext from "@/context/NotificationContext";
 import { useContext } from "react";
 

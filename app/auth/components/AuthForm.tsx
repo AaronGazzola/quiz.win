@@ -36,6 +36,8 @@ import {
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import configuration from "@/lib/configuration";
+import { useRouter } from "next/navigation";
 
 const { SignIn, SignUp, ForgotPassword, ResetPassword } = AuthFormType;
 
@@ -54,6 +56,7 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
   const [formType, setFormType] = useState<AuthFormType>(
     formTypeProp || SignIn
   );
+  const router = useRouter();
 
   const { showNotification } = useNotification();
 
@@ -79,8 +82,7 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
     if (formTypeProp) return;
     setFormType(formType);
     updateSearchParams({
-      key: "form",
-      value: formType,
+      form: formType,
     });
   };
 
@@ -125,14 +127,15 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
       style: NotificationStyle.Success,
       position: NotificationPosition.TopRight,
     });
+    if (isSignIn || isSignUp) router.push(configuration.paths.appHome);
+    if (isForgotPassword) onChangeForm(SignIn);
   };
 
   useEffect(() => {
     if (formTypeProp || formTypeParam) return;
     setFormType(SignIn);
     updateSearchParams({
-      key: "form",
-      value: SignIn,
+      form: SignIn,
     });
   }, [formTypeParam, updateSearchParams, formTypeProp]);
 
@@ -186,39 +189,47 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
               )}
             />
           </CollapseContainer>
-          <FormItem className="space-y-4">
-            <div className="flex justify-between items-center ">
-              <FormField
-                control={form.control}
-                name="remember"
-                render={({ field }) => (
-                  <FormItem className="">
-                    <div className="h-full w-full flex items-center">
-                      <Checkbox
-                        id="remember-me"
-                        checked={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormLabel
-                        htmlFor="remember-me"
-                        className="p-1 px-3 cursor-pointer"
-                      >
-                        Remember me
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <button
-                className={cn(
-                  `text-blue-500 transition-opacity text-sm font-semibold`,
-                  isForgotPassword ? "opacity-0" : ""
-                )}
-                onClick={() => onChangeForm(ForgotPassword)}
-              >
-                Forgot password
-              </button>
-            </div>
+          <FormItem
+            className={cn(
+              "space-y-4 transition-all",
+              isForgotPassword && "!m-0"
+            )}
+          >
+            <CollapseContainer isCollapsed={isForgotPassword}>
+              <div className="flex justify-between items-center ">
+                <FormField
+                  control={form.control}
+                  name="remember"
+                  render={({ field }) => (
+                    <FormItem className="">
+                      <div className="h-full w-full flex items-center">
+                        <Checkbox
+                          id="remember-me"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                        <FormLabel
+                          htmlFor="remember-me"
+                          className="p-1 px-3 cursor-pointer"
+                        >
+                          Remember me
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <button
+                  type="button"
+                  className={cn(
+                    `text-blue-500 transition-opacity text-sm font-semibold`
+                  )}
+                  onClick={() => onChangeForm(ForgotPassword)}
+                >
+                  Forgot password
+                </button>
+              </div>
+            </CollapseContainer>
 
             <Button
               type="submit"
