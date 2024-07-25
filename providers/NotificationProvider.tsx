@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Toaster, toast } from "sonner";
 import {
   NotificationPosition,
@@ -32,16 +32,21 @@ const SearchParamsNotificaitonProvider = ({
   const router = useRouter();
   const updateSearchParams = useUpdateSearchParams();
   const pathname = usePathname();
-  // TODO: test if multiple notifications are shown when one is set in query param
+  const paramsRef = useRef<URLSearchParams>(searchParams);
+
   useEffect(() => {
     Object.values(NotificationStyle).forEach((style) => {
-      const styleParam = searchParams.get(style);
+      const styleParam = paramsRef.current.get(style);
+
       if (styleParam) {
         showNotification({
           message: styleParam,
           style,
         });
-        updateSearchParams({ style: null });
+        updateSearchParams({ [style]: null });
+        const newParams = new URLSearchParams(paramsRef.current.toString());
+        newParams.delete(style);
+        paramsRef.current = newParams;
       }
     });
   }, [searchParams, updateSearchParams, pathname, router, showNotification]);

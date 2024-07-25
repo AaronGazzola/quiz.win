@@ -1,4 +1,4 @@
-import { Poppins, Rubik } from "next/font/google";
+import { Poppins, Rubik, Comfortaa } from "next/font/google";
 
 export const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -6,6 +6,16 @@ export const poppins = Poppins({
   display: "swap", // or other values for Display if applicable
   preload: true,
   fallback: ["Arial", "sans-serif"], // add more fallback fonts if needed
+  adjustFontFallback: true,
+  subsets: ["latin", "latin-ext"],
+});
+
+export const comfortaa = Comfortaa({
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal"],
+  display: "swap",
+  preload: true,
+  fallback: ["Arial", "sans-serif"],
   adjustFontFallback: true,
   subsets: ["latin", "latin-ext"],
 });

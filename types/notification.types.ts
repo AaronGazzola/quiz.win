@@ -6,6 +6,8 @@ export enum Notifications {
   ResetPasswordSuccess = "Password reset!",
   ForgotPasswordSuccess = "Password reset link sent!",
   GetSessionError = "Error getting session.",
+  AccountVerified = "Account verified!",
+  Welcome = "Welcome to Quiz.Win!",
 }
 
 export interface Notification {

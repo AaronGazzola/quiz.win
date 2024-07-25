@@ -34,9 +34,9 @@ export async function GET(request: NextRequest) {
 
   // TODO: set path from reset password callback
   const queryParam = `?success=${encodeURIComponent(
-    Notifications.ResetPasswordSuccess
+    Notifications.AccountVerified
   )}`;
-  redirect(`${configuration.paths.appHome}${queryParam}`);
+  redirect(`${configuration.paths.resetPassword}${queryParam}`);
 }
 
 function onError({ error }: { error: string }) {

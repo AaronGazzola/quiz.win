@@ -1,8 +1,9 @@
 "use server";
 
 import getActionResponse from "@/actions/getActionResponse";
+import { ResetPasswordSchemaType } from "@/app/auth/components/AuthForm";
 import getSupabaseServerActionClient from "@/clients/action-client";
-import { ActionResponse, ResetPasswordFormValues } from "@/types/action.types";
+import { ActionResponse } from "@/types/action.types";
 import "server-only";
 
 /**
@@ -10,7 +11,7 @@ import "server-only";
  * @description Updates the password of the logged in user */
 async function resetPasswordAction({
   password,
-}: ResetPasswordFormValues): Promise<ActionResponse<null>> {
+}: ResetPasswordSchemaType): Promise<ActionResponse<null>> {
   const client = getSupabaseServerActionClient();
 
   try {

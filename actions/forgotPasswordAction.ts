@@ -1,9 +1,10 @@
 "use server";
 
 import getActionResponse from "@/actions/getActionResponse";
+import { ForgotPasswordSchemaType } from "@/app/auth/components/AuthForm";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import configuration from "@/lib/configuration";
-import { ActionResponse, ForgotPasswordFormValues } from "@/types/action.types";
+import { ActionResponse } from "@/types/action.types";
 import "server-only";
 
 /**
@@ -12,10 +13,11 @@ import "server-only";
  */
 async function forgotPasswordAction({
   email,
-}: ForgotPasswordFormValues): Promise<ActionResponse<null>> {
+}: ForgotPasswordSchemaType): Promise<ActionResponse<null>> {
   const client = getSupabaseServerActionClient();
 
   try {
+    // TODO: check if profile exists before sending
     const { error } = await client.auth.resetPasswordForEmail(email, {
       redirectTo: `${configuration.site.siteUrl}${configuration.paths.resetPasswordCallback}`,
     });

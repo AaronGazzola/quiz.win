@@ -60,7 +60,7 @@ const UserMenu = () => {
       modal={false}
     >
       <DropdownMenuTrigger>
-        <Avatar className="w-8 h-8">
+        <Avatar className="w-7 h-7">
           <AvatarImage src="https://github.com/shadcn.png" />
           <AvatarFallback>Az</AvatarFallback>
         </Avatar>
@@ -96,7 +96,12 @@ const UserMenu = () => {
           </AlertDialog>
         ) : (
           <DropdownMenuItem className="cursor-pointer">
-            <Link href="/auth?form=sign-in">Sign in</Link>
+            <Link
+              className="w-full"
+              href="/auth?form=sign-in"
+            >
+              Sign in
+            </Link>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
 
   const authCode = requestUrl.searchParams.get("code");
+  const isWelcome = !!requestUrl.searchParams.get("welcome");
 
   if (authCode) {
     const client = getSupabaseRouteHandlerClient();
@@ -31,8 +32,10 @@ export async function GET(request: NextRequest) {
       });
     }
   }
-
-  // TODO: set path from auth callback
+  if (isWelcome) {
+    const queryParam = `?success=${encodeURIComponent(Notifications.Welcome)}`;
+    redirect(`${configuration.paths.appHome}${queryParam}`);
+  }
   const queryParam = `?success=${encodeURIComponent(
     Notifications.SignInSuccess
   )}`;
