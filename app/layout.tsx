@@ -44,11 +44,11 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={
-          (cn(poppins.className),
-          "flex flex-col border border-black relative dark:bg-slate-800 antialiased min-h-screen")
+          (cn(poppins.className), "flex flex-col  antialiased min-h-screen")
         }
       >
         <Providers>
+          <Header />
           {children}
           <Footer />
         </Providers>

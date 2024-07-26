@@ -243,13 +243,13 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
           </CollapseContainer>
           <FormItem
             className={cn(
-              "space-y-4 transition-all",
+              "space-y-4 transition-all pt-3",
               isForgotPassword && "!m-0"
             )}
           >
             {!isResetPassword && (
               <CollapseContainer isCollapsed={isForgotPassword}>
-                <div className="flex justify-between items-center ">
+                <div className="flex justify-between items-center">
                   {/* TODO: only show rmember me when required; implement with supabase */}
                   <FormField
                     control={form.control}
@@ -273,15 +273,14 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
                     )}
                   />
 
-                  <button
+                  <Button
                     type="button"
-                    className={cn(
-                      `text-blue-500 transition-opacity text-sm font-semibold`
-                    )}
+                    variant="link"
+                    className={cn(` transition-opacity`)}
                     onClick={() => onChangeForm(ForgotPassword)}
                   >
-                    Forgot password
-                  </button>
+                    Forgot password?
+                  </Button>
                 </div>
               </CollapseContainer>
             )}
@@ -298,17 +297,16 @@ const AuthForm = ({ formType: formTypeProp }: { formType?: AuthFormType }) => {
             </Button>
 
             {!isResetPassword && (
-              <div className="flex">
-                <button
+              <div className="flex items-center">
+                <span className="text-sm">Or&nbsp;</span>
+                <Button
+                  className="p-0 m-0"
                   type="button"
-                  className="text-sm font-semibold"
+                  variant="link"
                   onClick={() => onChangeForm(isSignIn ? SignUp : SignIn)}
                 >
-                  Or{" "}
-                  <span className="text-blue-500">
-                    {isSignIn ? "sign up!" : "sign in?"}
-                  </span>
-                </button>
+                  <span>{isSignIn ? "sign up!" : "sign in?"}&nbsp;&rarr;</span>
+                </Button>
               </div>
             )}
           </FormItem>
