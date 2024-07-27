@@ -1,7 +1,7 @@
 "use server";
 
 import getActionResponse from "@/actions/getActionResponse";
-import { SignInSchemaType } from "@/app/auth/components/AuthForm";
+import { SignInSchemaType } from "@/components/AuthForm";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import { ActionResponse } from "@/types/action.types";
 import { User } from "@supabase/supabase-js";

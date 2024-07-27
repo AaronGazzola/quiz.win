@@ -3,9 +3,9 @@ import "@/styles/globals.css";
 
 import Providers from "@/providers/Providers";
 import Footer from "@/components/Layout/Footer";
-import Header from "@/components/Layout/Header";
 import { poppins } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
+import { Drawer } from "@/components/Drawer";
 
 export const metadata: Metadata = {
   title: "Quiz.Win",
@@ -48,8 +48,8 @@ export default function RootLayout({
         }
       >
         <Providers>
-          <Header />
-          {children}
+          <Drawer />
+          <main className="flex-grow">{children}</main>
           <Footer />
         </Providers>
       </body>

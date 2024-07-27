@@ -1,7 +1,7 @@
 "use server";
 
 import getActionResponse from "@/actions/getActionResponse";
-import { ResetPasswordSchemaType } from "@/app/auth/components/AuthForm";
+import { ResetPasswordSchemaType } from "@/components/AuthForm";
 import getSupabaseServerActionClient from "@/clients/action-client";
 import { ActionResponse } from "@/types/action.types";
 import "server-only";
