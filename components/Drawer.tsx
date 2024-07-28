@@ -29,7 +29,15 @@ import Image from "next/image";
 import configuration from "@/lib/configuration";
 import { comfortaa } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
-import { Settings } from "lucide-react";
+import {
+  ChevronRight,
+  Menu,
+  Palette,
+  PanelRightClose,
+  Settings,
+  Settings2,
+  SquareChevronRight,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -40,8 +48,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
+import { Direction } from "@/types/util.types";
 const { SignIn, SignUp, ForgotPassword, ResetPassword } = AuthFormType;
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const SignInSchema = z.object({
   email: z.string().email("Please input a valid Email."),
@@ -82,8 +91,13 @@ const getSchema = (formType: AuthFormType) => {
   }
 };
 
-export function Drawer() {
+export function Drawer({
+  side = Direction.Left,
+}: {
+  side?: Direction.Left | Direction.Right;
+}) {
   const [formType, setFormType] = useState<AuthFormType>(SignIn);
+  const [isOpen, setIsOpen] = useState(true);
   const form = useForm<
     Partial<
       | SignInSchemaType
@@ -138,21 +152,40 @@ export function Drawer() {
   };
 
   return (
-    <Sheet open={true}>
+    <Sheet
+      open={isOpen}
+      onOpenChange={(open) => setIsOpen(open)}
+    >
       <SheetTrigger asChild>
         <Button
-          className="fixed top-2 right-2"
-          variant="outline"
+          variant="ghost"
+          className="p-4 h-12 rounded-tr-none hover:bg-gray-500/50 sm:px-4 px-2"
         >
-          Open
+          <Avatar className="w-7 h-7">
+            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarFallback>Az</AvatarFallback>
+          </Avatar>
         </Button>
+        {/* <Button
+          value="icon"
+          size="sm"
+          variant="outline"
+          className="border-none dark:text-gray-400 dark:hover:text-white border border-white h-10 mb-0.5"
+        >
+          <Menu className="w-6 h-6" />
+        </Button> */}
       </SheetTrigger>
-      <SheetContent className="!w-full !max-w-md gap-6 flex flex-col">
+      <SheetContent
+        side={side}
+        showCloseButton={false}
+        className="!w-full !max-w-md gap-6 flex flex-col border-l border-gray-600"
+      >
         <SheetHeader>
-          <div className="w-full max-w-sm flex justify-between pr-5 items-center">
+          <div className="w-full flex justify-between items-center">
             <Link
               href={configuration.paths.appHome}
               className="flex items-center gap-4 "
+              onClick={() => setIsOpen(false)}
             >
               <Image
                 src="/images/logo.png"
@@ -170,32 +203,39 @@ export function Drawer() {
                 Quiz.Win
               </h1>
             </Link>
-
-            <DropdownMenu modal>
-              <DropdownMenuTrigger>
-                <Button
-                  value="icon"
-                  size="sm"
-                  variant="outline"
-                  className="border-none dark:text-gray-500 dark:hover:text-gray-100 border border-white h-8 mb-0.5"
-                >
-                  <Settings className="w-6 h-6" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div>test</div>
-                {/* <DropdownMenuItem className="cursor-pointer">
-                  Profile
-                </DropdownMenuItem> */}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2 -mr-2">
+              <DropdownMenu modal>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    value="icon"
+                    size="sm"
+                    variant="outline"
+                    className="border-none dark:text-gray-400 dark:hover:text-white border border-white h-10 mb-0.5"
+                  >
+                    <Settings2 className="w-6 h-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div>test</div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                value="icon"
+                size="sm"
+                variant="outline"
+                className="border-none dark:text-gray-400 dark:hover:text-white border border-white h-10 mb-0.5 outline-none"
+                onClick={() => setIsOpen(false)}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </Button>
+            </div>
           </div>
-          {/* <SheetTitle className="text-center text-base">Welcome!</SheetTitle> */}
         </SheetHeader>
+        <SheetTitle className="">Welcome!</SheetTitle>
         <SheetDescription className="font-medium">
-          Sign in to start creating and completing gamified quizes!
+          Please enter your email or select a provider to sign in.
         </SheetDescription>
         <Form {...form}>
           <form
@@ -210,6 +250,7 @@ export function Drawer() {
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
+                      // autoFocus
                       placeholder="Email"
                       {...field}
                     />
@@ -224,6 +265,14 @@ export function Drawer() {
           <hr className="w-1/4 border-gray-500" />
           <span className="mx-2 text-gray-500">or</span>
           <hr className="w-1/4 border-gray-500" />
+        </div>
+        <div className="flex items-center justify-center w-full  gap-6">
+          {/* <div className="w-14 h-14 rounded-full flex items-center justify-center">
+            <AppleIcon />
+          </div>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center">
+            <GithubIcon />
+          </div> */}
         </div>
       </SheetContent>
     </Sheet>
