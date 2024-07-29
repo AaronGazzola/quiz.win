@@ -2,25 +2,24 @@
 import Image from "next/image";
 import { comfortaa } from "@/styles/fonts";
 import { cn } from "@/lib/utils";
-import UserMenu from "@/components/UserMenu";
 import configuration from "@/lib/configuration";
 import Link from "next/link";
 import { Drawer } from "@/components/Drawer";
 import { Direction } from "@/types/util.types";
+import { Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Flame, Gem, Heart, Shield, Sparkle, Sparkles } from "lucide-react";
 
 const Header = () => {
   return (
     <>
       <header
         className={cn(
-          "sticky top-0 left-0 right-0 w-full min-h-12 flex items-stretch backdrop-blur-lg bg-transparent shadow-md justify-between"
+          "sticky top-0 left-0 right-0 w-full min-h-12 flex items-stretch shadow-md justify-between bg-background py-0.5"
         )}
       >
         <Link
           href={configuration.paths.appHome}
-          className="flex items-center gap-2 sm:gap-4 px-2 sm:px-4"
+          className="flex items-center gap-2 sm:gap-4 px-4"
         >
           <Image
             src="/images/logo.png"
@@ -38,42 +37,34 @@ const Header = () => {
             Quiz.Win
           </h1>
         </Link>
-        <div className="flex-grow relative overflow-hidden">
-          <div className="flex items-center absolute top-0 right-0">
-            {[
-              {
-                icon: <Heart className="stroke-[3px]" />,
-                className: "dark:text-red-400 bg-red-500/20",
-              },
-              {
-                icon: <Sparkle />,
-                className: "dark:text-blue-300 bg-blue-500/20",
-              },
-              {
-                icon: <Gem />,
-                className: "dark:text-green-400 bg-green-500/20",
-              },
-            ].map(({ icon, className }, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                className="p-4 h-12 rounded-tr-none hover:bg-gray-500/50 border-none  dark:hover:text-white outline-none group px-1 sm:px-4"
+        <div className="flex items-center gap-3 flex-grow justify-center">
+          <div className="max-w-[260px] flex items-center gap-3 flex-grow justify-center">
+            <Button
+              variant="ghost"
+              className="w-full flex items-center gap-3 flex-grow justify-center h-12 px-2 sm:px-4"
+            >
+              <div className="flex flex-col items-center">
+                <span className="text-[11px] font-bold text-green-500">
+                  LEVEL
+                </span>
+                <span className="text-lg m-0 p-0 leading-none font-bold text-green-500">
+                  2
+                </span>
+              </div>
+              <div className="flex-grow rounded-lg border border-gray-500  flex items-center p-0.5">
+                <div className="w-2/3 h-0.5 rounded bg-green-500"></div>
+              </div>
+              <div
+                className={cn(
+                  "w-7 h-10 rounded-full flex flex-col items-center justify-center py-1 group-hover:dark:text-white dark:text-green-500 "
+                )}
               >
-                <div
-                  className={cn(
-                    "w-7 h-10 rounded-full flex flex-col items-center justify-center py-1 group-hover:dark:text-white",
-                    className
-                  )}
-                >
-                  {icon}
-                  <span className="font-bold text-xs">10</span>
-                </div>
-              </Button>
-            ))}
-
-            <Drawer side={Direction.Right} />
+                <Gem className="" />
+              </div>
+            </Button>
           </div>
         </div>
+        <Drawer side={Direction.Right} />
       </header>
     </>
   );

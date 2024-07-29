@@ -96,8 +96,9 @@ export function Drawer({
 }: {
   side?: Direction.Left | Direction.Right;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [formType, setFormType] = useState<AuthFormType>(SignIn);
-  const [isOpen, setIsOpen] = useState(true);
+
   const form = useForm<
     Partial<
       | SignInSchemaType
@@ -159,7 +160,7 @@ export function Drawer({
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="p-4 h-12 rounded-tr-none hover:bg-gray-500/50 sm:px-4 px-2"
+          className="p-4 h-12 rounded-tr-none hover:bg-gray-500/50 px-2 sm:px-4"
         >
           <Avatar className="w-7 h-7">
             <AvatarImage src="https://github.com/shadcn.png" />
