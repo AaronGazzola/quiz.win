@@ -14,63 +14,65 @@ const Header = () => {
     <>
       <header
         className={cn(
-          "sticky top-0 left-0 right-0 w-full min-h-12 flex items-stretch shadow-md justify-between bg-background py-0.5"
+          "sticky top-0 left-0 right-0 w-full min-h-12 flex items-stretch shadow-md justify-center bg-background py-0.5"
         )}
       >
-        <Link
-          href={configuration.paths.appHome}
-          className="flex items-center gap-2 sm:gap-4 px-4"
-        >
-          <Image
-            src="/images/logo.png"
-            alt="Quiz.Win logo"
-            width={738}
-            height={738}
-            className="w-7"
-          />
-          <h1
-            className={cn(
-              "text-gray-100 text-2xl tracking-wider font-black mt-1",
-              comfortaa.className
-            )}
+        <div className="flex h-full justify-between max-w-[100rem] flex-grow">
+          <Link
+            href={configuration.paths.appHome}
+            className="flex items-center gap-2 sm:gap-4 px-4"
           >
-            Quiz.Win
-          </h1>
-        </Link>
-        <div className="flex items-center gap-3 flex-grow justify-center relative max-w-[260px] sm:max-w-[300px] overflow-hidden">
-          <div className="absolute inset-0">
-            <div className="flex items-center gap-3 flex-grow justify-start">
-              <Button
-                variant="ghost"
-                className="w-full flex items-center gap-1 sm:gap-3 flex-grow justify-start h-12 pl-2 pr-0 sm:px-4"
-              >
-                <div className="flex flex-col items-center">
-                  <span className="text-[11px] font-bold text-green-500">
-                    LEVEL
-                  </span>
-                  <span className="text-lg m-0 p-0 leading-none font-bold text-green-500">
-                    2
-                  </span>
-                </div>
-                <div className="flex-grow  h-full relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="rounded-lg border border-gray-500  flex items-center p-0.5 w-full">
-                      <div className="w-2/3 h-0.5 rounded bg-green-500"></div>
+            <Image
+              src="/images/logo.png"
+              alt="Quiz.Win logo"
+              width={738}
+              height={738}
+              className="w-7"
+            />
+            <h1
+              className={cn(
+                "text-gray-100 text-2xl tracking-wider font-black mt-1",
+                comfortaa.className
+              )}
+            >
+              Quiz.Win
+            </h1>
+          </Link>
+          <div className="flex items-center gap-3 flex-grow justify-end relative overflow-hidden">
+            <div className="absolute inset-0">
+              <div className="flex items-center gap-3 flex-grow justify-end sm:pr-4">
+                <Button
+                  variant="ghost"
+                  className="w-full flex items-center gap-1.5 sm:gap-3 flex-grow justify-start h-12 pl-2 sm:px-4 max-w-[260px] sm:max-w-[300px]"
+                >
+                  <div className="flex flex-col items-center">
+                    <span className="text-[11px] font-bold text-green-500">
+                      LEVEL
+                    </span>
+                    <span className="text-lg m-0 p-0 leading-none font-bold text-green-500">
+                      2
+                    </span>
+                  </div>
+                  <div className="flex-grow  h-full relative overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="rounded-lg border border-gray-500  flex items-center p-0.5 w-full">
+                        <div className="w-2/3 h-0.5 rounded bg-green-500"></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div
-                  className={cn(
-                    "w-7 h-10 rounded-full flex flex-col items-center justify-center py-1 group-hover:dark:text-white dark:text-green-500 "
-                  )}
-                >
-                  <Gem className="" />
-                </div>
-              </Button>
+                  <div
+                    className={cn(
+                      "w-7 h-10 rounded-full flex flex-col items-center justify-center py-1 group-hover:dark:text-white dark:text-green-500 "
+                    )}
+                  >
+                    <Gem className="" />
+                  </div>
+                </Button>
+              </div>
             </div>
           </div>
+          <Drawer side={Direction.Right} />
         </div>
-        <Drawer side={Direction.Right} />
       </header>
     </>
   );

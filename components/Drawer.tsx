@@ -160,7 +160,7 @@ export function Drawer({
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="p-4 h-12 rounded-tr-none hover:bg-gray-500/50 ml-2 sm:ml-0 px-2 sm:px-4"
+          className="p-4 h-12 rounded-tr-none hover:bg-gray-500/50 px-2 sm:px-4"
         >
           <Avatar className="w-7 h-7">
             <AvatarImage src="https://github.com/shadcn.png" />
