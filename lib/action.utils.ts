@@ -1,4 +1,4 @@
-export interface ActionResponse<T = any> {
+export interface ActionResponse<T = unknown> {
   data?: T;
   error?: string;
   success: boolean;
@@ -9,10 +9,10 @@ export const getActionResponse = <T>({
   error,
 }: {
   data?: T;
-  error?: any;
+  error?: unknown;
 } = {}): ActionResponse<T> => {
   if (error) {
-    const errorMessage = error?.message || error?.toString() || "An unexpected error occurred";
+    const errorMessage = (error as any)?.message || (error as any)?.toString?.() || String(error) || "An unexpected error occurred";
     console.log(JSON.stringify({ error: errorMessage }, null, 0));
     return {
       success: false,
