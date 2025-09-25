@@ -54,7 +54,7 @@ export const auth = betterAuth({
       invitationExpiresIn: 48 * 60 * 60,
       requireEmailVerificationOnInvitation: false,
       async sendInvitationEmail(data) {
-        const inviteLink = `${process.env.BASE_URL}/invitation/${data.token}`;
+        const inviteLink = `${process.env.BASE_URL}/invitation/${data.invitation.id}`;
         await resend.emails.send({
           from: process.env.FROM_EMAIL || "noreply@example.com",
           to: data.email,

@@ -12,7 +12,11 @@ export const getActionResponse = <T>({
   error?: unknown;
 } = {}): ActionResponse<T> => {
   if (error) {
-    const errorMessage = (error as any)?.message || (error as any)?.toString?.() || String(error) || "An unexpected error occurred";
+    const errorMessage =
+      (error instanceof Error ? error.message : null) ||
+      (typeof error === "object" && error !== null && "toString" in error && typeof error.toString === "function" ? error.toString() : null) ||
+      String(error) ||
+      "An unexpected error occurred";
     console.log(JSON.stringify({ error: errorMessage }, null, 0));
     return {
       success: false,
