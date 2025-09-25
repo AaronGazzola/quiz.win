@@ -2,7 +2,7 @@
 
 import { useGetUser } from "@/app/layout.hooks";
 import { useState } from "react";
-import { Users, BookOpen, TrendingUp, Settings } from "lucide-react";
+import { Users, BookOpen, TrendingUp, Settings, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useGetUserOrganizations } from "./quizzes/page.hooks";
 import { OrganizationSwitcher } from "./components/OrganizationSwitcher";
@@ -110,11 +110,22 @@ export default function DashboardPage() {
                   Manage Quizzes
                 </Link>
 
+                <Link
+                  href="/dashboard/responses"
+                  className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  View Responses
+                </Link>
+
                 {(isAdmin || isSuperAdmin) && (
-                  <button className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                  <Link
+                    href="/dashboard/admin"
+                    className="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                  >
                     <Users className="w-5 h-5 mr-2" />
-                    View Analytics
-                  </button>
+                    Admin Panel
+                  </Link>
                 )}
               </div>
             </div>
