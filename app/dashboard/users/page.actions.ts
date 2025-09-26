@@ -1,8 +1,10 @@
 "use server";
 
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
+import { auth } from "@/lib/auth";
+import { getUserAdminOrganizations, isSuperAdmin, canManageUsers } from "@/lib/role.utils";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { isSuperAdmin } from "@/lib/role.utils";
+import { headers } from "next/headers";
 import { UsersData, UserWithDetails } from "./page.types";
 
 export const getUsersAction = async (
@@ -14,25 +16,17 @@ export const getUsersAction = async (
   itemsPerPage?: number
 ): Promise<ActionResponse<UsersData>> => {
   try {
-    const { db, user } = await getAuthenticatedClient();
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-    if (!user) {
+    if (!session?.user) {
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    const prismaUser = await db.user.findUnique({
-      where: { id: user.id },
-      include: { members: true }
-    });
-
-    if (!prismaUser) {
-      return getActionResponse({ error: "User not found" });
-    }
-
-    const isSuper = isSuperAdmin(prismaUser);
-    const userAdminOrgs = prismaUser.members
-      .filter(member => member.role === 'admin')
-      .map(member => member.organizationId);
+    const { db } = await getAuthenticatedClient();
+    const isSuper = await isSuperAdmin(session.user.id);
+    const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
 
     if (!isSuper && userAdminOrgs.length === 0) {
       return getActionResponse({ error: "Access denied" });
@@ -40,8 +34,10 @@ export const getUsersAction = async (
 
     let userFilter: Record<string, unknown> = {};
 
+    const adminOrgIds = userAdminOrgs.map(org => org.id);
+
     if (!isSuper) {
-      if (organizationId && userAdminOrgs.includes(organizationId)) {
+      if (organizationId && adminOrgIds.includes(organizationId)) {
         userFilter = {
           members: {
             some: {
@@ -53,7 +49,7 @@ export const getUsersAction = async (
         userFilter = {
           members: {
             some: {
-              organizationId: { in: userAdminOrgs }
+              organizationId: { in: adminOrgIds }
             }
           }
         };
@@ -139,22 +135,18 @@ export const getUsersAction = async (
 
 export const toggleUserBanAction = async (userId: string, banned: boolean, banReason?: string): Promise<ActionResponse<boolean>> => {
   try {
-    const { db, user } = await getAuthenticatedClient();
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-    if (!user) {
+    if (!session?.user) {
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    const prismaUser = await db.user.findUnique({
-      where: { id: user.id },
-      include: { members: true }
-    });
+    const { db } = await getAuthenticatedClient();
+    const isSuper = await isSuperAdmin(session.user.id);
 
-    if (!prismaUser) {
-      return getActionResponse({ error: "User not found" });
-    }
-
-    if (!isSuperAdmin(prismaUser)) {
+    if (!isSuper) {
       const targetUser = await db.user.findUnique({
         where: { id: userId },
         include: { members: true }
@@ -164,13 +156,11 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
         return getActionResponse({ error: "Target user not found" });
       }
 
-      const userAdminOrgs = prismaUser.members
-        .filter(member => member.role === 'admin')
-        .map(member => member.organizationId);
-
+      const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
+      const adminOrgIds = userAdminOrgs.map(org => org.id);
       const targetUserOrgs = targetUser.members.map(member => member.organizationId);
 
-      const hasSharedOrg = userAdminOrgs.some(orgId => targetUserOrgs.includes(orgId));
+      const hasSharedOrg = adminOrgIds.some(orgId => targetUserOrgs.includes(orgId));
 
       if (!hasSharedOrg) {
         return getActionResponse({ error: "You can only manage users from your organizations" });

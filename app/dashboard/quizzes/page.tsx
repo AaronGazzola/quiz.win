@@ -2,8 +2,7 @@
 
 import { useGetUser } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Plus, Trash2, Edit, Play } from "lucide-react";
-import { Checkbox } from "@radix-ui/react-checkbox";
+import { Search, ChevronUp, ChevronDown, Plus, Trash2, Edit, Play, Download } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { cn } from "@/lib/shadcn.utils";
 import { useGetQuizzes, useBulkDeleteQuizzes, useViewportResize, useGetUserOrganizations } from "./page.hooks";
@@ -17,29 +16,35 @@ export default function QuizzesPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
   const [selectedOrganization, setSelectedOrganization] = useState<string>("");
+  const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
+  const [responsesSearch, setResponsesSearch] = useState("");
 
   const {
     search,
     sort,
     page,
     itemsPerPage,
-    selectedItems,
     setSearch,
     setSort,
     setPage,
     setItemsPerPage,
-    toggleSelected,
-    selectAll,
-    clearSelection,
   } = useQuizTableStore();
 
-  const { isVisible: bulkVisible, isLoading: bulkLoading } = useBulkOperationStore();
+  const { isLoading: bulkLoading } = useBulkOperationStore();
   const { calculateItemsPerPage } = useViewportPagination();
   const { isOpen: dialogOpen, editingQuiz, openCreate, openEdit, close } = useQuizDialogStore();
 
   const { data: organizations } = useGetUserOrganizations();
   const { data: quizData, isLoading } = useGetQuizzes(selectedOrganization || organizations?.[0]?.id);
   const bulkDeleteMutation = useBulkDeleteQuizzes();
+
+  // Get selected quiz and current organization details
+  const selectedQuiz = quizzes.find(quiz => quiz.id === selectedQuizId);
+  const currentOrgId = selectedOrganization || organizations?.[0]?.id || "";
+  const currentOrg = organizations?.find(org => org.id === currentOrgId);
+  const isAdmin = currentOrg?.role === "admin" || currentOrg?.role === "owner";
+  const isSuperAdmin = user?.role === "super-admin";
+  const canViewResponses = isAdmin || isSuperAdmin;
 
   const quizzes = quizData?.quizzes || [];
   const totalPages = quizData?.totalPages || 0;
@@ -59,13 +64,10 @@ export default function QuizzesPage() {
     return () => clearTimeout(timeoutId);
   }, [immediateSearch, setSearch]);
 
+  // Reset selected quiz when organization changes
   useEffect(() => {
-    if (selectedItems.size > 0) {
-      useBulkOperationStore.getState().setVisible(true);
-    } else {
-      useBulkOperationStore.getState().setVisible(false);
-    }
-  }, [selectedItems.size]);
+    setSelectedQuizId(null);
+  }, [selectedOrganization]);
 
   if (!user) return null;
 
@@ -86,21 +88,8 @@ export default function QuizzesPage() {
     return <ChevronUp className="w-4 h-4 opacity-0" />;
   };
 
-  const isAllSelected = quizzes.length > 0 && selectedItems.size === quizzes.length;
-  const isSomeSelected = selectedItems.size > 0 && selectedItems.size < quizzes.length;
-
-  const handleSelectAll = () => {
-    if (isAllSelected) {
-      clearSelection();
-    } else {
-      selectAll(quizzes);
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedItems.size > 0) {
-      bulkDeleteMutation.mutate(Array.from(selectedItems));
-    }
+  const handleQuizSelect = (quizId: string) => {
+    setSelectedQuizId(selectedQuizId === quizId ? null : quizId);
   };
 
   return (
@@ -141,46 +130,19 @@ export default function QuizzesPage() {
         </div>
       </div>
 
-      {/* Bulk Operations */}
-      {bulkVisible && (
-        <div className="mb-4">
-          <Popover open={bulkVisible}>
-            <PopoverTrigger asChild>
-              <div className="inline-flex items-center px-4 py-2 bg-blue-50 border border-blue-200 rounded-md">
-                <span className="text-sm text-blue-700 mr-2">
-                  {selectedItems.size} selected
-                </span>
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-2 bg-white border border-gray-200 rounded-md shadow-lg">
-              <button
-                onClick={handleBulkDelete}
-                disabled={bulkLoading}
-                className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {bulkLoading ? "Deleting..." : "Delete Selected"}
-              </button>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
 
-      {/* Table */}
-      <div className="flex-1 overflow-hidden bg-card border border-border rounded-lg">
+      {/* Quiz Table */}
+      <div className="flex-1 mb-6 bg-card border border-border rounded-lg">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-lg font-medium text-foreground">Quizzes</h2>
+          <p className="text-sm text-muted-foreground">Select a quiz to view its responses</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted/50">
               <tr>
                 <th className="w-12 px-6 py-3">
-                  <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={handleSelectAll}
-                    className="data-[state=indeterminate]:bg-blue-500"
-                    style={{
-                      backgroundColor: isSomeSelected ? '#3b82f6' : undefined
-                    }}
-                  />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Select</span>
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -237,11 +199,17 @@ export default function QuizzesPage() {
                 </tr>
               ) : (
                 quizzes.map((quiz) => (
-                  <tr key={quiz.id} className="hover:bg-muted/50 cursor-pointer">
+                  <tr key={quiz.id} className={cn(
+                    "hover:bg-muted/50 cursor-pointer transition-colors",
+                    selectedQuizId === quiz.id && "bg-blue-50 border-blue-200"
+                  )}>
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedItems.has(quiz.id)}
-                        onCheckedChange={() => toggleSelected(quiz.id)}
+                      <input
+                        type="radio"
+                        name="selectedQuiz"
+                        checked={selectedQuizId === quiz.id}
+                        onChange={() => handleQuizSelect(quiz.id)}
+                        className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
 
@@ -302,11 +270,79 @@ export default function QuizzesPage() {
         </div>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Responses Table */}
+      {selectedQuizId && canViewResponses && (
+        <div className="bg-card border border-border rounded-lg">
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-medium text-foreground">Responses for "{selectedQuiz?.title}"</h2>
+                <p className="text-sm text-muted-foreground">View and manage quiz responses</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search responses..."
+                    value={responsesSearch}
+                    onChange={(e) => setResponsesSearch(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-500 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <button
+                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+                  title="Export Responses"
+                >
+                  <Download className="w-4 h-4" />
+                  Export
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Score
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Completed
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
+                    Responses functionality will be implemented in the next phase
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {selectedQuizId && !canViewResponses && (
+        <div className="bg-card border border-border rounded-lg p-6">
+          <div className="text-center text-muted-foreground">
+            <p>You need admin permissions to view quiz responses.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Quiz Pagination */}
+      {!selectedQuizId && totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {page * itemsPerPage + 1} to {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems} results
+            Showing {page * itemsPerPage + 1} to {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems} quizzes
           </div>
 
           <div className="flex space-x-2">

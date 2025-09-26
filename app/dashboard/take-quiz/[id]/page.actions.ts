@@ -3,6 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
+import { getUserOrganizations } from "@/lib/role.utils";
 import { Response } from "@prisma/client";
 import { headers } from "next/headers";
 import { QuizForTaking, SubmitResponseData, ResponseWithDetails } from "./page.types";
@@ -37,13 +38,9 @@ export const getQuizForTakingAction = async (
       return getActionResponse({ error: "Quiz not found or inactive" });
     }
 
-    const userOrganizations = await db.member.findMany({
-      where: { userId: session.user.id },
-      select: { organizationId: true },
-    });
-
+    const userOrganizations = await getUserOrganizations(session.user.id);
     const hasAccess = userOrganizations.some(
-      (membership) => membership.organizationId === quiz.organizationId
+      (org) => org.id === quiz.organizationId
     );
 
     if (!hasAccess) {

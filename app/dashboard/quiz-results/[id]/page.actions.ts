@@ -3,6 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
+import { getUserOrganizations, isOrgAdmin, isSuperAdmin } from "@/lib/role.utils";
 import { headers } from "next/headers";
 import { QuizResultData } from "./page.types";
 
@@ -40,13 +41,9 @@ export const getQuizResultAction = async (
       return getActionResponse({ error: "Quiz result not found" });
     }
 
-    const userOrganizations = await db.member.findMany({
-      where: { userId: session.user.id },
-      select: { organizationId: true },
-    });
-
+    const userOrganizations = await getUserOrganizations(session.user.id);
     const hasAccess = userOrganizations.some(
-      (membership) => membership.organizationId === response.quiz.organizationId
+      (org) => org.id === response.quiz.organizationId
     );
 
     if (!hasAccess) {
