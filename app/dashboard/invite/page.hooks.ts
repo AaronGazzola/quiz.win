@@ -41,7 +41,7 @@ export const useSendInvitations = () => {
       organizationId
     }: {
       emails: string[],
-      role: "org-admin" | "member",
+      role: "admin" | "member",
       organizationId: string
     }) => {
       const { data, error } = await sendInvitationsAction(emails, role, organizationId);

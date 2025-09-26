@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetUser } from "@/app/layout.hooks";
-import { isAdmin } from "@/lib/role.utils";
+import { canInviteUsers } from "@/lib/client-role.utils";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -14,7 +14,7 @@ export default function InviteLayout({
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && (!user || !isAdmin(user))) {
+    if (!isLoading && (!user || !canInviteUsers(user))) {
       router.push("/dashboard");
     }
   }, [user, isLoading, router]);
@@ -27,7 +27,7 @@ export default function InviteLayout({
     );
   }
 
-  if (!user || !isAdmin(user)) {
+  if (!user || !canInviteUsers(user)) {
     return null;
   }
 

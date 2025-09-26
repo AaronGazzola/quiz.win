@@ -5,7 +5,7 @@ import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAppStore } from "@/app/layout.stores";
-import { isAdmin, isSuperAdmin } from "@/lib/role.utils";
+import { isAdmin, isSuperAdmin } from "@/lib/client-role.utils";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import Link from "next/link";
 

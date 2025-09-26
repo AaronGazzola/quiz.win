@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetUser } from "@/app/layout.hooks";
-import { isSuperAdmin } from "@/lib/role.utils";
+import { isSuperAdmin, isAdmin } from "@/lib/client-role.utils";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -13,7 +13,7 @@ export default function UsersLayout({
   const { data: user, isLoading } = useGetUser();
   const router = useRouter();
 
-  const hasAccess = user && (isSuperAdmin(user) || user.members?.some(member => member.role === 'admin'));
+  const hasAccess = user && (isSuperAdmin(user) || isAdmin(user));
 
   useEffect(() => {
     if (!isLoading && !hasAccess) {

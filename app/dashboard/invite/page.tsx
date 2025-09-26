@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useGetUser } from "@/app/layout.hooks";
-import { isSuperAdmin } from "@/lib/role.utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -24,7 +23,7 @@ export default function InvitePage() {
   const sendInvitationsMutation = useSendInvitations();
 
   const [emails, setEmails] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"org-admin" | "member" | "">("");
+  const [selectedRole, setSelectedRole] = useState<"admin" | "member" | "">("");
   const [selectedOrg, setSelectedOrg] = useState<string>("");
   const [showAddOrgDialog, setShowAddOrgDialog] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -136,12 +135,12 @@ export default function InvitePage() {
           <label className="block text-sm font-medium text-foreground mb-2">
             Role
           </label>
-          <Select value={selectedRole} onValueChange={(value: "org-admin" | "member") => setSelectedRole(value)}>
+          <Select value={selectedRole} onValueChange={(value: "admin" | "member") => setSelectedRole(value)}>
             <SelectTrigger className="border border-input">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="org-admin">Organization Admin</SelectItem>
+              <SelectItem value="admin">Organization Admin</SelectItem>
               <SelectItem value="member">Member</SelectItem>
             </SelectContent>
           </Select>
@@ -161,7 +160,7 @@ export default function InvitePage() {
                   {org.name}
                 </SelectItem>
               ))}
-              {isSuperAdmin(user) && (
+              {user?.role === "super-admin" && (
                 <div
                   className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-foreground outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-accent"
                   onClick={() => setShowAddOrgDialog(true)}

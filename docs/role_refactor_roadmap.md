@@ -25,14 +25,19 @@ This roadmap outlines the complete migration from the current custom role system
   - ✅ Completely replaced custom role logic with Better Auth API calls
   - ✅ Implemented async role checking functions using Better Auth permissions
   - ✅ Added resource-specific permission functions (quiz, response, user management)
+- **Phase 5: Invitation System Migration** - ✅ COMPLETE
+  - ✅ Updated invitation page to use Better Auth organization permissions
+  - ✅ Replaced custom invitation logic with Better Auth organization API
+  - ✅ Updated React Query hooks to use new Better Auth APIs
+  - ✅ Created client-safe role checking utilities for UI components
+  - ✅ Fixed TypeScript types and resolved build issues
 
 ### 🔄 IN PROGRESS
 
-- None - Ready to proceed with Phase 5
+- None - Ready to proceed with Phase 6
 
 ### ⏳ REMAINING WORK
 
-- **Phase 5**: Invitation System Migration
 - **Phase 6**: User Management Updates
 - **Phase 7**: Data Access Control Implementation
 - **Phase 8**: UI Updates & Testing
@@ -48,11 +53,13 @@ Current system provides:
 - ✅ Async role checking functions using Better Auth APIs
 - ✅ Organization context in session handling
 - ✅ Enhanced type system for Better Auth compatibility
+- ✅ Fully migrated invitation system with Better Auth organization invitations
+- ✅ Client-safe role checking utilities for UI components
 
 ### 📍 NEXT STEPS
 
-1. Migrate invitation system to use Better Auth organization invitations
-2. Update existing dashboard pages to use Better Auth APIs
+1. Update user management page with advanced data table and organization filtering
+2. Update existing dashboard pages to use Better Auth APIs with organization-scoped access
 3. Implement organization-scoped data access throughout application
 4. Update UI components and implement comprehensive testing
 
@@ -327,76 +334,78 @@ Create middleware for route-level permission checking:
 - `requireOrgAdmin()` - Ensure user is organization admin
 - `requireSuperAdmin()` - Ensure user is system admin
 
-## ⏳ Phase 5: Invitation System Migration
+## ✅ Phase 5: Invitation System Migration - COMPLETE
 
 Replace custom invitation system with Better Auth organization invitations on existing invite page.
 
-### ⏳ 5.1 Update Invitation Page (`app/dashboard/invite/page.tsx`) - PENDING
+### ✅ 5.1 Update Invitation Page (`app/dashboard/invite/page.tsx`) - COMPLETE
 
-Update existing invite page to use Better Auth organization permissions:
+Updated existing invite page to use Better Auth organization permissions:
 
-- Only allow invitations if signed-in user is admin of the organization
-- Add organization selection dropdown for users with multiple admin organizations
-- Implement permission checking before displaying invite form
-- Show appropriate error messages for insufficient permissions
+- ✅ Updated to only show organizations where user has admin permissions
+- ✅ Fixed role selection to use "admin" instead of "org-admin" for Better Auth compatibility
+- ✅ Implemented client-safe role checking for super admin features
+- ✅ Updated TypeScript types for Better Auth organization structure
 
-**Permission Logic:**
+**Completed Updates:**
 
-```typescript
-// Only show invite form if user is admin of selected organization
-const canInvite = await auth.api.organization.hasRole({
-  userId: session.user.id,
-  organizationId: selectedOrgId,
-  role: "admin"
-});
-```
+- Updated organization fetching to use `getUserAdminOrganizations()`
+- Fixed role value mapping for Better Auth standards
+- Created client-safe utilities in `lib/client-role.utils.ts`
 
-### ⏳ 5.2 Update Invitation Actions (`app/dashboard/invite/page.actions.ts`) - PENDING
+### ✅ 5.2 Update Invitation Actions (`app/dashboard/invite/page.actions.ts`) - COMPLETE
 
-Replace custom invitation logic with Better Auth organization API:
+Replaced custom invitation logic with Better Auth organization API:
 
-- Use Better Auth's built-in invitation system
-- Remove custom magic link generation
-- Implement proper role assignment during invitation
-- Add server-side permission validation for admin-only invitations
+- ✅ Migrated to `auth.api.inviteToOrganization()` for sending invitations
+- ✅ Removed custom magic link generation in favor of Better Auth's built-in system
+- ✅ Implemented proper permission validation using `auth.api.hasPermission()`
+- ✅ Updated organization fetching to use Better Auth APIs
+- ✅ Fixed TypeScript types for Better Auth compatibility
 
-**Key Action Updates:**
+**Completed Implementation:**
 
 ```typescript
+// Updated to use Better Auth organization invitation API
 export const sendInvitationsAction = async (
   emails: string[],
   role: "admin" | "member",
   organizationId: string
 ) => {
-  // Validate user can invite to this organization
-  const isAdmin = await auth.api.organization.hasRole({
+  const canManageUsers = await auth.api.hasPermission({
     userId: session.user.id,
     organizationId,
-    role: "admin"
+    resource: "user",
+    action: "invite",
+    headers: await headers(),
   });
 
-  if (!isAdmin) throw new Error("Insufficient permissions");
-
-  for (const email of emails) {
-    await auth.api.organization.inviteUser({
+  for (const email of validEmails) {
+    await auth.api.inviteToOrganization({
       userId: session.user.id,
       organizationId,
-      email,
+      email: email.trim(),
       role,
-      inviteRedirectURI: `${baseUrl}/dashboard`
+      headers: await headers(),
     });
   }
 };
 ```
 
-### ⏳ 5.3 Update Invitation Hooks (`app/dashboard/invite/page.hooks.ts`) - PENDING
+### ✅ 5.3 Update Invitation Hooks (`app/dashboard/invite/page.hooks.ts`) - COMPLETE
 
-Update React Query hooks to use new Better Auth APIs:
+Updated React Query hooks to use new Better Auth APIs:
 
-- Fetch user's admin organizations for dropdown selection
-- Update invitation sending to use organization plugin with permission checks
-- Add proper error handling for Better Auth responses
-- Maintain existing UI state management patterns
+- ✅ Updated mutation function to use new role types ("admin" | "member")
+- ✅ Maintained existing React Query patterns and error handling
+- ✅ Fixed TypeScript types for Better Auth compatibility
+- ✅ Preserved existing UI state management and success/error toast patterns
+
+**Completed Updates:**
+
+- Updated `useSendInvitations` hook with correct role types
+- Maintained existing React Query patterns for consistency
+- Preserved toast notification system for user feedback
 
 ## ⏳ Phase 6: User Management Updates
 
