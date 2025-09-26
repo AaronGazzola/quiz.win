@@ -8,7 +8,7 @@ import { headers } from "next/headers";
 import { UsersData, UserWithDetails } from "./page.types";
 
 export const getUsersAction = async (
-  organizationId?: string,
+  organizationIds?: string[],
   search?: string,
   sortColumn?: string,
   sortDirection?: "asc" | "desc",
@@ -24,108 +24,124 @@ export const getUsersAction = async (
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    const { db } = await getAuthenticatedClient();
     const isSuper = await isSuperAdmin();
-    const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
+    let targetOrgIds: string[] = [];
 
-    if (!isSuper && userAdminOrgs.length === 0) {
-      return getActionResponse({ error: "Access denied" });
-    }
-
-    let userFilter: Record<string, unknown> = {};
-
-    const adminOrgIds = userAdminOrgs.map(org => org.id);
-
-    if (!isSuper) {
-      if (organizationId && adminOrgIds.includes(organizationId)) {
-        userFilter = {
-          members: {
-            some: {
-              organizationId: organizationId
-            }
-          }
-        };
+    if (isSuper) {
+      if (organizationIds && organizationIds.length > 0) {
+        targetOrgIds = organizationIds;
       } else {
-        userFilter = {
-          members: {
-            some: {
-              organizationId: { in: adminOrgIds }
-            }
-          }
-        };
+        const allOrgs = await auth.api.listOrganizations({
+          headers: await headers(),
+        });
+        targetOrgIds = allOrgs?.map(org => org.id) || [];
       }
-    } else if (organizationId) {
-      userFilter = {
-        members: {
-          some: {
-            organizationId: organizationId
-          }
-        }
-      };
+    } else {
+      const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
+
+      if (userAdminOrgs.length === 0) {
+        return getActionResponse({ error: "Access denied" });
+      }
+
+      if (organizationIds && organizationIds.length > 0) {
+        targetOrgIds = organizationIds.filter(orgId =>
+          userAdminOrgs.some(adminOrg => adminOrg.id === orgId)
+        );
+      } else {
+        targetOrgIds = userAdminOrgs.map(org => org.id);
+      }
     }
+
+    if (targetOrgIds.length === 0) {
+      return getActionResponse({
+        data: { users: [], totalPages: 0, totalCount: 0 }
+      });
+    }
+
+    const allMembers: any[] = [];
+
+    for (const orgId of targetOrgIds) {
+      try {
+        const members = await auth.api.listMembers({
+          organizationId: orgId,
+          headers: await headers(),
+        });
+
+        if (members) {
+          allMembers.push(...members.map(member => ({
+            ...member,
+            organizationName: member.organization?.name || 'Unknown Organization'
+          })));
+        }
+      } catch (error) {
+        console.error(`Failed to fetch members for organization ${orgId}:`, error);
+      }
+    }
+
+    let filteredMembers = allMembers;
 
     if (search) {
-      userFilter.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
-      ];
+      filteredMembers = filteredMembers.filter(member =>
+        member.user.name?.toLowerCase().includes(search.toLowerCase()) ||
+        member.user.email?.toLowerCase().includes(search.toLowerCase()) ||
+        member.organizationName?.toLowerCase().includes(search.toLowerCase())
+      );
     }
-
-    let orderBy: Record<string, string> = { createdAt: 'desc' };
 
     if (sortColumn && sortDirection) {
-      switch (sortColumn) {
-        case 'name':
-          orderBy = { name: sortDirection };
-          break;
-        case 'email':
-          orderBy = { email: sortDirection };
-          break;
-        case 'role':
-          orderBy = { role: sortDirection };
-          break;
-        case 'createdAt':
-          orderBy = { createdAt: sortDirection };
-          break;
-        default:
-          orderBy = { createdAt: 'desc' };
-      }
+      filteredMembers.sort((a, b) => {
+        let aValue: string | Date | null = null;
+        let bValue: string | Date | null = null;
+
+        switch (sortColumn) {
+          case 'name':
+            aValue = a.user.name || '';
+            bValue = b.user.name || '';
+            break;
+          case 'email':
+            aValue = a.user.email || '';
+            bValue = b.user.email || '';
+            break;
+          case 'role':
+            aValue = a.role || '';
+            bValue = b.role || '';
+            break;
+          case 'organization':
+            aValue = a.organizationName || '';
+            bValue = b.organizationName || '';
+            break;
+          case 'createdAt':
+            aValue = a.user.createdAt || new Date(0);
+            bValue = b.user.createdAt || new Date(0);
+            break;
+          default:
+            aValue = a.user.createdAt || new Date(0);
+            bValue = b.user.createdAt || new Date(0);
+        }
+
+        if (sortDirection === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      });
     }
 
-    const skip = page && itemsPerPage ? page * itemsPerPage : 0;
     const take = itemsPerPage || 10;
-
-    const [users, totalCount] = await Promise.all([
-      db.user.findMany({
-        where: userFilter,
-        include: {
-          members: {
-            include: {
-              organization: true
-            }
-          },
-          _count: {
-            select: {
-              members: true
-            }
-          }
-        },
-        orderBy,
-        skip,
-        take
-      }),
-      db.user.count({
-        where: userFilter
-      })
-    ]);
-
-    const totalPages = Math.ceil(totalCount / take);
+    const skip = page && itemsPerPage ? page * itemsPerPage : 0;
+    const paginatedMembers = filteredMembers.slice(skip, skip + take);
+    const totalPages = Math.ceil(filteredMembers.length / take);
 
     return getActionResponse({
       data: {
-        users: users as UserWithDetails[],
+        users: paginatedMembers.map(member => ({
+          ...member.user,
+          members: [member],
+          _count: { members: 1 },
+          organizationName: member.organizationName
+        })) as UserWithDetails[],
         totalPages,
-        totalCount
+        totalCount: filteredMembers.length
       }
     });
   } catch (error) {
@@ -143,38 +159,59 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    const { db } = await getAuthenticatedClient();
     const isSuper = await isSuperAdmin();
 
-    if (!isSuper) {
-      const targetUser = await db.user.findUnique({
-        where: { id: userId },
-        include: { members: true }
-      });
+    if (isSuper) {
+      if (banned) {
+        await auth.api.banUser({
+          userId,
+          banReason,
+          headers: await headers(),
+        });
+      } else {
+        await auth.api.unbanUser({
+          userId,
+          headers: await headers(),
+        });
+      }
+    } else {
+      const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
 
-      if (!targetUser) {
-        return getActionResponse({ error: "Target user not found" });
+      if (userAdminOrgs.length === 0) {
+        return getActionResponse({ error: "Access denied" });
       }
 
-      const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
-      const adminOrgIds = userAdminOrgs.map(org => org.id);
-      const targetUserOrgs = targetUser.members.map(member => member.organizationId);
+      let canManageUser = false;
 
-      const hasSharedOrg = adminOrgIds.some(orgId => targetUserOrgs.includes(orgId));
+      for (const org of userAdminOrgs) {
+        const members = await auth.api.listMembers({
+          organizationId: org.id,
+          headers: await headers(),
+        });
 
-      if (!hasSharedOrg) {
+        if (members?.some(member => member.userId === userId)) {
+          canManageUser = true;
+          break;
+        }
+      }
+
+      if (!canManageUser) {
         return getActionResponse({ error: "You can only manage users from your organizations" });
       }
-    }
 
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        banned,
-        banReason: banned ? banReason : null,
-        banExpires: null
+      if (banned) {
+        await auth.api.banUser({
+          userId,
+          banReason,
+          headers: await headers(),
+        });
+      } else {
+        await auth.api.unbanUser({
+          userId,
+          headers: await headers(),
+        });
       }
-    });
+    }
 
     return getActionResponse({ data: banned });
   } catch (error) {

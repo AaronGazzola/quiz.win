@@ -170,3 +170,22 @@ export const getOrgRoleLabel = (role: string): string => {
       return "Unknown";
   }
 };
+
+
+export const canViewUsers = async (
+  userId: string,
+  organizationId: string
+): Promise<boolean> => {
+  try {
+    return await auth.api.hasPermission({
+      userId,
+      organizationId,
+      resource: "user",
+      action: "view",
+      headers: await headers(),
+    });
+  } catch (error) {
+    console.error("Error checking user view permission:", error);
+    return false;
+  }
+};

@@ -8,7 +8,7 @@ import { headers } from "next/headers";
 import { QuizWithDetails } from "./page.types";
 
 export interface GetQuizzesParams {
-  organizationId?: string;
+  organizationIds?: string[];
   search?: string;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
@@ -37,7 +37,7 @@ export const getQuizzesAction = async (
     const { db } = await getAuthenticatedClient();
 
     const {
-      organizationId,
+      organizationIds,
       search = "",
       sortColumn = "createdAt",
       sortDirection = "desc",
@@ -45,8 +45,28 @@ export const getQuizzesAction = async (
       itemsPerPage = 10,
     } = params;
 
+    // Get all organizations the user is a member of
+    const userMemberships = await db.member.findMany({
+      where: { userId: session.user.id },
+      select: { organizationId: true }
+    });
+
+    const userOrgIds = userMemberships.map(m => m.organizationId);
+
+    if (userOrgIds.length === 0) {
+      return getActionResponse({
+        data: { quizzes: [], totalCount: 0, totalPages: 0 }
+      });
+    }
+
+    // Filter by user's organizations and optionally by specific organizationIds
+    let targetOrgIds = userOrgIds;
+    if (organizationIds && organizationIds.length > 0) {
+      targetOrgIds = organizationIds.filter(id => userOrgIds.includes(id));
+    }
+
     const where = {
-      ...(organizationId && { organizationId }),
+      organizationId: { in: targetOrgIds },
       ...(search && {
         OR: [
           { title: { contains: search, mode: "insensitive" as const } },
@@ -66,6 +86,12 @@ export const getQuizzesAction = async (
         include: {
           questions: true,
           responses: true,
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
           _count: {
             select: {
               questions: true,

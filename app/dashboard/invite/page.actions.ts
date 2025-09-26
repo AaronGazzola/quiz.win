@@ -81,6 +81,17 @@ export const sendInvitationsAction = async (
       return getActionResponse({ error: "Not authenticated" });
     }
 
+    const canInviteUsers = await auth.api.hasPermission({
+      userId: session.user.id,
+      organizationId,
+      resource: "user",
+      action: "invite",
+      headers: await headers(),
+    });
+
+    if (!canInviteUsers && !(await isSuperAdmin())) {
+      return getActionResponse({ error: "Insufficient permissions to invite users" });
+    }
 
     const validEmails = emails.filter(email => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -94,8 +105,20 @@ export const sendInvitationsAction = async (
     let sentCount = 0;
     for (const email of validEmails) {
       try {
-        console.log(`Would send invitation to ${email.trim()} for organization ${organizationId} with role ${role}`);
+        await auth.api.inviteToOrganization({
+          email: email.trim(),
+          organizationId,
+          role,
+          userId: session.user.id,
+          headers: await headers(),
+        });
         sentCount++;
+        console.log(JSON.stringify({
+          auth: "invitation_sent",
+          email: email.substring(0, 3) + "***",
+          organizationId: organizationId.substring(0, 8) + "***",
+          role
+        }));
       } catch (error) {
         console.error(`Failed to send invitation to ${email}:`, JSON.stringify(error));
       }

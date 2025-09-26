@@ -30,65 +30,93 @@ async function seed() {
     const users = await Promise.all([
       prisma.user.create({
         data: {
-          email: `admin@${fromEmailDomain}`,
-          name: "Super Admin",
+          email: `superadmin@${fromEmailDomain}`,
+          name: "System Super Admin",
           role: "super-admin",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `john.doe@${fromEmailDomain}`,
-          name: "John Doe",
-          role: "admin",
+          email: `org1owner1@${fromEmailDomain}`,
+          name: "TechCorp Owner",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `sarah.smith@${fromEmailDomain}`,
-          name: "Sarah Smith",
-          role: "user",
+          email: `org1admin1@${fromEmailDomain}`,
+          name: "TechCorp Admin One",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `mike.johnson@${fromEmailDomain}`,
-          name: "Mike Johnson",
-          role: "user",
+          email: `org1admin2@${fromEmailDomain}`,
+          name: "TechCorp Admin Two",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `lisa.wilson@${fromEmailDomain}`,
-          name: "Lisa Wilson",
-          role: "user",
+          email: `org1member1@${fromEmailDomain}`,
+          name: "TechCorp Member One",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `david.brown@${fromEmailDomain}`,
-          name: "David Brown",
-          role: "user",
+          email: `org1member2@${fromEmailDomain}`,
+          name: "TechCorp Member Two",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `member@${fromEmailDomain}`,
-          name: "",
-          role: "member",
+          email: `org2owner1@${fromEmailDomain}`,
+          name: "EduSoft Owner",
           emailVerified: true,
         },
       }),
       prisma.user.create({
         data: {
-          email: `org-admin@${fromEmailDomain}`,
-          name: "Org Amin",
-          role: "org-admin",
+          email: `org2admin1@${fromEmailDomain}`,
+          name: "EduSoft Admin",
+          emailVerified: true,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `org2member1@${fromEmailDomain}`,
+          name: "EduSoft Member One",
+          emailVerified: true,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `org2member2@${fromEmailDomain}`,
+          name: "EduSoft Member Two",
+          emailVerified: true,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `org3owner1@${fromEmailDomain}`,
+          name: "DevSkills Owner",
+          emailVerified: true,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `org3admin1@${fromEmailDomain}`,
+          name: "DevSkills Admin",
+          emailVerified: true,
+        },
+      }),
+      prisma.user.create({
+        data: {
+          email: `org3member1@${fromEmailDomain}`,
+          name: "DevSkills Member",
           emailVerified: true,
         },
       }),
@@ -98,30 +126,30 @@ async function seed() {
     const organizations = await Promise.all([
       prisma.organization.create({
         data: {
-          name: "Acme Learning",
-          slug: "acme-learning",
+          name: "TechCorp Learning",
+          slug: "techcorp-learning",
           metadata: {
-            description: "Enterprise learning solutions",
+            description: "Enterprise technology training solutions",
             industry: "Technology",
           },
         },
       }),
       prisma.organization.create({
         data: {
-          name: "TechCorp Academy",
-          slug: "techcorp-academy",
+          name: "EduSoft Academy",
+          slug: "edusoft-academy",
           metadata: {
-            description: "Technical training programs",
+            description: "Educational software development training",
             industry: "Software",
           },
         },
       }),
       prisma.organization.create({
         data: {
-          name: "EduSoft Institute",
-          slug: "edusoft-institute",
+          name: "DevSkills Institute",
+          slug: "devskills-institute",
           metadata: {
-            description: "Educational software training",
+            description: "Advanced developer skills and security training",
             industry: "Education",
           },
         },
@@ -154,40 +182,70 @@ async function seed() {
       {
         userId: users[1].id,
         organizationId: organizations[0].id,
-        role: "admin",
+        role: "owner",
       },
       {
         userId: users[2].id,
         organizationId: organizations[0].id,
-        role: "member",
+        role: "admin",
       },
       {
         userId: users[3].id,
         organizationId: organizations[0].id,
-        role: "member",
-      },
-      {
-        userId: users[1].id,
-        organizationId: organizations[1].id,
-        role: "owner",
-      },
-      {
-        userId: users[4].id,
-        organizationId: organizations[1].id,
         role: "admin",
       },
       {
+        userId: users[4].id,
+        organizationId: organizations[0].id,
+        role: "member",
+      },
+      {
         userId: users[5].id,
-        organizationId: organizations[1].id,
+        organizationId: organizations[0].id,
         role: "member",
       },
       {
         userId: users[6].id,
-        organizationId: organizations[2].id,
+        organizationId: organizations[1].id,
         role: "owner",
       },
       {
         userId: users[7].id,
+        organizationId: organizations[1].id,
+        role: "admin",
+      },
+      {
+        userId: users[8].id,
+        organizationId: organizations[1].id,
+        role: "member",
+      },
+      {
+        userId: users[9].id,
+        organizationId: organizations[1].id,
+        role: "member",
+      },
+      {
+        userId: users[2].id,
+        organizationId: organizations[1].id,
+        role: "admin",
+      },
+      {
+        userId: users[10].id,
+        organizationId: organizations[2].id,
+        role: "owner",
+      },
+      {
+        userId: users[11].id,
+        organizationId: organizations[2].id,
+        role: "admin",
+      },
+      {
+        userId: users[12].id,
+        organizationId: organizations[2].id,
+        role: "member",
+      },
+      {
+        userId: users[4].id,
         organizationId: organizations[2].id,
         role: "member",
       },
@@ -209,7 +267,7 @@ async function seed() {
           description:
             "Test your knowledge of JavaScript basics including variables, functions, and control structures.",
           organizationId: organizations[0].id,
-          createdBy: users[1].id,
+          createdBy: users[2].id,
           isActive: true,
         },
       }),
@@ -219,7 +277,7 @@ async function seed() {
           description:
             "Advanced React concepts including components, hooks, and state management.",
           organizationId: organizations[0].id,
-          createdBy: users[1].id,
+          createdBy: users[3].id,
           isActive: true,
         },
       }),
@@ -229,7 +287,7 @@ async function seed() {
           description:
             "Fundamental concepts of relational database design and normalization.",
           organizationId: organizations[1].id,
-          createdBy: users[4].id,
+          createdBy: users[7].id,
           isActive: true,
         },
       }),
@@ -239,8 +297,8 @@ async function seed() {
           description:
             "Core project management methodologies and best practices.",
           organizationId: organizations[1].id,
-          createdBy: users[4].id,
-          isActive: true,
+          createdBy: users[2].id,
+          isActive: false,
         },
       }),
       prisma.quiz.create({
@@ -249,7 +307,7 @@ async function seed() {
           description:
             "Essential web security concepts and common vulnerabilities.",
           organizationId: organizations[2].id,
-          createdBy: users[6].id,
+          createdBy: users[11].id,
           isActive: true,
         },
       }),
@@ -259,7 +317,7 @@ async function seed() {
           description:
             "RESTful API design principles and implementation strategies.",
           organizationId: organizations[2].id,
-          createdBy: users[6].id,
+          createdBy: users[11].id,
           isActive: false,
         },
       }),
@@ -513,7 +571,7 @@ async function seed() {
     const responses = [
       {
         quizId: quizzes[0].id,
-        userId: users[2].id,
+        userId: users[4].id,
         answers: {
           "1": "var myVar = 5;",
           "2": "push()",
@@ -525,7 +583,7 @@ async function seed() {
       },
       {
         quizId: quizzes[0].id,
-        userId: users[3].id,
+        userId: users[5].id,
         answers: {
           "1": "var myVar = 5;",
           "2": "add()",
@@ -537,7 +595,7 @@ async function seed() {
       },
       {
         quizId: quizzes[1].id,
-        userId: users[2].id,
+        userId: users[4].id,
         answers: {
           "1": "To handle side effects",
           "2": "Through props",
@@ -548,7 +606,7 @@ async function seed() {
       },
       {
         quizId: quizzes[1].id,
-        userId: users[3].id,
+        userId: users[5].id,
         answers: {
           "1": "To manage state",
           "2": "Through props",
@@ -559,7 +617,7 @@ async function seed() {
       },
       {
         quizId: quizzes[2].id,
-        userId: users[5].id,
+        userId: users[8].id,
         answers: {
           "1": "A unique identifier for records",
           "2": "Organizing data efficiently",
@@ -570,7 +628,7 @@ async function seed() {
       },
       {
         quizId: quizzes[3].id,
-        userId: users[5].id,
+        userId: users[9].id,
         answers: {
           "1": "Initiation",
           "2": "Task scheduling",
@@ -581,7 +639,7 @@ async function seed() {
       },
       {
         quizId: quizzes[4].id,
-        userId: users[7].id,
+        userId: users[12].id,
         answers: {
           "1": "Cross-Site Scripting",
           "2": "A security vulnerability",
@@ -589,6 +647,17 @@ async function seed() {
         },
         score: 67,
         completedAt: new Date("2024-02-05T13:10:00Z"),
+      },
+      {
+        quizId: quizzes[5].id,
+        userId: users[4].id,
+        answers: {
+          "1": "Representational State Transfer",
+          "2": "PUT",
+          "3": "To maintain backward compatibility",
+        },
+        score: 100,
+        completedAt: new Date("2024-02-10T15:45:00Z"),
       },
     ];
 
@@ -611,9 +680,14 @@ async function seed() {
     );
     console.log(`- ${responses.length} responses created`);
     console.log(
-      `\n🔑 Admin user: admin@${fromEmailDomain} (role: super-admin)`
+      `\n🔑 System Admin: superadmin@${fromEmailDomain} (role: super-admin)`
     );
-    console.log(`🔑 Other admin: john.doe@${fromEmailDomain} (role: admin)`);
+    console.log(`🔑 TechCorp Owner: org1owner1@${fromEmailDomain}`);
+    console.log(`🔑 EduSoft Owner: org2owner1@${fromEmailDomain}`);
+    console.log(`🔑 DevSkills Owner: org3owner1@${fromEmailDomain}`);
+    console.log(`\n🔗 Cross-org memberships:`);
+    console.log(`- org1admin1@${fromEmailDomain} (admin in TechCorp & EduSoft)`);
+    console.log(`- org1member1@${fromEmailDomain} (member in TechCorp & DevSkills)`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     process.exit(1);

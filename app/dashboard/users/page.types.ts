@@ -7,6 +7,7 @@ export interface UserWithDetails extends User {
   _count: {
     members: number;
   };
+  organizationName?: string;
 }
 
 export interface UsersData {

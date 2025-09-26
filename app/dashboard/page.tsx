@@ -4,7 +4,7 @@ import { useGetUser } from "@/app/layout.hooks";
 import { useState, useEffect } from "react";
 import { Users, BookOpen, TrendingUp, Settings } from "lucide-react";
 import { useGetUserOrganizations } from "./quizzes/page.hooks";
-import { OrganizationSwitcher } from "./components/OrganizationSwitcher";
+import { OrganizationFilter } from "./components/OrganizationFilter";
 import { QuizOverview } from "./components/QuizOverview";
 import { MembersTable } from "./components/MembersTable";
 import { InviteUsersCard } from "./components/InviteUsersCard";
@@ -15,10 +15,17 @@ import { queryClient } from "@/app/layout.providers";
 export default function DashboardPage() {
   const { data: user } = useGetUser();
   const { data: organizations } = useGetUserOrganizations();
-  const [selectedOrganization, setSelectedOrganization] = useState<string>("");
+  const [selectedOrganizationIds, setSelectedOrganizationIds] = useState<string[]>([]);
   const processInvitationMutation = useProcessInvitation();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Initialize with all organizations selected by default
+  useEffect(() => {
+    if (organizations && organizations.length > 0 && selectedOrganizationIds.length === 0) {
+      setSelectedOrganizationIds(organizations.map(org => org.id));
+    }
+  }, [organizations, selectedOrganizationIds.length]);
 
   useEffect(() => {
     const invitationParam = searchParams.get('invitation');
@@ -54,9 +61,13 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
-  const currentOrgId = selectedOrganization || organizations?.[0]?.id || "";
-  const currentOrg = organizations?.find(org => org.id === currentOrgId);
-  const isAdmin = currentOrg?.role === "admin" || currentOrg?.role === "owner";
+  const selectedOrganizations = organizations?.filter(org =>
+    selectedOrganizationIds.includes(org.id)
+  ) || [];
+
+  const hasAdminAccess = selectedOrganizations.some(org =>
+    org.role === "admin" || org.role === "owner"
+  );
   const isSuperAdmin = user.role === "super-admin";
 
   return (
@@ -68,11 +79,11 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Welcome back, {user.email}</p>
         </div>
 
-        {organizations && organizations.length > 1 && (
-          <OrganizationSwitcher
+        {organizations && organizations.length > 0 && (
+          <OrganizationFilter
             organizations={organizations}
-            selectedOrganization={selectedOrganization}
-            onOrganizationChange={setSelectedOrganization}
+            selectedOrganizationIds={selectedOrganizationIds}
+            onOrganizationChange={setSelectedOrganizationIds}
           />
         )}
       </div>
@@ -103,7 +114,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {(isAdmin || isSuperAdmin) && (
+        {(hasAdminAccess || isSuperAdmin) && (
           <>
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
               <div className="flex items-center space-x-4">
@@ -136,14 +147,14 @@ export default function DashboardPage() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Quiz Overview */}
         <div className="space-y-6">
-          <QuizOverview organizationId={currentOrgId} />
+          <QuizOverview organizationIds={selectedOrganizationIds} />
         </div>
 
         {/* Admin Section */}
-        {(isAdmin || isSuperAdmin) && (
+        {(hasAdminAccess || isSuperAdmin) && (
           <div className="space-y-6">
-            <MembersTable organizationId={currentOrgId} />
-            <InviteUsersCard organizationId={currentOrgId} />
+            <MembersTable organizationIds={selectedOrganizationIds} />
+            <InviteUsersCard organizationIds={selectedOrganizationIds} />
           </div>
         )}
       </div>

@@ -33,10 +33,10 @@ export default function SignInPage() {
     return (
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-muted-foreground mb-4">
           We&apos;ve sent a magic link to <strong>{email}</strong>
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Click the link in your email to sign in. The link will expire in 5 minutes.
         </p>
       </div>
@@ -47,12 +47,12 @@ export default function SignInPage() {
     <div>
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold">Welcome to LMS</h2>
-        <p className="text-gray-600 mt-2">Sign in with your email address</p>
+        <p className="text-muted-foreground mt-2">Sign in with your email address</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
             Email address
           </label>
           <input

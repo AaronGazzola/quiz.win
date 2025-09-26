@@ -1,8 +1,12 @@
-import { Quiz, Question, Response } from "@prisma/client";
+import { Quiz, Question, Response, Organization } from "@prisma/client";
 
 export interface QuizWithDetails extends Quiz {
   questions: Question[];
   responses: Response[];
+  organization: {
+    id: string;
+    name: string;
+  };
   _count: {
     questions: number;
     responses: number;

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAppStore, useRedirectStore } from "./layout.stores";
 import { SignInData } from "./layout.types";
-import { getUserAction } from "./layout.actions";
+import { getUserAction, getUserMembersAction, getUserProfileAction } from "./layout.actions";
 import { useAuthLayoutStore } from "./(auth)/layout.stores";
 
 export const useGetUser = () => {
@@ -76,7 +76,7 @@ export const useSignIn = () => {
       }
     },
     onSuccess: (data) => {
-      console.log(JSON.stringify({hook:"useSignIn",step:"onSuccess",hasData:!!data,hasProfile:!!data?.profile}));
+      console.log(JSON.stringify({hook:"useSignIn",step:"onSuccess",hasData:!!data}));
       if (data) {
         setUser(data);
         setUserData(data);
@@ -90,5 +90,35 @@ export const useSignIn = () => {
       if (error?.status === 403) return;
       toast.error(error?.message || "Failed to sign in");
     },
+  });
+};
+
+export const useGetUserMembers = () => {
+  const { user } = useAppStore();
+
+  return useQuery({
+    queryKey: ["user", "members", user?.id],
+    queryFn: async () => {
+      const { data, error } = await getUserMembersAction();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+export const useGetUserProfile = () => {
+  const { user } = useAppStore();
+
+  return useQuery({
+    queryKey: ["user", "profile", user?.id],
+    queryFn: async () => {
+      const { data, error } = await getUserProfileAction();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 10,
   });
 };

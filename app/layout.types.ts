@@ -11,17 +11,9 @@ export interface UserWithOrganizations extends User {
   organizations?: Organization[];
 }
 
-export interface OrganizationContext {
-  organization: Organization;
-  role: string;
-  hasAdminAccess: boolean;
-}
-
 export interface AppState {
-  user: ExtendedUser | null;
-  setUser: (user: ExtendedUser | null) => void;
-  activeOrganization: OrganizationContext | null;
-  setActiveOrganization: (org: OrganizationContext | null) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
   tempEmail?: string;
   setTempEmail: (tempEmail: string) => void;
   reset: () => void;

@@ -1,14 +1,12 @@
 "use client";
 
-import { useGetUser } from "@/app/layout.hooks";
+import { useGetUser, useGetUserMembers } from "@/app/layout.hooks";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/app/layout.stores";
-import { useGetUserOrganizations } from "./quizzes/page.hooks";
 import { isAdmin, isSuperAdmin } from "@/lib/client-role.utils";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
-import { OrganizationSwitcher } from "./components/OrganizationSwitcher";
 import Link from "next/link";
 
 export default function DashboardLayout({
@@ -17,10 +15,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: user, isLoading } = useGetUser();
+  const { data: userWithMembers } = useGetUserMembers();
   const { reset } = useAppStore();
   const router = useRouter();
-  const { data: organizations = [] } = useGetUserOrganizations();
-  const [selectedOrganization, setSelectedOrganization] = useState<string>("");
 
   const handleSignOut = async () => {
     await signOut();
@@ -35,11 +32,6 @@ export default function DashboardLayout({
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    if (organizations.length > 0 && !selectedOrganization) {
-      setSelectedOrganization(organizations[0].id);
-    }
-  }, [organizations, selectedOrganization]);
 
   if (isLoading) {
     return (
@@ -77,7 +69,7 @@ export default function DashboardLayout({
               >
                 Quizzes
               </Link>
-              {isAdmin(user) && (
+              {isAdmin(userWithMembers || null) && (
                 <Link
                   href="/dashboard/invite"
                   className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
@@ -85,7 +77,7 @@ export default function DashboardLayout({
                   Invite Users
                 </Link>
               )}
-              {(isSuperAdmin(user) || user.members?.some(member => member.role === 'admin')) && (
+              {(isSuperAdmin(user) || userWithMembers?.members?.some(member => member.role === 'admin')) && (
                 <Link
                   href="/dashboard/users"
                   className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
@@ -96,13 +88,6 @@ export default function DashboardLayout({
             </nav>
           </div>
           <div className="flex items-center space-x-4">
-            {organizations.length > 1 && (
-              <OrganizationSwitcher
-                organizations={organizations}
-                selectedOrganization={selectedOrganization}
-                onOrganizationChange={setSelectedOrganization}
-              />
-            )}
             <UserAvatarMenu user={user} onSignOut={handleSignOut} />
           </div>
         </div>

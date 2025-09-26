@@ -61,10 +61,11 @@ export function RoleBadge({
 
   if (variant === "icon-only") {
     return (
-      <Icon
-        className={cn("w-4 h-4", config.iconColor, className)}
-        title={`${config.label}${organizationName ? ` - ${organizationName}` : ''}`}
-      />
+      <span title={`${config.label}${organizationName ? ` - ${organizationName}` : ''}`}>
+        <Icon
+          className={cn("w-4 h-4", config.iconColor, className)}
+        />
+      </span>
     );
   }
 

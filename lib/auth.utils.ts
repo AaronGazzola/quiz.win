@@ -22,7 +22,7 @@ export const getAuthenticatedClient = async () => {
   };
 };
 
-export const getAuthenticatedClientWithOrg = async () => {
+export const getAuthenticatedClientWithOrgs = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -33,7 +33,6 @@ export const getAuthenticatedClientWithOrg = async () => {
       user: null,
       session: null,
       organizations: [],
-      activeOrganization: null,
     };
   }
 
@@ -42,16 +41,11 @@ export const getAuthenticatedClientWithOrg = async () => {
     headers: await headers(),
   });
 
-  const activeOrganization = session.activeOrganizationId
-    ? organizations.find((org) => org.id === session.activeOrganizationId)
-    : organizations[0] || null;
-
   return {
     db: prisma,
     user: session.user,
     session,
-    organizations,
-    activeOrganization,
+    organizations: organizations || [],
   };
 };
 

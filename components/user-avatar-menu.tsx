@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ExtendedUser } from "@/app/layout.types"
 import { RoleBadge } from "@/components/RoleBadge"
+import { useGetUserMembers } from "@/app/layout.hooks"
 
 interface UserAvatarMenuProps {
   user: ExtendedUser
@@ -23,6 +24,7 @@ interface UserAvatarMenuProps {
 export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { data: userWithMembers } = useGetUserMembers()
 
   React.useEffect(() => {
     setMounted(true)
@@ -62,9 +64,9 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
             <div className="flex items-center">
               <RoleBadge
                 role={user.role === 'super-admin' ? 'super-admin' :
-                      user.members?.some(m => m.role === 'admin') ? 'admin' : 'member'}
+                      userWithMembers?.members?.some(m => m.role === 'admin') ? 'admin' : 'member'}
                 variant="compact"
-                organizationName={user.members?.[0]?.organization?.name}
+                organizationName={userWithMembers?.members?.[0]?.organization?.name}
               />
             </div>
           </div>
