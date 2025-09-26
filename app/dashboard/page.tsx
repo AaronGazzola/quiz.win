@@ -2,8 +2,7 @@
 
 import { useGetUser } from "@/app/layout.hooks";
 import { useState, useEffect } from "react";
-import { Users, BookOpen, TrendingUp, Settings, BarChart3 } from "lucide-react";
-import Link from "next/link";
+import { Users, BookOpen, TrendingUp, Settings } from "lucide-react";
 import { useGetUserOrganizations } from "./quizzes/page.hooks";
 import { OrganizationSwitcher } from "./components/OrganizationSwitcher";
 import { QuizOverview } from "./components/QuizOverview";

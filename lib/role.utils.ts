@@ -29,7 +29,7 @@ export const isOrgOwner = async (userId: string, organizationId: string): Promis
   }
 };
 
-export const isSuperAdmin = async (userId: string): Promise<boolean> => {
+export const isSuperAdmin = async (): Promise<boolean> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),

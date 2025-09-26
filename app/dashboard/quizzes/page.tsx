@@ -2,8 +2,7 @@
 
 import { useGetUser } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Plus, Trash2, Edit, Play, Download } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
+import { Search, ChevronUp, ChevronDown, Trash2, Edit, Play, Download } from "lucide-react";
 import { cn } from "@/lib/shadcn.utils";
 import { useGetQuizzes, useBulkDeleteQuizzes, useViewportResize, useGetUserOrganizations } from "./page.hooks";
 import { useQuizTableStore, useBulkOperationStore, useViewportPagination, useQuizDialogStore } from "./page.stores";
@@ -38,6 +37,8 @@ export default function QuizzesPage() {
   const { data: quizData, isLoading } = useGetQuizzes(selectedOrganization || organizations?.[0]?.id);
   const bulkDeleteMutation = useBulkDeleteQuizzes();
 
+  const quizzes = quizData?.quizzes || [];
+
   // Get selected quiz and current organization details
   const selectedQuiz = quizzes.find(quiz => quiz.id === selectedQuizId);
   const currentOrgId = selectedOrganization || organizations?.[0]?.id || "";
@@ -45,8 +46,6 @@ export default function QuizzesPage() {
   const isAdmin = currentOrg?.role === "admin" || currentOrg?.role === "owner";
   const isSuperAdmin = user?.role === "super-admin";
   const canViewResponses = isAdmin || isSuperAdmin;
-
-  const quizzes = quizData?.quizzes || [];
   const totalPages = quizData?.totalPages || 0;
   const totalItems = quizData?.totalCount || 0;
 
@@ -276,7 +275,7 @@ export default function QuizzesPage() {
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-medium text-foreground">Responses for "{selectedQuiz?.title}"</h2>
+                <h2 className="text-lg font-medium text-foreground">Responses for &ldquo;{selectedQuiz?.title}&rdquo;</h2>
                 <p className="text-sm text-muted-foreground">View and manage quiz responses</p>
               </div>
               <div className="flex items-center gap-2">

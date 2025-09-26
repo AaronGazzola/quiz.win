@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getUsersAction, toggleUserBanAction } from "./page.actions";
 import { useUserTableStore } from "./page.stores";
-import { useGetUserOrganizations } from "../quizzes/page.hooks";
 import { useEffect } from "react";
 
 export const useGetUsers = (organizationId?: string) => {
@@ -60,20 +59,6 @@ export const useToggleUserBan = () => {
   });
 };
 
-import { useQuery } from "@tanstack/react-query";
-import { getOrganizationsAction } from "../invite/page.actions";
-
-export const useGetUserOrganizations = () => {
-  return useQuery({
-    queryKey: ["user-admin-organizations"],
-    queryFn: async () => {
-      const { data, error } = await getOrganizationsAction();
-      if (error) throw new Error(error);
-      return data || [];
-    },
-    staleTime: 1000 * 60 * 10,
-  });
-};
 
 export const useViewportResize = (callback: (height: number) => void) => {
   useEffect(() => {

@@ -15,7 +15,7 @@ export const useUserTableStore = create<UserTableState>()((set, get) => ({
     set({ search, page: 0 });
   },
 
-  setSort: (column: string, _direction: "asc" | "desc" | null) => {
+  setSort: (column: string) => {
     const currentSort = get().sort;
 
     if (currentSort.column === column) {

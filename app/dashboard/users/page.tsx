@@ -2,12 +2,15 @@
 
 import { useGetUser } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Shield, ShieldX, Ban, BanIcon } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Ban, BanIcon } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { cn } from "@/lib/shadcn.utils";
-import { useGetUsers, useToggleUserBan, useViewportResize, useGetUserOrganizations } from "./page.hooks";
+import { useGetUsers, useToggleUserBan, useViewportResize } from "./page.hooks";
+import { useGetUserOrganizations } from "../quizzes/page.hooks";
 import { useUserTableStore, useBulkOperationStore, useViewportPagination } from "./page.stores";
+import { RoleBadge } from "@/components/RoleBadge";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 export default function UsersPage() {
   const { data: user } = useGetUser();
@@ -101,16 +104,6 @@ export default function UsersPage() {
     });
   };
 
-  const getRoleDisplay = (userRole: string) => {
-    switch (userRole) {
-      case 'super-admin':
-        return 'Super Admin';
-      case 'admin':
-        return 'Admin';
-      default:
-        return 'User';
-    }
-  };
 
   const getOrganizationsDisplay = (userMembers: { organization: { name: string } }[]) => {
     if (userMembers.length === 0) return "No organizations";
@@ -118,8 +111,14 @@ export default function UsersPage() {
     return `${userMembers[0].organization.name} (+${userMembers.length - 1} more)`;
   };
 
+  const selectedOrgName = organizations?.find(org => org.id === selectedOrganization)?.name || organizations?.[0]?.name;
+
   return (
     <div ref={containerRef} className="flex flex-col h-full p-6">
+      <Breadcrumb
+        items={[{ label: "User Management" }]}
+        organizationName={selectedOrgName}
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">User Management</h1>
@@ -285,13 +284,11 @@ export default function UsersPage() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        {userData.role === 'super-admin' && <Shield className="w-4 h-4 text-purple-600 mr-1" />}
-                        {userData.role === 'admin' && <ShieldX className="w-4 h-4 text-blue-600 mr-1" />}
-                        <span className="text-sm text-foreground">
-                          {getRoleDisplay(userData.role)}
-                        </span>
-                      </div>
+                      <RoleBadge
+                        role={userData.role}
+                        variant="compact"
+                        organizationName={userData.members?.[0]?.organization?.name}
+                      />
                     </td>
 
                     <td className="px-6 py-4 text-sm text-muted-foreground">

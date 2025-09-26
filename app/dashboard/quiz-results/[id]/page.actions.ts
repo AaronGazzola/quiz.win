@@ -3,7 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { getUserOrganizations, isOrgAdmin, isSuperAdmin } from "@/lib/role.utils";
+import { getUserOrganizations } from "@/lib/role.utils";
 import { headers } from "next/headers";
 import { QuizResultData } from "./page.types";
 

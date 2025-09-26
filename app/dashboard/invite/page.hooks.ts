@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Organization } from "@prisma/client";
 import { toast } from "sonner";
 import { getOrganizationsAction, createOrganizationAction, sendInvitationsAction } from "./page.actions";
 

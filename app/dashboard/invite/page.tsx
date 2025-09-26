@@ -56,7 +56,7 @@ export default function InvitePage() {
       await createOrgMutation.mutateAsync(name);
       setShowAddOrgDialog(false);
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
-    } catch (error) {
+    } catch {
 
     }
   };
@@ -86,7 +86,7 @@ export default function InvitePage() {
       setSelectedRole("");
       setSelectedOrg("");
       setEmailError("");
-    } catch (error) {
+    } catch {
 
     }
   };

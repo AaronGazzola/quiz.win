@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ExtendedUser } from "@/app/layout.types"
+import { RoleBadge } from "@/components/RoleBadge"
 
 interface UserAvatarMenuProps {
   user: ExtendedUser
@@ -58,6 +59,14 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm text-muted-foreground">{user.email}</p>
+            <div className="flex items-center">
+              <RoleBadge
+                role={user.role === 'super-admin' ? 'super-admin' :
+                      user.members?.some(m => m.role === 'admin') ? 'admin' : 'member'}
+                variant="compact"
+                organizationName={user.members?.[0]?.organization?.name}
+              />
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

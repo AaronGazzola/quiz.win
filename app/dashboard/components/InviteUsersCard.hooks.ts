@@ -6,7 +6,6 @@ import {
   inviteUsersAction,
   getPendingInvitationsAction,
   revokeInvitationAction,
-  InvitationData,
 } from "./InviteUsersCard.actions";
 
 export const useInviteUsers = () => {

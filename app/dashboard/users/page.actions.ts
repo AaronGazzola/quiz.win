@@ -2,7 +2,7 @@
 
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
-import { getUserAdminOrganizations, isSuperAdmin, canManageUsers } from "@/lib/role.utils";
+import { getUserAdminOrganizations, isSuperAdmin } from "@/lib/role.utils";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { headers } from "next/headers";
 import { UsersData, UserWithDetails } from "./page.types";
@@ -25,7 +25,7 @@ export const getUsersAction = async (
     }
 
     const { db } = await getAuthenticatedClient();
-    const isSuper = await isSuperAdmin(session.user.id);
+    const isSuper = await isSuperAdmin();
     const userAdminOrgs = await getUserAdminOrganizations(session.user.id);
 
     if (!isSuper && userAdminOrgs.length === 0) {
@@ -144,7 +144,7 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
     }
 
     const { db } = await getAuthenticatedClient();
-    const isSuper = await isSuperAdmin(session.user.id);
+    const isSuper = await isSuperAdmin();
 
     if (!isSuper) {
       const targetUser = await db.user.findUnique({
