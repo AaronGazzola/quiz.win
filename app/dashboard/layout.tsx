@@ -5,7 +5,8 @@ import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAppStore } from "@/app/layout.stores";
-import { isAdmin, getRoleLabel } from "@/lib/role.utils";
+import { isAdmin, isSuperAdmin } from "@/lib/role.utils";
+import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import Link from "next/link";
 
 export default function DashboardLayout({
@@ -29,16 +30,12 @@ export default function DashboardLayout({
       return;
     }
 
-    if (user && !user.profile?.isOnboardingComplete) {
-      router.push("/onboarding");
-      return;
-    }
   }, [user, isLoading, router]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-lg text-foreground">Loading...</div>
       </div>
     );
   }
@@ -48,57 +45,53 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <Link href="/dashboard" className="text-xl font-semibold hover:text-gray-700">
-                LMS Dashboard
-              </Link>
-              <nav className="flex space-x-4">
-                <Link
-                  href="/dashboard"
-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/quizzes"
-                  className="text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Quizzes
-                </Link>
-                {isAdmin(user) && (
-                  <Link
-                    href="/dashboard/admin"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    Admin
-                  </Link>
-                )}
-              </nav>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-col items-end">
-                <span className="text-sm text-gray-600">
-                  {user.email}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {getRoleLabel(user.role as "user" | "admin" | "super-admin")}
-                </span>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="text-sm text-gray-500 hover:text-gray-700"
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center px-4 md:px-6">
+          <div className="flex flex-1 items-center space-x-8">
+            <Link
+              href="/dashboard"
+              className="flex items-center text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
+            >
+              LMS Dashboard
+            </Link>
+            <nav className="hidden md:flex space-x-6">
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Sign Out
-              </button>
-            </div>
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/quizzes"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Quizzes
+              </Link>
+              {isAdmin(user) && (
+                <Link
+                  href="/dashboard/invite"
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Invite Users
+                </Link>
+              )}
+              {(isSuperAdmin(user) || user.members?.some(member => member.role === 'admin')) && (
+                <Link
+                  href="/dashboard/users"
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  User Management
+                </Link>
+              )}
+            </nav>
+          </div>
+          <div className="flex items-center">
+            <UserAvatarMenu user={user} onSignOut={handleSignOut} />
           </div>
         </div>
-      </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      </header>
+      <main className="container mx-auto py-6">
         {children}
       </main>
     </div>

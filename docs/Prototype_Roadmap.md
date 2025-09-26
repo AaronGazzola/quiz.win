@@ -21,6 +21,7 @@ The LMS prototype is now fully functional with complete quiz management and lear
 **All Phases Complete - Full Learning Management System:**
 
 **Authentication & User Management:**
+
 - Better Auth server with magic link, admin, and organization plugins
 - Dual schema PostgreSQL database (auth/public schemas)
 - Complete database models for authentication and LMS
@@ -31,6 +32,7 @@ The LMS prototype is now fully functional with complete quiz management and lear
 - User session management and sign-out functionality
 
 **Dashboard & Quiz Management:**
+
 - Comprehensive role-based dashboard with organization switching
 - Advanced quiz data table with search, sorting, and pagination (see @docs/Table_Prompt.md)
 - Full quiz CRUD operations with dialog-based editing
@@ -41,6 +43,7 @@ The LMS prototype is now fully functional with complete quiz management and lear
 - Organization-scoped data access and permissions
 
 **Learning Experience & Analytics:**
+
 - Interactive quiz-taking interface with question navigation
 - Real-time progress tracking and answer selection
 - Automatic scoring and completion status
@@ -51,6 +54,7 @@ The LMS prototype is now fully functional with complete quiz management and lear
 - Complete learning workflow from quiz creation to completion
 
 **Development Environment:**
+
 - Next.js 15 application with App Router and React 19
 - TypeScript for comprehensive type safety
 - TailwindCSS v4 styling framework with responsive design
@@ -90,6 +94,7 @@ Better Auth server setup with plugins:
 - Dual schema configuration (auth/public)
 
 **Key Plugins Required:**
+
 - `magicLink({ sendMagicLink: resendHandler })` - Passwordless authentication
 - `admin({ defaultRole: "user" })` - Role management system
 - `organization({ allowUserToCreateOrganization: false })` - Multi-org support
@@ -99,6 +104,7 @@ Better Auth server setup with plugins:
 Dual schema configuration with Better Auth and LMS models:
 
 **Auth Schema (Better Auth tables):**
+
 ```prisma
 model User {
   id            String    @id @default(cuid())
@@ -108,7 +114,7 @@ model User {
   banned        Boolean   @default(false)  // admin plugin
   banReason     String?   // admin plugin
   banExpires    DateTime? // admin plugin
-  emailVerified DateTime?
+  emailVerified Boolean?
   createdAt     DateTime  @default(now())
   @@schema("auth")
 }
@@ -134,6 +140,7 @@ model Member {
 ```
 
 **Public Schema (LMS models):**
+
 ```prisma
 model Profile {
   id                    String  @id @default(cuid())
@@ -197,6 +204,7 @@ TypeScript script for super admin assignment:
 - Error handling and confirmation messages
 
 **Key Features Required:**
+
 - Email validation and user lookup
 - Role assignment via Prisma client
 - Command line argument parsing
@@ -212,6 +220,7 @@ Better Auth client setup with plugins:
 - Action hooks for authentication flows
 
 **Key Methods Required:**
+
 - `signIn.magicLink({ email, callbackURL })` - Magic link authentication
 - `organization.listUserOrganizations()` - Multi-org support
 - `getSession()` - Session state management
@@ -230,6 +239,7 @@ Passwordless authentication flow:
 - Redirect logic based on onboarding status
 
 **Key Components Implemented:**
+
 - ✅ `SignInPage` - Email input with magic link request
 - ✅ Magic link email delivery via Better Auth + Resend
 - ✅ Session management and automatic redirects
@@ -245,6 +255,7 @@ Role-based organization and user management:
 - Organization type indicators (healthcare vs corporate)
 
 **Key Features Implemented:**
+
 - ✅ Admin area with role-based access control
 - ✅ Super admin vs admin role distinction and UI
 - ✅ Organization management interface structure
@@ -262,6 +273,7 @@ Simple onboarding flow for new users:
 - Redirect to dashboard after completion
 
 **Key Components Implemented:**
+
 - ✅ `OnboardingPage` - Complete profile setup interface
 - ✅ User preferences configuration (notifications, theme)
 - ✅ Profile creation via server actions with Prisma
@@ -284,6 +296,7 @@ Role-based dashboard with organization management:
 - ✅ Real-time quiz metrics and activity overview
 
 **Key Components Implemented:**
+
 - ✅ `OrganizationSwitcher` - Multi-org context selection dropdown
 - ✅ `QuizOverview` - Summary cards with quiz statistics and recent activity
 - ✅ `MembersTable` - Organization member management (admin only)
@@ -301,6 +314,7 @@ Full implementation following `@docs/Table_Prompt.md` specifications:
 - ✅ Loading states with skeleton animations and error handling
 
 **Advanced Features Implemented:**
+
 - ✅ Debounced search with immediate UI feedback
 - ✅ Viewport-based pagination calculation (ROW_HEIGHT = 60px)
 - ✅ Multi-select with Set-based selection tracking
@@ -319,6 +333,7 @@ Full quiz management with question creation:
 - ✅ Organization-scoped quiz ownership and access control
 
 **Key Components Implemented:**
+
 - ✅ `QuizDialog` - Modal for quiz creation and editing with validation
 - ✅ Dynamic question management with order tracking
 - ✅ Multiple choice editor with add/remove option functionality
@@ -334,6 +349,7 @@ Complete organization member administration:
 - ✅ Role-based permissions (admin/super-admin only access)
 
 **Key Components Implemented:**
+
 - ✅ `MembersTable` - Data table showing organization members with role management
 - ✅ In-line role editing with instant updates via React Query
 - ✅ Member removal with optimistic UI updates
@@ -350,6 +366,7 @@ Comprehensive invitation workflow:
 - ✅ Invitation revocation functionality
 
 **Key Features Implemented:**
+
 - ✅ Bulk email processing with validation and feedback
 - ✅ Pending invitations display with revocation options
 - ✅ Expiration date tracking (7-day default)
@@ -372,6 +389,7 @@ Interactive quiz player for organization members:
 - ✅ Quiz results display with detailed feedback
 
 **Key Components Implemented:**
+
 - ✅ `QuizPlayer` - Complete quiz taking interface with state management
 - ✅ Question navigation with progress indicators
 - ✅ Answer selection with immediate UI feedback
@@ -388,6 +406,7 @@ Comprehensive data collection and storage system:
 - ✅ Existing response detection to prevent duplicates
 
 **Key Features Implemented:**
+
 - ✅ Server actions for response submission and retrieval
 - ✅ JSON-based answer storage with question mapping
 - ✅ Score calculation based on correct answers
@@ -406,6 +425,7 @@ Advanced response analytics following @docs/Table_Prompt.md patterns:
 - ✅ Multi-select operations for bulk data export
 
 **Key Components Implemented:**
+
 - ✅ `ResponseDataTable` - Advanced data table with sorting, pagination, and filtering
 - ✅ Organization-scoped response analytics with role-based access
 - ✅ CSV export system with comprehensive response data
@@ -423,6 +443,7 @@ Phase 1 → Complete & Test → Phase 2 → Complete & Test → Phase 3 → Comp
 ### Quality Gates
 
 After each phase:
+
 1. **Unit Tests**: Test individual components with Jest
 2. **Integration Tests**: Test component interactions with Playwright
 3. **Manual Testing**: Verify functionality works as expected
@@ -450,6 +471,7 @@ After each phase:
 ## Job Requirement Mapping
 
 **✅ Prototype Addresses:**
+
 1. **Web-based** - Next.js web application
 2. **Individual logins** - Better Auth magic link authentication
 3. **Organization management** - Multi-organization membership with role-based access
@@ -457,26 +479,27 @@ After each phase:
 5. **Section bypass** - Not applicable (quiz-focused approach)
 6. **Data retrieval** - PostgreSQL storage ready for CRM integration
 
-**🔄 Foundation for Future:**
-4. **AI-informed questions** - Manual question creation with structure ready for AI enhancement
-7. **CRM/visualization** - Data export capabilities and structured response data
+**🔄 Foundation for Future:** 4. **AI-informed questions** - Manual question creation with structure ready for AI enhancement 7. **CRM/visualization** - Data export capabilities and structured response data
 
 This prototype demonstrates core LMS capabilities with a focus on quiz-based learning while providing technical foundations for AI integration and advanced reporting features.
 
 ## Future Enhancement Path
 
 **Phase 5: AI Integration**
+
 - OpenAI integration for dynamic question generation
 - Intelligent question sequencing and difficulty adjustment
 - Personalized learning recommendations
 
 **Phase 6: Advanced Features**
+
 - Rich content support (images, videos, documents)
 - Advanced analytics and reporting dashboard
 - CRM connector development (Salesforce, HubSpot)
 - Real-time collaboration features
 
 **Phase 7: Specialized Interfaces**
+
 - Healthcare patient portal with HIPAA compliance
 - Corporate training platform with skills tracking
 - Mobile applications and offline capability

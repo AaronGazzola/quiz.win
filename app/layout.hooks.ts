@@ -44,33 +44,49 @@ export const useSignIn = () => {
 
   return useMutation({
     mutationFn: async (signInData: SignInData) => {
-      const { error } = await signIn.email({
-        email: signInData.email,
-        password: signInData.password,
-      });
+      console.log(JSON.stringify({hook:"useSignIn",step:"start",data:{email:signInData.email?.substring(0,3)+"***"}}));
 
-      if (error?.status === 403) setTempEmail(signInData.email);
+      try {
+        console.log(JSON.stringify({hook:"useSignIn",step:"calling_signIn.email"}));
+        const { error } = await signIn.email({
+          email: signInData.email,
+          password: signInData.password,
+        });
 
-      if (error) throw error;
-      const { data: userData, error: userError } = await getUserAction();
+        console.log(JSON.stringify({hook:"useSignIn",step:"signIn.email_response",error:error?{status:error.status,message:error.message}:null}));
 
-      if (userError) throw new Error(userError);
+        if (error?.status === 403) {
+          console.log(JSON.stringify({hook:"useSignIn",step:"setting_temp_email"}));
+          setTempEmail(signInData.email);
+        }
 
-      return userData;
+        if (error) throw error;
+
+        console.log(JSON.stringify({hook:"useSignIn",step:"calling_getUserAction"}));
+        const { data: userData, error: userError } = await getUserAction();
+
+        console.log(JSON.stringify({hook:"useSignIn",step:"getUserAction_response",hasData:!!userData,error:userError}));
+
+        if (userError) throw new Error(userError);
+
+        return userData;
+      } catch (err) {
+        console.log(JSON.stringify({hook:"useSignIn",step:"error_caught",error:err instanceof Error?{name:err.name,message:err.message}:err}));
+        throw err;
+      }
     },
     onSuccess: (data) => {
+      console.log(JSON.stringify({hook:"useSignIn",step:"onSuccess",hasData:!!data,hasProfile:!!data?.profile}));
       if (data) {
         setUser(data);
         setUserData(data);
       }
       toast.success("Successfully signed in");
-      if (data && !data.profile?.isOnboardingComplete) {
-        router.push(configuration.paths.onboarding);
-        return;
-      }
+      console.log(JSON.stringify({hook:"useSignIn",step:"redirecting_to_home"}));
       router.push(configuration.paths.home);
     },
     onError: (error: { status?: number; message?: string }) => {
+      console.log(JSON.stringify({hook:"useSignIn",step:"onError",error:{status:error?.status,message:error?.message}}));
       if (error?.status === 403) return;
       toast.error(error?.message || "Failed to sign in");
     },

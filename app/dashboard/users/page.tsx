@@ -2,18 +2,15 @@
 
 import { useGetUser } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Plus, Trash2, Edit, Play } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Shield, ShieldX, Ban, BanIcon } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { cn } from "@/lib/shadcn.utils";
-import { useGetQuizzes, useBulkDeleteQuizzes, useViewportResize, useGetUserOrganizations } from "./page.hooks";
-import { useQuizTableStore, useBulkOperationStore, useViewportPagination, useQuizDialogStore } from "./page.stores";
-import { QuizDialog } from "./QuizDialog";
-import { useRouter } from "next/navigation";
+import { useGetUsers, useToggleUserBan, useViewportResize, useGetUserOrganizations } from "./page.hooks";
+import { useUserTableStore, useBulkOperationStore, useViewportPagination } from "./page.stores";
 
-export default function QuizzesPage() {
+export default function UsersPage() {
   const { data: user } = useGetUser();
-  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
   const [selectedOrganization, setSelectedOrganization] = useState<string>("");
@@ -31,19 +28,18 @@ export default function QuizzesPage() {
     toggleSelected,
     selectAll,
     clearSelection,
-  } = useQuizTableStore();
+  } = useUserTableStore();
 
   const { isVisible: bulkVisible, isLoading: bulkLoading } = useBulkOperationStore();
   const { calculateItemsPerPage } = useViewportPagination();
-  const { isOpen: dialogOpen, editingQuiz, openCreate, openEdit, close } = useQuizDialogStore();
 
   const { data: organizations } = useGetUserOrganizations();
-  const { data: quizData, isLoading } = useGetQuizzes(selectedOrganization || organizations?.[0]?.id);
-  const bulkDeleteMutation = useBulkDeleteQuizzes();
+  const { data: usersData, isLoading } = useGetUsers(selectedOrganization || undefined);
+  const toggleUserBanMutation = useToggleUserBan();
 
-  const quizzes = quizData?.quizzes || [];
-  const totalPages = quizData?.totalPages || 0;
-  const totalItems = quizData?.totalCount || 0;
+  const users = usersData?.users || [];
+  const totalPages = usersData?.totalPages || 0;
+  const totalItems = usersData?.totalCount || 0;
 
   useViewportResize((height) => {
     const newItemsPerPage = calculateItemsPerPage(height);
@@ -86,39 +82,58 @@ export default function QuizzesPage() {
     return <ChevronUp className="w-4 h-4 opacity-0" />;
   };
 
-  const isAllSelected = quizzes.length > 0 && selectedItems.size === quizzes.length;
-  const isSomeSelected = selectedItems.size > 0 && selectedItems.size < quizzes.length;
+  const isAllSelected = users.length > 0 && selectedItems.size === users.length;
+  const isSomeSelected = selectedItems.size > 0 && selectedItems.size < users.length;
 
   const handleSelectAll = () => {
     if (isAllSelected) {
       clearSelection();
     } else {
-      selectAll(quizzes);
+      selectAll(users);
     }
   };
 
-  const handleBulkDelete = () => {
-    if (selectedItems.size > 0) {
-      bulkDeleteMutation.mutate(Array.from(selectedItems));
+  const handleToggleBan = (userId: string, currentBanned: boolean) => {
+    toggleUserBanMutation.mutate({
+      userId,
+      banned: !currentBanned,
+      banReason: !currentBanned ? "Banned by admin" : undefined
+    });
+  };
+
+  const getRoleDisplay = (userRole: string) => {
+    switch (userRole) {
+      case 'super-admin':
+        return 'Super Admin';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'User';
     }
+  };
+
+  const getOrganizationsDisplay = (userMembers: { organization: { name: string } }[]) => {
+    if (userMembers.length === 0) return "No organizations";
+    if (userMembers.length === 1) return userMembers[0].organization.name;
+    return `${userMembers[0].organization.name} (+${userMembers.length - 1} more)`;
   };
 
   return (
     <div ref={containerRef} className="flex flex-col h-full p-6">
-      {/* Header with Search */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Quiz Management</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-50 mt-1">Manage quizzes and view responses</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">User Management</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-50 mt-1">Manage users and their access</p>
         </div>
 
         <div className="flex items-center gap-4">
           {organizations && organizations.length > 1 && (
             <select
-              value={selectedOrganization || organizations?.[0]?.id || ""}
+              value={selectedOrganization || ""}
               onChange={(e) => setSelectedOrganization(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
+              <option value="">All Organizations</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
                   {org.name}
@@ -131,17 +146,15 @@ export default function QuizzesPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search quizzes..."
+              placeholder="Search users..."
               value={immediateSearch}
               onChange={(e) => setImmediateSearch(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-500 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-
         </div>
       </div>
 
-      {/* Bulk Operations */}
       {bulkVisible && (
         <div className="mb-4">
           <Popover open={bulkVisible}>
@@ -154,19 +167,18 @@ export default function QuizzesPage() {
             </PopoverTrigger>
             <PopoverContent className="w-48 p-2 bg-white border border-gray-200 rounded-md shadow-lg">
               <button
-                onClick={handleBulkDelete}
+                onClick={() => console.log("Bulk ban users")}
                 disabled={bulkLoading}
                 className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {bulkLoading ? "Deleting..." : "Delete Selected"}
+                <Ban className="w-4 h-4 mr-2" />
+                Ban Selected
               </button>
             </PopoverContent>
           </Popover>
         </div>
       )}
 
-      {/* Table */}
       <div className="flex-1 overflow-hidden bg-card border border-border rounded-lg">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
@@ -185,12 +197,36 @@ export default function QuizzesPage() {
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   <button
-                    onClick={() => handleSort("title")}
+                    onClick={() => handleSort("name")}
                     className="flex items-center space-x-1 hover:text-foreground"
                   >
-                    <span>Title</span>
-                    {getSortIcon("title")}
+                    <span>Name</span>
+                    {getSortIcon("name")}
                   </button>
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort("email")}
+                    className="flex items-center space-x-1 hover:text-foreground"
+                  >
+                    <span>Email</span>
+                    {getSortIcon("email")}
+                  </button>
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <button
+                    onClick={() => handleSort("role")}
+                    className="flex items-center space-x-1 hover:text-foreground"
+                  >
+                    <span>Role</span>
+                    {getSortIcon("role")}
+                  </button>
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Organizations
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -201,14 +237,6 @@ export default function QuizzesPage() {
                     <span>Created</span>
                     {getSortIcon("createdAt")}
                   </button>
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Questions
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Responses
                 </th>
 
                 <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -223,74 +251,71 @@ export default function QuizzesPage() {
                   <tr key={i} className="animate-pulse">
                     <td className="px-6 py-4"><div className="w-4 h-4 bg-muted rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-48" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-20" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-16" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-20" /></td>
                   </tr>
                 ))
-              ) : quizzes.length === 0 ? (
+              ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                    {search ? `No quizzes found matching "${search}"` : "No quizzes created yet"}
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                    {search ? `No users found matching "${search}"` : "No users found"}
                   </td>
                 </tr>
               ) : (
-                quizzes.map((quiz) => (
-                  <tr key={quiz.id} className="hover:bg-muted/50 cursor-pointer">
+                users.map((userData) => (
+                  <tr key={userData.id} className="hover:bg-muted/50">
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
-                        checked={selectedItems.has(quiz.id)}
-                        onCheckedChange={() => toggleSelected(quiz.id)}
+                        checked={selectedItems.has(userData.id)}
+                        onCheckedChange={() => toggleSelected(userData.id)}
                       />
                     </td>
 
                     <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-foreground">{quiz.title}</div>
-                        {quiz.description && (
-                          <div className="text-sm text-muted-foreground truncate max-w-md">
-                            {quiz.description}
-                          </div>
-                        )}
+                      <div className="text-sm font-medium text-foreground">
+                        {userData.name || "No Name"}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-foreground">
+                      {userData.email}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex items-center">
+                        {userData.role === 'super-admin' && <Shield className="w-4 h-4 text-purple-600 mr-1" />}
+                        {userData.role === 'admin' && <ShieldX className="w-4 h-4 text-blue-600 mr-1" />}
+                        <span className="text-sm text-foreground">
+                          {getRoleDisplay(userData.role)}
+                        </span>
                       </div>
                     </td>
 
                     <td className="px-6 py-4 text-sm text-muted-foreground">
-                      {new Date(quiz.createdAt).toLocaleDateString()}
+                      {getOrganizationsDisplay(userData.members)}
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-foreground">
-                      {quiz._count.questions}
-                    </td>
-
-                    <td className="px-6 py-4 text-sm text-foreground">
-                      {quiz._count.responses}
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                      {new Date(userData.createdAt).toLocaleDateString()}
                     </td>
 
                     <td className="px-6 py-4 text-right text-sm font-medium" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end space-x-2">
-                        {quiz._count.questions > 0 && (
-                          <button
-                            onClick={() => router.push(`/dashboard/take-quiz/${quiz.id}`)}
-                            className="text-green-600 hover:text-green-900"
-                            title="Take Quiz"
-                          >
-                            <Play className="w-4 h-4" />
-                          </button>
-                        )}
                         <button
-                          onClick={() => openEdit(quiz)}
-                          className="text-indigo-600 hover:text-indigo-900"
-                          title="Edit Quiz"
+                          onClick={() => handleToggleBan(userData.id, userData.banned)}
+                          disabled={toggleUserBanMutation.isPending}
+                          className={cn(
+                            "hover:opacity-80 transition-opacity",
+                            userData.banned
+                              ? "text-green-600 hover:text-green-900"
+                              : "text-red-600 hover:text-red-900"
+                          )}
+                          title={userData.banned ? "Unban User" : "Ban User"}
                         >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          title="Delete Quiz"
-                        >
-                          <Trash2 className="w-4 h-4" />
+                          <BanIcon className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -302,7 +327,6 @@ export default function QuizzesPage() {
         </div>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
           <div className="text-sm text-gray-500">
@@ -346,14 +370,6 @@ export default function QuizzesPage() {
           </div>
         </div>
       )}
-
-      {/* Quiz Dialog */}
-      <QuizDialog
-        open={dialogOpen}
-        onOpenChange={close}
-        quiz={editingQuiz}
-        organizationId={selectedOrganization || organizations?.[0]?.id || ""}
-      />
     </div>
   );
 }

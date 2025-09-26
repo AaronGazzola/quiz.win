@@ -2,7 +2,6 @@ export const configuration = {
   paths: {
     signIn: "/sign-in",
     home: "/dashboard",
-    onboarding: "/onboarding",
     admin: "/dashboard/admin",
     quizzes: "/dashboard/quizzes",
   },
@@ -10,7 +9,6 @@ export const configuration = {
 
 export const privatePaths = [
   "/dashboard",
-  "/onboarding",
 ];
 
 export const adminPaths = [

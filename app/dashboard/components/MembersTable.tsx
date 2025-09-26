@@ -10,9 +10,9 @@ interface MembersTableProps {
 }
 
 const roleColors = {
-  owner: "bg-purple-100 text-purple-800",
-  admin: "bg-blue-100 text-blue-800",
-  member: "bg-gray-100 text-gray-800",
+  owner: "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
+  admin: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+  member: "bg-secondary text-secondary-foreground",
 };
 
 const roleIcons = {
@@ -44,13 +44,13 @@ export function MembersTable({ organizationId }: MembersTableProps) {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-medium text-gray-900 flex items-center">
+        <h2 className="text-lg font-semibold text-foreground flex items-center">
           <Users className="w-5 h-5 mr-2" />
           Team Members
         </h2>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-muted-foreground">
           {members?.length || 0} members
         </span>
       </div>
@@ -59,18 +59,18 @@ export function MembersTable({ organizationId }: MembersTableProps) {
         <div className="animate-pulse space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div className="w-10 h-10 bg-muted rounded-full"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-1/4"></div>
               </div>
             </div>
           ))}
         </div>
       ) : !members || members.length === 0 ? (
         <div className="text-center py-8">
-          <Users className="mx-auto w-12 h-12 text-gray-400 mb-4" />
-          <p className="text-gray-500">No members found</p>
+          <Users className="mx-auto w-12 h-12 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">No members found</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -81,17 +81,17 @@ export function MembersTable({ organizationId }: MembersTableProps) {
             return (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-4 border border-border rounded-lg bg-card"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-500" />
+                  <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-foreground">
                       {member.user.name || member.user.email}
                     </p>
-                    <p className="text-sm text-gray-500">{member.user.email}</p>
+                    <p className="text-sm text-muted-foreground">{member.user.email}</p>
                   </div>
                 </div>
 
@@ -101,7 +101,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
                       <select
                         defaultValue={member.role}
                         onChange={(e) => handleRoleUpdate(member.id, e.target.value)}
-                        className="text-sm border border-gray-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-blue-500"
+                        className="text-sm border border-input rounded-md px-2 py-1 bg-background text-foreground focus:ring-2 focus:ring-ring"
                       >
                         <option value="member">Member</option>
                         <option value="admin">Admin</option>
@@ -109,7 +109,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
                       </select>
                       <button
                         onClick={() => setEditingMemberId(null)}
-                        className="text-sm text-gray-500 hover:text-gray-700"
+                        className="text-sm text-muted-foreground hover:text-foreground"
                       >
                         Cancel
                       </button>
@@ -130,7 +130,7 @@ export function MembersTable({ organizationId }: MembersTableProps) {
                       <button
                         onClick={() => handleRemoveMember(member.id)}
                         disabled={removeMemberMutation.isPending}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md disabled:opacity-50"
+                        className="p-2 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded-md disabled:opacity-50"
                         title="Remove member"
                       >
                         <Trash2 className="w-4 h-4" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetUser } from "@/app/layout.hooks";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, BookOpen, TrendingUp, Settings, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useGetUserOrganizations } from "./quizzes/page.hooks";
@@ -9,11 +9,49 @@ import { OrganizationSwitcher } from "./components/OrganizationSwitcher";
 import { QuizOverview } from "./components/QuizOverview";
 import { MembersTable } from "./components/MembersTable";
 import { InviteUsersCard } from "./components/InviteUsersCard";
+import { useProcessInvitation } from "./page.hooks";
+import { useSearchParams, useRouter } from "next/navigation";
+import { queryClient } from "@/app/layout.providers";
 
 export default function DashboardPage() {
   const { data: user } = useGetUser();
   const { data: organizations } = useGetUserOrganizations();
   const [selectedOrganization, setSelectedOrganization] = useState<string>("");
+  const processInvitationMutation = useProcessInvitation();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const invitationParam = searchParams.get('invitation');
+
+    if (invitationParam && user) {
+      try {
+        const invitationData = JSON.parse(decodeURIComponent(invitationParam));
+
+        const { organizationId, role } = invitationData;
+
+        if (organizationId && role) {
+          processInvitationMutation.mutate(
+            { organizationId, role },
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["user"] });
+                queryClient.invalidateQueries({ queryKey: ["organizations"] });
+
+                router.replace('/dashboard');
+              },
+              onError: () => {
+                router.replace('/dashboard');
+              }
+            }
+          );
+        }
+      } catch (error) {
+        console.error('Failed to process invitation:', error);
+        router.replace('/dashboard');
+      }
+    }
+  }, [searchParams, user, processInvitationMutation, router]);
 
   if (!user) return null;
 
@@ -23,122 +61,92 @@ export default function DashboardPage() {
   const isSuperAdmin = user.role === "super-admin";
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="bg-white shadow">
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user.email}</p>
-            </div>
-
-            {organizations && organizations.length > 1 && (
-              <OrganizationSwitcher
-                organizations={organizations}
-                selectedOrganization={selectedOrganization}
-                onOrganizationChange={setSelectedOrganization}
-              />
-            )}
-          </div>
+      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back, {user.email}</p>
         </div>
+
+        {organizations && organizations.length > 1 && (
+          <OrganizationSwitcher
+            organizations={organizations}
+            selectedOrganization={selectedOrganization}
+            onOrganizationChange={setSelectedOrganization}
+          />
+        )}
       </div>
 
-      <div className="px-4 sm:px-6 lg:px-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <BookOpen className="w-8 h-8 text-blue-500" />
-              <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Total Quizzes</h3>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
-              </div>
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <BookOpen className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Total Quizzes</p>
+              <p className="text-2xl font-bold">-</p>
             </div>
           </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <TrendingUp className="w-8 h-8 text-green-500" />
-              <div className="ml-4">
-                <h3 className="text-sm font-medium text-gray-500">Completed Today</h3>
-                <p className="text-2xl font-semibold text-gray-900">-</p>
-              </div>
-            </div>
-          </div>
-
-          {(isAdmin || isSuperAdmin) && (
-            <>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <Users className="w-8 h-8 text-purple-500" />
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Team Members</h3>
-                    <p className="text-2xl font-semibold text-gray-900">-</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex items-center">
-                  <Settings className="w-8 h-8 text-orange-500" />
-                  <div className="ml-4">
-                    <h3 className="text-sm font-medium text-gray-500">Active Invites</h3>
-                    <p className="text-2xl font-semibold text-gray-900">-</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Quiz Overview */}
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-green-500/10 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-500" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Completed Today</p>
+              <p className="text-2xl font-bold">-</p>
+            </div>
+          </div>
+        </div>
+
+        {(isAdmin || isSuperAdmin) && (
+          <>
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-purple-500/10 rounded-lg">
+                  <Users className="h-6 w-6 text-purple-600 dark:text-purple-500" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Team Members</p>
+                  <p className="text-2xl font-bold">-</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <Settings className="h-6 w-6 text-orange-600 dark:text-orange-500" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Active Invites</p>
+                  <p className="text-2xl font-bold">-</p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Quiz Overview */}
+        <div className="space-y-6">
+          <QuizOverview organizationId={currentOrgId} />
+        </div>
+
+        {/* Admin Section */}
+        {(isAdmin || isSuperAdmin) && (
           <div className="space-y-6">
-            <QuizOverview organizationId={currentOrgId} />
-
-            {/* Quick Actions */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Link
-                  href="/dashboard/quizzes"
-                  className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <BookOpen className="w-5 h-5 mr-2" />
-                  Manage Quizzes
-                </Link>
-
-                <Link
-                  href="/dashboard/responses"
-                  className="flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  View Responses
-                </Link>
-
-                {(isAdmin || isSuperAdmin) && (
-                  <Link
-                    href="/dashboard/admin"
-                    className="flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                  >
-                    <Users className="w-5 h-5 mr-2" />
-                    Admin Panel
-                  </Link>
-                )}
-              </div>
-            </div>
+            <MembersTable organizationId={currentOrgId} />
+            <InviteUsersCard organizationId={currentOrgId} />
           </div>
-
-          {/* Admin Section */}
-          {(isAdmin || isSuperAdmin) && (
-            <div className="space-y-6">
-              <MembersTable organizationId={currentOrgId} />
-              <InviteUsersCard organizationId={currentOrgId} />
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

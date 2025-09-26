@@ -11,6 +11,15 @@ export const isSuperAdmin = (user: ExtendedUser | null): boolean => {
   return user.role === roles.SUPER_ADMIN;
 };
 
+export const isOrgAdmin = (user: ExtendedUser | null, organizationId?: string): boolean => {
+  if (!user || !organizationId) return false;
+  if (isSuperAdmin(user)) return true;
+
+  return user.members?.some(
+    member => member.organizationId === organizationId && member.role === "admin"
+  ) || false;
+};
+
 export const hasRole = (user: ExtendedUser | null, requiredRole: UserRole): boolean => {
   if (!user) return false;
 
@@ -24,6 +33,37 @@ export const hasRole = (user: ExtendedUser | null, requiredRole: UserRole): bool
     default:
       return false;
   }
+};
+
+export const canManageContent = (user: ExtendedUser | null, organizationId?: string): boolean => {
+  if (!user) return false;
+  if (isSuperAdmin(user)) return true;
+  if (!organizationId) return false;
+
+  return isOrgAdmin(user, organizationId);
+};
+
+export const canViewContent = (user: ExtendedUser | null, organizationId?: string): boolean => {
+  if (!user) return false;
+  if (isSuperAdmin(user)) return true;
+  if (!organizationId) return true;
+
+  return user.members?.some(
+    member => member.organizationId === organizationId
+  ) || false;
+};
+
+export const canManageUsers = (user: ExtendedUser | null, targetOrganizationId?: string): boolean => {
+  if (!user) return false;
+  if (isSuperAdmin(user)) return true;
+  if (!targetOrganizationId) return false;
+
+  return isOrgAdmin(user, targetOrganizationId);
+};
+
+export const getUserOrganizations = (user: ExtendedUser | null): string[] => {
+  if (!user || !user.members) return [];
+  return user.members.map(member => member.organizationId);
 };
 
 export const getRoleLabel = (role: UserRole): string => {

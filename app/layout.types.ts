@@ -1,7 +1,8 @@
-import { User, Profile } from "@prisma/client";
+import { User, Profile, Member } from "@prisma/client";
 
 export interface ExtendedUser extends User {
   profile?: Profile | null;
+  members?: Member[];
 }
 
 export interface AppState {

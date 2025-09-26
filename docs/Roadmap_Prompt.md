@@ -12,6 +12,8 @@ A project roadmap serves as:
 - **Scope Manager**: Clear boundaries for what gets built in each phase
 - **Quality Assurance**: Built-in testing and verification at each stage
 
+The roadmap does not include timeline or scheduling information.
+
 ## Roadmap Structure & Format
 
 ### 1. Document Header
@@ -103,8 +105,7 @@ Description of what needs to be implemented:
 
 1. **Logical Dependencies**: Each phase builds on previous phases
 2. **Testable Milestones**: Each phase produces working functionality
-3. **Manageable Scope**: Phases should take 1-3 days of focused work
-4. **Clear Boundaries**: No overlap between phase responsibilities
+3. **Clear Boundaries**: No overlap between phase responsibilities
 
 ### Task Breakdown
 
@@ -268,10 +269,9 @@ After each phase:
 
 ### Status Management
 
-1. **Regular Updates**: Update status at least weekly during active development
-2. **Detailed Progress**: Use sub-tasks and checkmarks for granular tracking
-3. **Clear Descriptions**: Write status descriptions that non-technical stakeholders can understand
-4. **Honest Assessment**: Don't mark items complete until they're truly finished
+1. **Detailed Progress**: Use sub-tasks and checkmarks for granular tracking
+2. **Clear Descriptions**: Write status descriptions that non-technical stakeholders can understand
+3. **Honest Assessment**: Don't mark items complete until they're truly finished
 
 ### Implementation Tracking
 
@@ -294,7 +294,6 @@ This template can be adapted for:
 - **Different Technologies**: Replace file extensions and patterns as needed
 - **Team Sizes**: Adjust phase scope based on team capacity
 - **Project Types**: Modify phase structure for different project types
-- **Timelines**: Scale phase complexity based on available time
 - **Complexity Levels**: Add or remove detail based on project complexity
 
 Use this template as a starting point, then customize based on your specific project needs, team structure, and technical requirements.
