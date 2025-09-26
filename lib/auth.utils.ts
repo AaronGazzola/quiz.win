@@ -21,3 +21,74 @@ export const getAuthenticatedClient = async () => {
     session: session || null,
   };
 };
+
+export const getAuthenticatedClientWithOrg = async () => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    return {
+      db: prisma,
+      user: null,
+      session: null,
+      organizations: [],
+      activeOrganization: null,
+    };
+  }
+
+  const organizations = await auth.api.listOrganizations({
+    userId: session.user.id,
+    headers: await headers(),
+  });
+
+  const activeOrganization = session.activeOrganizationId
+    ? organizations.find((org) => org.id === session.activeOrganizationId)
+    : organizations[0] || null;
+
+  return {
+    db: prisma,
+    user: session.user,
+    session,
+    organizations,
+    activeOrganization,
+  };
+};
+
+export const hasOrgPermission = async (
+  userId: string,
+  organizationId: string,
+  resource: string,
+  action: string
+) => {
+  try {
+    return await auth.api.hasPermission({
+      userId,
+      organizationId,
+      resource,
+      action,
+      headers: await headers(),
+    });
+  } catch (error) {
+    console.error("Permission check failed:", error);
+    return false;
+  }
+};
+
+export const hasOrgRole = async (
+  userId: string,
+  organizationId: string,
+  role: string
+) => {
+  try {
+    return await auth.api.hasRole({
+      userId,
+      organizationId,
+      role,
+      headers: await headers(),
+    });
+  } catch (error) {
+    console.error("Role check failed:", error);
+    return false;
+  }
+};

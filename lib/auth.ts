@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin, magicLink, organization } from "better-auth/plugins";
+import { createAccessControl } from "better-auth/plugins/access";
 import { Resend } from "resend";
 
 const prisma = new PrismaClient();
@@ -77,17 +78,21 @@ export const auth = betterAuth({
     }),
     admin({
       defaultRole: "user",
-      adminRoles: ["admin", "super-admin"],
+      adminRole: "super-admin",
       impersonationSessionDuration: 60 * 60,
-      defaultBanReason: "Violation of terms of service",
-      defaultBanExpiresIn: 60 * 60 * 24 * 7,
-      bannedUserMessage:
-        "Your account has been suspended. Contact support for assistance.",
+      disableBannedUserMessage: true,
     }),
     organization({
+      ac: createAccessControl({
+        quiz: ["create", "read", "update", "delete"],
+        question: ["create", "read", "update", "delete"],
+        response: ["read", "delete", "export"],
+        user: ["invite", "remove", "update-role", "view"],
+      }),
+      roles: ["owner", "admin", "member"],
       allowUserToCreateOrganization: false,
-      organizationLimit: 5,
-      creatorRole: "owner",
+      organizationLimit: 10,
+      creatorRole: "admin",
       membershipLimit: 100,
       invitationExpiresIn: 48 * 60 * 60,
       requireEmailVerificationOnInvitation: false,

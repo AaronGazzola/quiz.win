@@ -7,17 +7,31 @@ This roadmap outlines the complete migration from the current custom role system
 ### ✅ COMPLETED PHASES
 
 - **Analysis Phase** - Comprehensive review of current implementation and Better Auth capabilities
+- **Phase 0: Planning & Documentation** - Creating implementation roadmap and migration strategy
+- **Phase 1: Better Auth Plugin Setup & Configuration** - ✅ COMPLETE
+  - ✅ Updated Better Auth to latest version with organization and admin plugins
+  - ✅ Configured organization plugin with access control for quiz/question/response/user resources
+  - ✅ Configured admin plugin with super-admin role and impersonation settings
+  - ✅ Environment variables already properly configured
+- **Phase 2: Database Schema Migration** - ✅ COMPLETE
+  - ✅ Generated Better Auth schema with organization models using CLI
+  - ✅ Successfully migrated database with Prisma while preserving existing models
+  - ✅ Fixed invitation-user relationship for proper schema validation
+- **Phase 3: Authentication System Integration** - ✅ COMPLETE
+  - ✅ Extended auth client with organization and admin capabilities
+  - ✅ Updated session handling with organization context and permission utilities
+  - ✅ Enhanced user types and stores for Better Auth compatibility
+- **Phase 4: Role Utilities Refactor** - ✅ COMPLETE
+  - ✅ Completely replaced custom role logic with Better Auth API calls
+  - ✅ Implemented async role checking functions using Better Auth permissions
+  - ✅ Added resource-specific permission functions (quiz, response, user management)
 
 ### 🔄 IN PROGRESS
 
-- **Phase 0: Planning & Documentation** - Creating implementation roadmap and migration strategy
+- None - Ready to proceed with Phase 5
 
 ### ⏳ REMAINING WORK
 
-- **Phase 1**: Better Auth Plugin Setup & Configuration
-- **Phase 2**: Database Schema Migration
-- **Phase 3**: Authentication System Integration
-- **Phase 4**: Role Utilities Refactor
 - **Phase 5**: Invitation System Migration
 - **Phase 6**: User Management Updates
 - **Phase 7**: Data Access Control Implementation
@@ -26,18 +40,56 @@ This roadmap outlines the complete migration from the current custom role system
 ### 🚀 READY TO USE
 
 Current system provides:
-- Basic multi-tenant organization support with custom implementation
-- User invitation system via magic links
-- Global and organization-specific role management
-- Content access control based on organization membership
-- User management with ban/unban functionality
+
+- ✅ Better Auth organization plugin with multi-tenant access control
+- ✅ Resource-based permissions (quiz, question, response, user management)
+- ✅ Organization role hierarchy (owner, admin, member)
+- ✅ Database schema migrated to Better Auth models
+- ✅ Async role checking functions using Better Auth APIs
+- ✅ Organization context in session handling
+- ✅ Enhanced type system for Better Auth compatibility
 
 ### 📍 NEXT STEPS
 
-1. Install Better Auth organization and admin plugins
-2. Configure plugin settings and access control rules
-3. Create database migration strategy
-4. Set up parallel implementation for safe migration
+1. Migrate invitation system to use Better Auth organization invitations
+2. Update existing dashboard pages to use Better Auth APIs
+3. Implement organization-scoped data access throughout application
+4. Update UI components and implement comprehensive testing
+
+## 📄 Existing Page Routes & Implementation Strategy
+
+### Dashboard Pages (All Organization-Scoped)
+
+- **`/dashboard`** - Main dashboard showing organization-filtered data and metrics
+- **`/dashboard/invite`** - Invite users to organizations (admin-only permission)
+- **`/dashboard/users`** - Advanced data table of organization users (admin-only view)
+- **`/dashboard/quizzes`** - Dual-table layout: quizzes + responses (radio-button selection)
+- **`/dashboard/take-quiz/[id]`** - Quiz taking interface (member access to org quizzes)
+- **`/dashboard/quiz-results/[id]`** - Quiz results view (organization-scoped access)
+
+### Page-Specific Functionality
+
+**Invite Page** (`/dashboard/invite`):
+- Only accessible to users who are admins of at least one organization
+- Organization dropdown for users with multiple admin organizations
+- Role assignment (admin/member) when sending invitations
+
+**Users Page** (`/dashboard/users`):
+- Advanced data table implementation (see Table_Prompt.md)
+- Organization filter dropdown (showing only admin organizations)
+- Display users from selected organization with full CRUD operations
+- Multi-select bulk operations for user management
+
+**Quizzes Page** (`/dashboard/quizzes`):
+- **Top Table**: Organization-scoped quizzes with radio button selection
+- **Bottom Table**: Responses for selected quiz (admin-only, populated on selection)
+- Both tables follow advanced data table patterns
+- **Removed**: Separate `/dashboard/responses` page (functionality integrated here)
+
+**Quiz Access Pages**:
+- All quiz-related pages show only organization-member accessible content
+- Permission validation before displaying quiz data
+- Results scoped to user's organization memberships
 
 ## Prerequisites
 
@@ -82,13 +134,13 @@ organization({
     quiz: ["create", "read", "update", "delete"],
     question: ["create", "read", "update", "delete"],
     response: ["read", "delete", "export"],
-    user: ["invite", "remove", "update-role", "view"]
+    user: ["invite", "remove", "update-role", "view"],
   }),
   roles: ["owner", "admin", "member"],
   creatorRole: "admin",
   organizationLimit: 10,
-  memberLimit: 100
-})
+  memberLimit: 100,
+});
 ```
 
 ### ⏳ 1.3 Configure Admin Plugin (`lib/auth.ts`) - PENDING
@@ -107,8 +159,8 @@ admin({
   defaultRole: "user",
   adminRole: "super-admin",
   impersonationSessionDuration: 60 * 60, // 1 hour
-  disableBannedUserMessage: true
-})
+  disableBannedUserMessage: true,
+});
 ```
 
 ### ⏳ 1.4 Environment Configuration (`.env`) - PENDING
@@ -122,55 +174,46 @@ Add required environment variables:
 
 ## ⏳ Phase 2: Database Schema Migration
 
-Migrate from custom organization schema to Better Auth's generated schema.
+Migrate from custom organization schema to Better Auth's generated schema using Prisma's recommended approach.
 
-### ⏳ 2.1 Generate Better Auth Schema (`prisma/schema.prisma`) - PENDING
+### ⏳ 2.1 Update Schema with Better Auth Models (`prisma/schema.prisma`) - PENDING
 
-Generate new database schema with Better Auth plugins:
+Update database schema to use Better Auth organization plugin models:
 
-- Run Better Auth schema generation
-- Review generated organization, member, invitation tables
-- Plan migration from existing custom tables
-- Ensure schema compatibility with existing user data
+- Generate Better Auth schema using plugin configuration
+- Replace custom `Organization`, `Member`, and `Invitation` models
+- Update existing models to reference Better Auth organization structure
+- Add organization-scoped indexes for performance
 
 **Key Schema Changes:**
 
-- Replace custom `Organization` model with Better Auth version
-- Replace custom `Member` model with Better Auth version
-- Replace custom `Invitation` model with Better Auth version
-- Maintain references in `Quiz`, `Question`, `Response` models
-
-### ⏳ 2.2 Create Migration Scripts (`prisma/migrations/`) - PENDING
-
-Create database migration scripts to transfer existing data:
-
-- Create migration to backup existing data
-- Map existing organization data to new schema
-- Transfer member relationships with role mapping
-- Migrate pending invitations to new system
-- Create rollback procedures
-
-**Key Migration Tasks:**
-
-- `backup_existing_data.sql` - Backup current organization data
-- `transfer_organizations.sql` - Migrate organization records
-- `transfer_members.sql` - Migrate member relationships
-- `cleanup_old_tables.sql` - Remove deprecated tables
-
-### ⏳ 2.3 Update Content Model References (`prisma/schema.prisma`) - PENDING
-
-Update existing models to reference Better Auth organization structure:
-
-- Update `Quiz` model organization references
-- Ensure proper foreign key constraints
-- Add organization-scoped indexes for performance
-- Update related model relationships
-
-**Key Model Updates:**
-
-- Quiz.organizationId → references Better Auth organization
+- Remove custom `Organization`, `Member`, `Invitation` models
+- Add Better Auth generated models via plugin
+- Update `Quiz.organizationId` to reference Better Auth organization
 - Add organization-scoped compound indexes
 - Update cascade deletion rules
+
+### ⏳ 2.2 Apply Schema Migration (`npx prisma migrate dev`) - PENDING
+
+Apply schema changes using Prisma's development migration workflow:
+
+```bash
+# Reset database and apply new schema
+npx prisma migrate reset
+
+# Generate and apply new migration
+npx prisma migrate dev --name "migrate-to-better-auth-organizations"
+
+# Re-seed database with updated data structure
+npx prisma db seed
+```
+
+**Migration Steps:**
+
+- Reset existing database (acceptable for development)
+- Generate migration with Better Auth organization models
+- Apply migration using Prisma's recommended workflow
+- Re-seed database with initial data
 
 ## ⏳ Phase 3: Authentication System Integration
 
@@ -235,15 +278,23 @@ Replace custom role functions with Better Auth API calls:
 // Replace custom logic with Better Auth APIs
 export const isOrgAdmin = async (userId: string, organizationId: string) => {
   return await auth.api.organization.hasRole({
-    userId, organizationId, role: "admin"
-  })
-}
+    userId,
+    organizationId,
+    role: "admin",
+  });
+};
 
-export const canManageQuizzes = async (userId: string, organizationId: string) => {
+export const canManageQuizzes = async (
+  userId: string,
+  organizationId: string
+) => {
   return await auth.api.organization.hasPermission({
-    userId, organizationId, resource: "quiz", action: "create"
-  })
-}
+    userId,
+    organizationId,
+    resource: "quiz",
+    action: "create",
+  });
+};
 ```
 
 ### ⏳ 4.2 Create Organization Utils (`lib/org.utils.ts`) - PENDING
@@ -278,16 +329,36 @@ Create middleware for route-level permission checking:
 
 ## ⏳ Phase 5: Invitation System Migration
 
-Replace custom invitation system with Better Auth organization invitations.
+Replace custom invitation system with Better Auth organization invitations on existing invite page.
 
-### ⏳ 5.1 Update Invitation Actions (`app/dashboard/invite/page.actions.ts`) - PENDING
+### ⏳ 5.1 Update Invitation Page (`app/dashboard/invite/page.tsx`) - PENDING
+
+Update existing invite page to use Better Auth organization permissions:
+
+- Only allow invitations if signed-in user is admin of the organization
+- Add organization selection dropdown for users with multiple admin organizations
+- Implement permission checking before displaying invite form
+- Show appropriate error messages for insufficient permissions
+
+**Permission Logic:**
+
+```typescript
+// Only show invite form if user is admin of selected organization
+const canInvite = await auth.api.organization.hasRole({
+  userId: session.user.id,
+  organizationId: selectedOrgId,
+  role: "admin"
+});
+```
+
+### ⏳ 5.2 Update Invitation Actions (`app/dashboard/invite/page.actions.ts`) - PENDING
 
 Replace custom invitation logic with Better Auth organization API:
 
 - Use Better Auth's built-in invitation system
 - Remove custom magic link generation
 - Implement proper role assignment during invitation
-- Add invitation validation and error handling
+- Add server-side permission validation for admin-only invitations
 
 **Key Action Updates:**
 
@@ -297,120 +368,201 @@ export const sendInvitationsAction = async (
   role: "admin" | "member",
   organizationId: string
 ) => {
-  // Replace custom logic with Better Auth organization invitation
+  // Validate user can invite to this organization
+  const isAdmin = await auth.api.organization.hasRole({
+    userId: session.user.id,
+    organizationId,
+    role: "admin"
+  });
+
+  if (!isAdmin) throw new Error("Insufficient permissions");
+
   for (const email of emails) {
     await auth.api.organization.inviteUser({
       userId: session.user.id,
       organizationId,
       email,
       role,
-      inviteRedirectURI: `${baseUrl}/dashboard/accept-invitation`
-    })
+      inviteRedirectURI: `${baseUrl}/dashboard`
+    });
   }
-}
+};
 ```
 
-### ⏳ 5.2 Update Invitation Hooks (`app/dashboard/invite/page.hooks.ts`) - PENDING
+### ⏳ 5.3 Update Invitation Hooks (`app/dashboard/invite/page.hooks.ts`) - PENDING
 
 Update React Query hooks to use new Better Auth APIs:
 
-- Modify organization fetching to use Better Auth APIs
-- Update invitation sending to use organization plugin
+- Fetch user's admin organizations for dropdown selection
+- Update invitation sending to use organization plugin with permission checks
 - Add proper error handling for Better Auth responses
 - Maintain existing UI state management patterns
 
-### ⏳ 5.3 Create Invitation Acceptance Flow (`app/dashboard/accept-invitation/`) - PENDING
-
-Create new page for handling invitation acceptance:
-
-- Parse invitation tokens from Better Auth
-- Display invitation details (organization, role)
-- Handle invitation acceptance/rejection
-- Redirect to appropriate dashboard after acceptance
-- Integration with Better Auth invitation handling
-
-**Key Components Required:**
-
-- `page.tsx` - Invitation acceptance UI
-- `page.actions.ts` - Invitation processing server actions
-- `page.hooks.ts` - React Query hooks for invitation handling
-
 ## ⏳ Phase 6: User Management Updates
 
-Update user management system to use Better Auth patterns.
+Update existing users page to use Better Auth patterns with advanced data table implementation.
 
-### ⏳ 6.1 Update User Management Actions (`app/dashboard/users/page.actions.ts`) - PENDING
+### ⏳ 6.1 Implement Advanced Users Data Table (`app/dashboard/users/page.tsx`) - PENDING
+
+Replace existing users page with advanced data table (see Table_Prompt.md):
+
+- Display users from organizations where signed-in user is admin
+- Organization filter dropdown to switch between admin organizations
+- Multi-select functionality for bulk user operations
+- Search across user names and emails with debounced input
+- Column sorting (name, email, role, status, join date)
+- Dynamic pagination based on viewport height
+- Role management toggles for admin users
+
+**Key Features:**
+
+- Organization-scoped data access with admin permission validation
+- Bulk operations: role updates, ban/unban users
+- Row actions: individual user management, role changes
+- Responsive design with mobile-friendly interactions
+
+### ⏳ 6.2 Update User Management Actions (`app/dashboard/users/page.actions.ts`) - PENDING
 
 Refactor user management to use Better Auth admin and organization APIs:
 
-- Replace custom user filtering with Better Auth queries
-- Use organization-scoped user retrieval
-- Implement Better Auth user ban/unban functionality
-- Add role management through Better Auth APIs
+- Fetch users only from organizations where user is admin
+- Implement organization filtering with Better Auth queries
+- Add bulk user operations with proper permission validation
+- Role management through Better Auth APIs
 
 **Key Action Updates:**
 
 ```typescript
-export const getUsersAction = async (organizationId?: string) => {
-  // Use Better Auth organization API for user listing
+export const getUsersAction = async (
+  organizationId?: string,
+  search?: string,
+  page?: number,
+  limit?: number
+) => {
+  // Only fetch from organizations where user is admin
+  const adminOrgs = await auth.api.organization.listOrganizations({
+    userId: session.user.id,
+    role: "admin"
+  });
+
+  const targetOrgId = organizationId || adminOrgs[0]?.id;
+  if (!targetOrgId) return [];
+
   const users = await auth.api.organization.listMembers({
+    organizationId: targetOrgId,
+    userId: session.user.id,
+    search,
+    offset: page * limit,
+    limit
+  });
+
+  return users;
+};
+
+export const updateUserRoleAction = async (
+  userId: string,
+  organizationId: string,
+  role: string
+) => {
+  // Validate admin permissions
+  const isAdmin = await auth.api.organization.hasRole({
+    userId: session.user.id,
     organizationId,
-    userId: session.user.id
-  })
+    role: "admin"
+  });
 
-  return users.filter(user =>
-    hasPermission(session.user.id, organizationId, "user", "view")
-  )
-}
+  if (!isAdmin) throw new Error("Insufficient permissions");
 
-export const updateUserRoleAction = async (userId: string, organizationId: string, role: string) => {
   return await auth.api.organization.updateMemberRole({
     userId: session.user.id,
     organizationId,
     targetUserId: userId,
     role
-  })
-}
+  });
+};
 ```
 
-### ⏳ 6.2 Update User Management Hooks (`app/dashboard/users/page.hooks.ts`) - PENDING
+### ⏳ 6.3 Update User Management Hooks (`app/dashboard/users/page.hooks.ts`) - PENDING
 
-Update React Query hooks for new user management APIs:
+Implement advanced table hooks following Table_Prompt.md patterns:
 
-- Modify user fetching to use Better Auth organization APIs
-- Update user ban/unban to use admin plugin
-- Add role update functionality through Better Auth
-- Maintain existing pagination and filtering logic
+- Debounced search hook for real-time filtering
+- Organization selection hook for admin organizations
+- Bulk operations hook with loading states
+- Dynamic pagination hook with viewport-based calculations
+- User data fetching with Better Auth organization APIs
 
-### ⏳ 6.3 Create Organization Switching (`components/OrganizationSwitcher.tsx`) - PENDING
+### ⏳ 6.4 Create User Management Stores (`app/dashboard/users/page.stores.tsx`) - PENDING
 
-Enhance organization switcher with Better Auth integration:
+Implement Zustand stores for table state management:
 
-- Use Better Auth APIs to fetch user organizations
-- Implement active organization context management
-- Add organization creation through Better Auth
-- Update organization switching logic
+- User table state (pagination, sorting, search, selection)
+- Organization filter state
+- Bulk operation modal states
+- Selection tracking with Set-based operations
 
 ## ⏳ Phase 7: Data Access Control Implementation
 
-Implement organization-scoped data access throughout the application.
+Implement organization-scoped data access throughout existing application pages.
 
-### ⏳ 7.1 Update Quiz Management (`app/dashboard/quizzes/`) - PENDING
+### ⏳ 7.1 Update Dashboard Page (`app/dashboard/page.tsx`) - PENDING
 
-Implement organization-scoped quiz access control:
+Implement organization-scoped dashboard data:
 
-- Update quiz creation to enforce organization membership
-- Add organization context to quiz queries
-- Implement permission checking for quiz operations
-- Ensure data isolation between organizations
+- Show only data from organizations user is member of
+- Display organization-filtered metrics and recent activity
+- Add organization context for all dashboard widgets
+- Ensure proper permission checking for displayed data
 
-**Key Updates Required:**
+### ⏳ 7.2 Update Quiz Management Page (`app/dashboard/quizzes/page.tsx`) - PENDING
 
-- `page.actions.ts` - Organization-scoped quiz CRUD operations
-- `page.hooks.ts` - Updated React Query hooks with organization context
-- Permission validation for quiz management operations
+Replace existing quizzes page with dual-table layout and organization-scoped access:
 
-### ⏳ 7.2 Create Data Access Utilities (`lib/data-access.ts`) - PENDING
+- **Quiz Table**: Advanced data table showing organization-scoped quizzes
+  - Display quizzes from user's member organizations
+  - Search, sort, and pagination following Table_Prompt.md
+  - Radio button selection for each quiz row
+  - Admin-only actions: create, edit, delete quizzes
+
+- **Responses Table**: Below quiz table, populated by radio selection
+  - Only show when quiz is selected via radio button
+  - Display responses for selected quiz from user's admin organizations only
+  - Admin permission required to view responses
+  - Advanced table features: search, sort, export responses
+
+**Implementation Details:**
+
+```typescript
+// Quiz selection state
+const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
+
+// Only load responses when quiz selected and user is admin
+const canViewResponses = await auth.api.organization.hasRole({
+  userId: session.user.id,
+  organizationId: quiz.organizationId,
+  role: "admin"
+});
+```
+
+### ⏳ 7.3 Update Take Quiz Page (`app/dashboard/take-quiz/[id]/page.tsx`) - PENDING
+
+Implement organization-scoped quiz access:
+
+- Validate user membership in quiz's organization before allowing access
+- Show quiz only if user is member of the organization
+- Proper permission validation and error handling
+- Redirect unauthorized users with appropriate message
+
+### ⏳ 7.4 Update Quiz Results Page (`app/dashboard/quiz-results/[id]/page.tsx`) - PENDING
+
+Implement organization-scoped results access:
+
+- Show results only for quizzes from user's member organizations
+- Validate user has permission to view specific quiz results
+- Display results with organization context
+- Admin users see aggregate results, members see only their own
+
+### ⏳ 7.5 Create Data Access Utilities (`lib/data-access.ts`) - PENDING
 
 Create utilities for organization-scoped data operations:
 
@@ -430,126 +582,119 @@ export const getOrgScopedData = async <T>(
   queryFn: (orgId: string) => Promise<T>
 ): Promise<T | null> => {
   const hasAccess = await auth.api.organization.hasPermission({
-    userId, organizationId, resource, action
-  })
+    userId,
+    organizationId,
+    resource,
+    action,
+  });
 
-  if (!hasAccess) throw new Error('Insufficient permissions')
+  if (!hasAccess) throw new Error("Insufficient permissions");
 
-  return await queryFn(organizationId)
-}
+  return await queryFn(organizationId);
+};
+
+export const getUserMemberOrganizations = async (userId: string) => {
+  return await auth.api.organization.listOrganizations({
+    userId,
+    role: ["owner", "admin", "member"]
+  });
+};
+
+export const getUserAdminOrganizations = async (userId: string) => {
+  return await auth.api.organization.listOrganizations({
+    userId,
+    role: ["owner", "admin"]
+  });
+};
 ```
 
-### ⏳ 7.3 Update Dashboard Layout (`app/dashboard/layout.tsx`) - PENDING
+### ⏳ 7.6 Update Dashboard Layout (`app/dashboard/layout.tsx`) - PENDING
 
 Update dashboard to include organization context:
 
-- Add organization context provider
+- Add organization context provider for user's organizations
 - Implement organization-aware navigation
-- Add organization switching interface
-- Update layout with organization branding
+- Update layout with current organization context
+- Remove references to deprecated responses page route
 
 ## ⏳ Phase 8: UI Updates & Testing
 
-Update UI components and implement comprehensive testing.
+Update existing UI components and implement comprehensive testing.
 
 ### ⏳ 8.1 Update Role Display Components - PENDING
 
-Update UI components to display Better Auth roles correctly:
+Update existing UI components to display Better Auth roles correctly:
 
-- Update role display logic in user tables
+- Update role display logic in user tables (users page)
 - Add organization-specific role badges
-- Update invitation forms with correct role options
-- Ensure consistent role terminology throughout UI
+- Update invitation forms with correct role options (invite page)
+- Update user avatars and profile displays with role context
+- Ensure consistent role terminology throughout existing UI
 
-**Components to Update:**
+**Existing Components to Update:**
 
-- `app/dashboard/users/page.tsx` - User role display
-- `app/dashboard/invite/page.tsx` - Role selection dropdown
-- `components/UserAvatar.tsx` - Role-based user display
+- `app/dashboard/users/page.tsx` - Advanced table with role display
+- `app/dashboard/invite/page.tsx` - Role selection dropdown with permissions
+- Existing user avatar and profile components - Role-based display
 
-### ⏳ 8.2 Create Organization Management UI - PENDING
+### ⏳ 8.2 Update Navigation and Layout Components - PENDING
 
-Create comprehensive organization management interface:
+Update existing dashboard navigation and layout:
 
-- Organization settings page
-- Member management interface
-- Role assignment tools
-- Organization switching interface
-- Invitation management dashboard
+- Remove responses page route from navigation
+- Update sidebar navigation to reflect new page structure
+- Add organization context to layout components
+- Update breadcrumb navigation for organization-scoped pages
+- Ensure all navigation respects organization permissions
 
-**New Components Required:**
+**Layout Updates:**
 
-- `app/dashboard/organization/settings/page.tsx` - Organization settings
-- `app/dashboard/organization/members/page.tsx` - Member management
-- `components/MemberRoleSelector.tsx` - Role assignment interface
+- Remove `/dashboard/responses` route references
+- Update navigation menu structure
+- Add organization switching interface to existing layout
+- Update page titles and metadata with organization context
 
 ### ⏳ 8.3 Implement Comprehensive Testing - PENDING
 
-Create test suite for new role system:
+Create test suite for Better Auth integration:
 
 - Unit tests for role utility functions
 - Integration tests for organization operations
-- E2E tests for invitation flow
-- Permission boundary testing
-- Data isolation testing
+- E2E tests for invitation flow using existing pages
+- Permission boundary testing across all existing pages
+- Data isolation testing for organization-scoped data
 
 **Test Files Required:**
 
 - `__tests__/lib/role.utils.test.ts` - Role utility tests
 - `__tests__/auth/organization.test.ts` - Organization API tests
-- `__tests__/e2e/invitation-flow.test.ts` - End-to-end invitation tests
+- `__tests__/e2e/existing-pages.test.ts` - End-to-end tests for updated pages
 - `__tests__/auth/permissions.test.ts` - Permission system tests
+- `__tests__/pages/dual-table.test.ts` - Quiz/responses dual table tests
 
-### ⏳ 8.4 Migration Testing & Cleanup - PENDING
+### ⏳ 8.4 Cleanup Legacy Code - PENDING
 
-Validate migration success and cleanup legacy code:
+Remove deprecated code and update existing implementations:
 
-- Test data integrity after migration
-- Validate all role-based permissions work correctly
-- Remove legacy role management code
-- Update documentation and code comments
-- Performance testing for new permission system
+- Remove deprecated responses page (`app/dashboard/responses/`)
+- Remove legacy role management code and custom organization models
+- Update existing API routes to use Better Auth
+- Clean up unused imports and types from existing files
+- Performance optimization for Better Auth API calls
 
 **Cleanup Tasks:**
 
-- Remove old organization models and utilities
-- Clean up unused imports and types
-- Update API documentation
-- Archive migration scripts
-- Performance optimization
-
-## Quality Gates
-
-After each phase:
-
-1. **Unit Tests**: Test new utility functions and API integrations
-2. **Integration Tests**: Test Better Auth plugin integration
-3. **Permission Tests**: Validate role-based access control
-4. **Data Tests**: Ensure proper data isolation between organizations
-5. **UI Tests**: Verify user interface updates work correctly
-6. **Migration Tests**: Validate data migration integrity
+- Delete entire `app/dashboard/responses/` directory
+- Remove old organization models and utilities from schema
+- Clean up unused imports and types in existing files
+- Update existing API documentation
+- Remove any hardcoded role references in existing components
 
 ## Implementation Notes
 
 ### Migration Strategy
 
-- **Feature Flags**: Use environment variables to switch between old/new systems
-- **Parallel Testing**: Run both systems side-by-side during migration
-- **Gradual Rollout**: Migrate one organization at a time if needed
-- **Rollback Plan**: Maintain ability to revert to previous system
-
-### Security Considerations
-
-- **Permission Validation**: Double-check all permission boundaries
-- **Data Isolation**: Ensure complete separation between organizations
-- **Access Control**: Validate all role-based access patterns
-- **Audit Trail**: Log all role and permission changes
-
-### Performance Optimization
-
-- **Caching**: Implement role and permission caching
-- **Database Indexes**: Add organization-scoped database indexes
-- **Query Optimization**: Optimize organization-filtered queries
-- **API Efficiency**: Minimize Better Auth API calls where possible
-
-This roadmap provides a comprehensive migration path from the current custom role system to Better Auth's robust plugin-based approach, ensuring proper multi-tenant access control while maintaining system functionality throughout the migration process.
+- **Schema Reset**: Use Prisma's `migrate reset` to start with clean Better Auth schema
+- **Development Migration**: Apply changes using `npx prisma migrate dev` workflow
+- **Database Re-seeding**: Re-populate database with initial data after schema migration
+- **Simple Approach**: Acceptable to reset development database for clean migration

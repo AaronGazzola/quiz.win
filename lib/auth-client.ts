@@ -54,4 +54,12 @@ authClient.signIn = {
   },
 };
 
-export const { signIn, signOut, useSession, getSession, signUp } = authClient;
+export const {
+  signIn,
+  signOut,
+  useSession,
+  getSession,
+  signUp,
+  organization,
+  admin
+} = authClient;
