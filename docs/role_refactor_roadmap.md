@@ -116,31 +116,31 @@ The system is now ready for production deployment with full Better Auth integrat
 
 ### Dashboard Pages (All Organization-Scoped)
 
-- **`/dashboard`** - Main dashboard showing organization-filtered data and metrics
-- **`/dashboard/invite`** - Invite users to organizations (admin-only permission)
-- **`/dashboard/users`** - Advanced data table of organization users (admin-only view)
-- **`/dashboard/quizzes`** - Dual-table layout: quizzes + responses (radio-button selection)
-- **`/dashboard/take-quiz/[id]`** - Quiz taking interface (member access to org quizzes)
-- **`/dashboard/quiz-results/[id]`** - Quiz results view (organization-scoped access)
+- **`/`** - Main dashboard showing organization-filtered data and metrics
+- **`/invite`** - Invite users to organizations (admin-only permission)
+- **`/users`** - Advanced data table of organization users (admin-only view)
+- **`/quizzes`** - Dual-table layout: quizzes + responses (radio-button selection)
+- **`/take-quiz/[id]`** - Quiz taking interface (member access to org quizzes)
+- **`/quiz-results/[id]`** - Quiz results view (organization-scoped access)
 
 ### Page-Specific Functionality
 
-**Invite Page** (`/dashboard/invite`):
+**Invite Page** (`/invite`):
 - Only accessible to users who are admins of at least one organization
 - Organization dropdown for users with multiple admin organizations
 - Role assignment (admin/member) when sending invitations
 
-**Users Page** (`/dashboard/users`):
+**Users Page** (`/users`):
 - Advanced data table implementation (see Table_Prompt.md)
 - Organization filter dropdown (showing only admin organizations)
 - Display users from selected organization with full CRUD operations
 - Multi-select bulk operations for user management
 
-**Quizzes Page** (`/dashboard/quizzes`):
+**Quizzes Page** (`/quizzes`):
 - **Top Table**: Organization-scoped quizzes with radio button selection
 - **Bottom Table**: Responses for selected quiz (admin-only, populated on selection)
 - Both tables follow advanced data table patterns
-- **Removed**: Separate `/dashboard/responses` page (functionality integrated here)
+- **Removed**: Separate `/responses` page (functionality integrated here)
 
 **Quiz Access Pages**:
 - All quiz-related pages show only organization-member accessible content
@@ -387,7 +387,7 @@ Create middleware for route-level permission checking:
 
 Replace custom invitation system with Better Auth organization invitations on existing invite page.
 
-### ✅ 5.1 Update Invitation Page (`app/dashboard/invite/page.tsx`) - COMPLETE
+### ✅ 5.1 Update Invitation Page (`app/(dashboard)/invite/page.tsx`) - COMPLETE
 
 Updated existing invite page to use Better Auth organization permissions:
 
@@ -402,7 +402,7 @@ Updated existing invite page to use Better Auth organization permissions:
 - Fixed role value mapping for Better Auth standards
 - Created client-safe utilities in `lib/client-role.utils.ts`
 
-### ✅ 5.2 Update Invitation Actions (`app/dashboard/invite/page.actions.ts`) - COMPLETE
+### ✅ 5.2 Update Invitation Actions (`app/(dashboard)/invite/page.actions.ts`) - COMPLETE
 
 Replaced custom invitation logic with Better Auth organization API:
 
@@ -441,7 +441,7 @@ export const sendInvitationsAction = async (
 };
 ```
 
-### ✅ 5.3 Update Invitation Hooks (`app/dashboard/invite/page.hooks.ts`) - COMPLETE
+### ✅ 5.3 Update Invitation Hooks (`app/(dashboard)/invite/page.hooks.ts`) - COMPLETE
 
 Updated React Query hooks to use new Better Auth APIs:
 
@@ -460,7 +460,7 @@ Updated React Query hooks to use new Better Auth APIs:
 
 Update existing users page to use Better Auth patterns with advanced data table implementation.
 
-### ✅ 6.1 Implement Advanced Users Data Table (`app/dashboard/users/page.tsx`) - COMPLETE
+### ✅ 6.1 Implement Advanced Users Data Table (`app/(dashboard)/users/page.tsx`) - COMPLETE
 
 Replace existing users page with advanced data table (see Table_Prompt.md):
 
@@ -479,7 +479,7 @@ Replace existing users page with advanced data table (see Table_Prompt.md):
 - Row actions: individual user management, role changes
 - Responsive design with mobile-friendly interactions
 
-### ✅ 6.2 Update User Management Actions (`app/dashboard/users/page.actions.ts`) - COMPLETE
+### ✅ 6.2 Update User Management Actions (`app/(dashboard)/users/page.actions.ts`) - COMPLETE
 
 Refactor user management to use Better Auth admin and organization APIs:
 
@@ -540,7 +540,7 @@ export const updateUserRoleAction = async (
 };
 ```
 
-### ✅ 6.3 Update User Management Hooks (`app/dashboard/users/page.hooks.ts`) - COMPLETE
+### ✅ 6.3 Update User Management Hooks (`app/(dashboard)/users/page.hooks.ts`) - COMPLETE
 
 Implement advanced table hooks following Table_Prompt.md patterns:
 
@@ -550,7 +550,7 @@ Implement advanced table hooks following Table_Prompt.md patterns:
 - Dynamic pagination hook with viewport-based calculations
 - User data fetching with Better Auth organization APIs
 
-### ✅ 6.4 Create User Management Stores (`app/dashboard/users/page.stores.tsx`) - COMPLETE
+### ✅ 6.4 Create User Management Stores (`app/(dashboard)/users/page.stores.tsx`) - COMPLETE
 
 Implement Zustand stores for table state management:
 
@@ -563,7 +563,7 @@ Implement Zustand stores for table state management:
 
 Implement organization-scoped data access throughout existing application pages.
 
-### ✅ 7.1 Update Dashboard Page (`app/dashboard/page.tsx`) - COMPLETE
+### ✅ 7.1 Update Dashboard Page (`app/(dashboard)/page.tsx`) - COMPLETE
 
 Implement organization-scoped dashboard data:
 
@@ -572,7 +572,7 @@ Implement organization-scoped dashboard data:
 - Add organization context for all dashboard widgets
 - Ensure proper permission checking for displayed data
 
-### ✅ 7.2 Update Quiz Management Page (`app/dashboard/quizzes/page.tsx`) - COMPLETE
+### ✅ 7.2 Update Quiz Management Page (`app/(dashboard)/quizzes/page.tsx`) - COMPLETE
 
 Replace existing quizzes page with dual-table layout and organization-scoped access:
 
@@ -602,7 +602,7 @@ const canViewResponses = await auth.api.organization.hasRole({
 });
 ```
 
-### ✅ 7.3 Update Take Quiz Page (`app/dashboard/take-quiz/[id]/page.tsx`) - COMPLETE
+### ✅ 7.3 Update Take Quiz Page (`app/(dashboard)/take-quiz/[id]/page.tsx`) - COMPLETE
 
 Implement organization-scoped quiz access:
 
@@ -611,7 +611,7 @@ Implement organization-scoped quiz access:
 - Proper permission validation and error handling
 - Redirect unauthorized users with appropriate message
 
-### ✅ 7.4 Update Quiz Results Page (`app/dashboard/quiz-results/[id]/page.tsx`) - COMPLETE
+### ✅ 7.4 Update Quiz Results Page (`app/(dashboard)/quiz-results/[id]/page.tsx`) - COMPLETE
 
 Implement organization-scoped results access:
 
@@ -666,7 +666,7 @@ export const getUserAdminOrganizations = async (userId: string) => {
 };
 ```
 
-### ✅ 7.6 Update Dashboard Layout (`app/dashboard/layout.tsx`) - COMPLETE
+### ✅ 7.6 Update Dashboard Layout (`app/(dashboard)/layout.tsx`) - COMPLETE
 
 Update dashboard to include organization context:
 
@@ -691,8 +691,8 @@ Update existing UI components to display Better Auth roles correctly:
 
 **Existing Components to Update:**
 
-- `app/dashboard/users/page.tsx` - Advanced table with role display
-- `app/dashboard/invite/page.tsx` - Role selection dropdown with permissions
+- `app/(dashboard)/users/page.tsx` - Advanced table with role display
+- `app/(dashboard)/invite/page.tsx` - Role selection dropdown with permissions
 - Existing user avatar and profile components - Role-based display
 
 ### ⏳ 8.2 Update Navigation and Layout Components - PENDING
@@ -707,7 +707,7 @@ Update existing dashboard navigation and layout:
 
 **Layout Updates:**
 
-- Remove `/dashboard/responses` route references
+- Remove `/responses` route references
 - Update navigation menu structure
 - Add organization switching interface to existing layout
 - Update page titles and metadata with organization context
@@ -734,7 +734,7 @@ Create test suite for Better Auth integration:
 
 Remove deprecated code and update existing implementations:
 
-- Remove deprecated responses page (`app/dashboard/responses/`)
+- Remove deprecated responses page (`app/(dashboard)/responses/`)
 - Remove legacy role management code and custom organization models
 - Update existing API routes to use Better Auth
 - Clean up unused imports and types from existing files
@@ -742,7 +742,7 @@ Remove deprecated code and update existing implementations:
 
 **Cleanup Tasks:**
 
-- Delete entire `app/dashboard/responses/` directory
+- Delete entire `app/(dashboard)/responses/` directory
 - Remove old organization models and utilities from schema
 - Clean up unused imports and types in existing files
 - Update existing API documentation

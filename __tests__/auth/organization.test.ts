@@ -2,8 +2,10 @@
  * @jest-environment jsdom
  */
 
-import { getOrganizationsAction, createOrganizationAction } from "@/app/dashboard/invite/page.actions";
-import { getUserAdminOrganizations } from "@/lib/data-access";
+import {
+  createOrganizationAction,
+  getOrganizationsAction,
+} from "@/app/(dashboard)/invite/page.actions";
 
 // Mock the auth module
 jest.mock("@/lib/auth", () => ({
@@ -65,7 +67,10 @@ describe("Organization API Tests", () => {
 
     it("should return admin organizations for regular admin", async () => {
       const { auth } = require("@/lib/auth");
-      const { isSuperAdmin, getUserAdminOrganizations } = require("@/lib/role.utils");
+      const {
+        isSuperAdmin,
+        getUserAdminOrganizations,
+      } = require("@/lib/role.utils");
 
       const mockSession = { user: { id: "user1" } };
       const mockAdminOrganizations = [
@@ -121,7 +126,7 @@ describe("Organization API Tests", () => {
         createdAt: new Date(),
         logo: null,
         metadata: {},
-        members: []
+        members: [],
       };
 
       auth.api.getSession.mockResolvedValue(mockSession);
@@ -133,7 +138,7 @@ describe("Organization API Tests", () => {
       expect(result.data).toEqual({
         id: "org1",
         name: "Test Org",
-        slug: "test-org"
+        slug: "test-org",
       });
       expect(result.error).toBeNull();
       expect(auth.api.createOrganization).toHaveBeenCalledWith({
@@ -141,7 +146,7 @@ describe("Organization API Tests", () => {
           name: "Test Org",
           slug: "test-org",
         },
-        headers: {}
+        headers: {},
       });
     });
 

@@ -25,6 +25,7 @@ model User {
   accounts   Account[]
   magicLinks MagicLink[]
   members    Member[]
+  responses  Response[]
 
   image       String?
   invitations Invitation[]
@@ -204,6 +205,7 @@ model Response {
   completedAt DateTime @default(now())
 
   quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@schema("public")
 }

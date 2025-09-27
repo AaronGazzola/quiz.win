@@ -237,3 +237,46 @@ model NotificationPreferences {
 }
 
 ```
+
+## Organization Invitations
+
+### Server-side API
+
+Use `auth.api.createInvitation()` to invite users to organizations:
+
+```typescript
+await auth.api.createInvitation({
+  body: {
+    email: "[email protected]",
+    organizationId: "org-id",
+    role: "member", // "admin" | "member" | "guest"
+  },
+  headers: await headers(),
+});
+```
+
+Required parameters:
+- `email`: The email address of the user to invite (string)
+- `role`: The role to assign ("admin" | "member" | "guest")
+
+Optional parameters:
+- `organizationId`: The organization ID (defaults to active organization)
+- `resend`: Whether to resend if already invited (boolean)
+- `teamId`: The team ID to invite to (string)
+
+### Client-side API
+
+Use `authClient.organization.inviteMember()` for client-side invitations:
+
+```typescript
+await authClient.organization.inviteMember({
+  email: "[email protected]",
+  role: "member",
+  organizationId: "org-id",
+  resend: true,
+});
+```
+
+### Email Configuration
+
+The invitation emails are configured in the `sendMagicLink` function within the magicLink plugin. The system automatically detects invitation links and sends appropriate invitation emails with organization context.

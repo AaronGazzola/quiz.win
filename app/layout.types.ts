@@ -11,11 +11,17 @@ export interface UserWithOrganizations extends User {
   organizations?: Organization[];
 }
 
+export interface OrganizationWithMember extends Organization {
+  member: Member;
+}
+
 export interface AppState {
   user: User | null;
   setUser: (user: User | null) => void;
   tempEmail?: string;
   setTempEmail: (tempEmail: string) => void;
+  selectedOrganizationIds: string[];
+  setSelectedOrganizationIds: (organizationIds: string[]) => void;
   reset: () => void;
 }
 

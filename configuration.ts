@@ -1,18 +1,25 @@
 export const configuration = {
   paths: {
     signIn: "/sign-in",
-    home: "/dashboard",
-    admin: "/dashboard/admin",
-    quizzes: "/dashboard/quizzes",
+    home: "/",
+    admin: "/admin",
+    quizzes: "/quizzes",
   },
 };
 
 export const privatePaths = [
-  "/dashboard",
+  "/",
+  "/quizzes",
+  "/users",
+  "/invite",
+  "/take-quiz",
+  "/quiz-results",
 ];
 
 export const adminPaths = [
-  "/dashboard/admin",
+  "/admin",
+  "/users",
+  "/invite",
 ];
 
 export const roles = {

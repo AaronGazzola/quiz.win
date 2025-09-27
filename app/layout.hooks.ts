@@ -31,7 +31,7 @@ export const useGetUser = () => {
       if (error) throw error;
       setUser(data ?? null);
       setUserData(data ?? null);
-      return data;
+      return data ?? null;
     },
     staleTime: 1000 * 60 * 5,
   });
@@ -101,7 +101,7 @@ export const useGetUserMembers = () => {
     queryFn: async () => {
       const { data, error } = await getUserMembersAction();
       if (error) throw error;
-      return data;
+      return data ?? null;
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 10,
@@ -116,7 +116,7 @@ export const useGetUserProfile = () => {
     queryFn: async () => {
       const { data, error } = await getUserProfileAction();
       if (error) throw error;
-      return data;
+      return data ?? null;
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 10,

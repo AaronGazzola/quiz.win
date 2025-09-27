@@ -4,20 +4,20 @@
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import QuizzesPage from "@/app/dashboard/quizzes/page";
+import QuizzesPage from "@/app/(dashboard)/quizzes/page";
 
 // Mock the hooks
 jest.mock("@/app/layout.hooks", () => ({
   useGetUser: jest.fn(),
 }));
 
-jest.mock("@/app/dashboard/quizzes/page.hooks", () => ({
+jest.mock("@/app/quizzes/page.hooks", () => ({
   useGetQuizzes: jest.fn(),
   useGetUserOrganizations: jest.fn(),
   useBulkDeleteQuizzes: jest.fn(),
 }));
 
-jest.mock("@/app/dashboard/quizzes/page.stores", () => ({
+jest.mock("@/app/quizzes/page.stores", () => ({
   useQuizTableStore: jest.fn(),
   useBulkOperationStore: jest.fn(),
   useViewportPagination: jest.fn(),
@@ -47,7 +47,7 @@ describe("Dual-Table Quiz/Responses Page", () => {
 
     // Mock the stores
     const { useQuizTableStore, useBulkOperationStore, useViewportPagination, useQuizDialogStore } =
-      require("@/app/dashboard/quizzes/page.stores");
+      require("@/app/quizzes/page.stores");
 
     useQuizTableStore.mockReturnValue({
       search: "",
@@ -85,7 +85,7 @@ describe("Dual-Table Quiz/Responses Page", () => {
     // Mock the hooks
     const { useGetUser } = require("@/app/layout.hooks");
     const { useGetQuizzes, useGetUserOrganizations, useBulkDeleteQuizzes } =
-      require("@/app/dashboard/quizzes/page.hooks");
+      require("@/app/quizzes/page.hooks");
 
     useGetUser.mockReturnValue({
       data: {
@@ -240,7 +240,7 @@ describe("Dual-Table Quiz/Responses Page", () => {
 
   describe("Data Isolation", () => {
     it("should only show quizzes from user's organizations", async () => {
-      const { useGetQuizzes } = require("@/app/dashboard/quizzes/page.hooks");
+      const { useGetQuizzes } = require("@/app/quizzes/page.hooks");
 
       // Mock data with quizzes from different organizations
       useGetQuizzes.mockReturnValue({
@@ -304,7 +304,7 @@ describe("Dual-Table Quiz/Responses Page", () => {
     });
 
     it("should show bulk operations for admin users", async () => {
-      const { useQuizTableStore } = require("@/app/dashboard/quizzes/page.stores");
+      const { useQuizTableStore } = require("@/app/quizzes/page.stores");
       useQuizTableStore.mockReturnValue({
         search: "",
         sort: { column: null, direction: null },
@@ -320,7 +320,7 @@ describe("Dual-Table Quiz/Responses Page", () => {
         clearSelection: jest.fn(),
       });
 
-      const { useBulkOperationStore } = require("@/app/dashboard/quizzes/page.stores");
+      const { useBulkOperationStore } = require("@/app/quizzes/page.stores");
       useBulkOperationStore.mockReturnValue({
         isVisible: true,
         isLoading: false,

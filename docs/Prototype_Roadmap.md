@@ -245,7 +245,7 @@ Passwordless authentication flow:
 - ✅ Session management and automatic redirects
 - ✅ Callback URL handling for proper navigation
 
-### 2.2 Organization Management (`app/dashboard/admin/` routes) - ✅ COMPLETE
+### 2.2 Organization Management (`app/(dashboard)/admin/` routes) - ✅ COMPLETE
 
 Role-based organization and user management:
 
@@ -285,7 +285,7 @@ Simple onboarding flow for new users:
 
 Comprehensive dashboard with advanced data table for quiz management and organization administration.
 
-### 3.1 Comprehensive Dashboard UX (`app/dashboard/page.tsx`) - ✅ COMPLETE
+### 3.1 Comprehensive Dashboard UX (`app/(dashboard)/page.tsx`) - ✅ COMPLETE
 
 Role-based dashboard with organization management:
 
@@ -302,7 +302,7 @@ Role-based dashboard with organization management:
 - ✅ `MembersTable` - Organization member management (admin only)
 - ✅ `InviteUsersCard` - Bulk user invitation system (admin only)
 
-### 3.2 Advanced Data Table (`app/dashboard/quizzes/page.tsx`) - ✅ COMPLETE
+### 3.2 Advanced Data Table (`app/(dashboard)/quizzes/page.tsx`) - ✅ COMPLETE
 
 Full implementation following `@docs/Table_Prompt.md` specifications:
 
@@ -322,7 +322,7 @@ Full implementation following `@docs/Table_Prompt.md` specifications:
 - ✅ Organization context switching integration
 - ✅ Role-based row actions (edit/delete for admins)
 
-### 3.3 Quiz CRUD Interface (`app/dashboard/quizzes/QuizDialog.tsx`) - ✅ COMPLETE
+### 3.3 Quiz CRUD Interface (`app/(dashboard)/quizzes/QuizDialog.tsx`) - ✅ COMPLETE
 
 Full quiz management with question creation:
 
@@ -339,7 +339,7 @@ Full quiz management with question creation:
 - ✅ Multiple choice editor with add/remove option functionality
 - ✅ Form state management with proper error handling
 
-### 3.4 Member Management Interface (`app/dashboard/components/`) - ✅ COMPLETE
+### 3.4 Member Management Interface (`app/(dashboard)/components/`) - ✅ COMPLETE
 
 Complete organization member administration:
 
@@ -355,7 +355,7 @@ Complete organization member administration:
 - ✅ Member removal with optimistic UI updates
 - ✅ Role visualization with icons and color coding
 
-### 3.5 User Invitation System (`app/dashboard/components/InviteUsersCard.tsx`) - ✅ COMPLETE
+### 3.5 User Invitation System (`app/(dashboard)/components/InviteUsersCard.tsx`) - ✅ COMPLETE
 
 Comprehensive invitation workflow:
 
@@ -377,7 +377,7 @@ Comprehensive invitation workflow:
 
 Quiz taking interface with comprehensive response tracking and analytics system.
 
-### 4.1 Quiz Taking Interface (`app/dashboard/take-quiz/[id]/page.tsx`) - ✅ COMPLETE
+### 4.1 Quiz Taking Interface (`app/(dashboard)/take-quiz/[id]/page.tsx`) - ✅ COMPLETE
 
 Interactive quiz player for organization members:
 
@@ -395,7 +395,7 @@ Interactive quiz player for organization members:
 - ✅ Answer selection with immediate UI feedback
 - ✅ Score calculation and completion flow
 
-### 4.2 Response Tracking (`app/dashboard/take-quiz/[id]/page.actions.ts`) - ✅ COMPLETE
+### 4.2 Response Tracking (`app/(dashboard)/take-quiz/[id]/page.actions.ts`) - ✅ COMPLETE
 
 Comprehensive data collection and storage system:
 
@@ -413,7 +413,7 @@ Comprehensive data collection and storage system:
 - ✅ Organization-scoped access control
 - ✅ Response validation and error handling
 
-### 4.3 Response Analytics Tables (`app/dashboard/responses/page.tsx`) - ✅ COMPLETE
+### 4.3 Response Analytics Tables (`app/(dashboard)/responses/page.tsx`) - ✅ COMPLETE
 
 Advanced response analytics following @docs/Table_Prompt.md patterns:
 

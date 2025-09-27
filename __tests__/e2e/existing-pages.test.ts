@@ -72,7 +72,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
       await setupAuthContext(context, userType.session);
       const page = await context.newPage();
 
-      await page.goto('/dashboard');
+      await page.goto('/');
 
       // Check that dashboard loads
       await expect(page.getByText('LMS Dashboard')).toBeVisible();
@@ -94,7 +94,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(adminContext, mockOrgAdminSession);
     const adminPage = await adminContext.newPage();
 
-    await adminPage.goto('/dashboard/users');
+    await adminPage.goto('/users');
     await expect(adminPage.getByText('User Management')).toBeVisible();
     await expect(adminPage.getByText('Manage users and their access')).toBeVisible();
 
@@ -105,7 +105,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(memberContext, mockMemberSession);
     const memberPage = await memberContext.newPage();
 
-    await memberPage.goto('/dashboard/users');
+    await memberPage.goto('/users');
     // Should either redirect to dashboard or show unauthorized message
     await expect(memberPage.getByText('User Management')).not.toBeVisible();
 
@@ -118,7 +118,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(adminContext, mockOrgAdminSession);
     const adminPage = await adminContext.newPage();
 
-    await adminPage.goto('/dashboard/invite');
+    await adminPage.goto('/invite');
     await expect(adminPage.getByText('User Invitations')).toBeVisible();
     await expect(adminPage.getByText('Invite users to join organizations')).toBeVisible();
 
@@ -129,7 +129,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(memberContext, mockMemberSession);
     const memberPage = await memberContext.newPage();
 
-    await memberPage.goto('/dashboard/invite');
+    await memberPage.goto('/invite');
     // Should not see invitation form
     await expect(memberPage.getByText('User Invitations')).not.toBeVisible();
 
@@ -142,7 +142,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     const page = await adminContext.newPage();
 
     // Mock quiz data
-    await adminContext.route('**/api/dashboard/quizzes*', async route => {
+    await adminContext.route('**/api/quizzes*', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -162,7 +162,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
       });
     });
 
-    await page.goto('/dashboard/quizzes');
+    await page.goto('/quizzes');
 
     // Check that quiz table loads
     await expect(page.getByText('Quiz Management')).toBeVisible();
@@ -183,7 +183,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(context, mockSuperAdminSession);
     const page = await context.newPage();
 
-    await page.goto('/dashboard/users');
+    await page.goto('/users');
 
     // Check that role badges are displayed
     await expect(page.locator('[data-testid="role-badge"]')).toBeVisible();
@@ -212,7 +212,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(context, multiOrgSession);
     const page = await context.newPage();
 
-    await page.goto('/dashboard');
+    await page.goto('/');
 
     // Should see organization switcher for multi-org users
     await expect(page.getByRole('combobox')).toBeVisible();
@@ -230,7 +230,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await setupAuthContext(context, mockOrgAdminSession);
     const page = await context.newPage();
 
-    await page.goto('/dashboard/users');
+    await page.goto('/users');
 
     // Check breadcrumb shows organization context
     await expect(page.getByText('Dashboard')).toBeVisible();
@@ -247,7 +247,7 @@ test.describe('Permission Boundaries', () => {
     await setupAuthContext(context, mockOrgAdminSession);
 
     // Mock API to return organization-scoped data only
-    await context.route('**/api/dashboard/**', async route => {
+    await context.route('**/api/**', async route => {
       const url = route.request().url();
 
       if (url.includes('/users')) {
@@ -278,11 +278,11 @@ test.describe('Permission Boundaries', () => {
     const page = await context.newPage();
 
     // Test users page data isolation
-    await page.goto('/dashboard/users');
+    await page.goto('/users');
     await expect(page.getByText('user1@org1.com')).toBeVisible();
 
     // Test quizzes page data isolation
-    await page.goto('/dashboard/quizzes');
+    await page.goto('/quizzes');
     await expect(page.getByText('Org1 Quiz')).toBeVisible();
 
     await context.close();
@@ -293,7 +293,7 @@ test.describe('Permission Boundaries', () => {
     const page = await context.newPage();
 
     // Test access without authentication
-    await page.goto('/dashboard/users');
+    await page.goto('/users');
 
     // Should redirect to sign-in or show unauthorized
     await expect(page).toHaveURL(/sign-in/);

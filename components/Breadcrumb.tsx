@@ -17,7 +17,7 @@ export function Breadcrumb({ items, organizationName }: BreadcrumbProps) {
   return (
     <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
       <Link
-        href="/dashboard"
+        href="/"
         className="hover:text-foreground transition-colors"
       >
         Dashboard
