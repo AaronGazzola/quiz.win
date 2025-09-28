@@ -2,15 +2,13 @@
 
 import { useAuthLayoutStore } from "@/app/(auth)/layout.stores";
 import {
-  useQuizDialogStore,
   useQuizTableStore,
   useResponseTableStore,
 } from "@/app/(dashboard)/page.stores";
 import { useQuizPlayerStore } from "@/app/(dashboard)/take-quiz/[id]/page.stores";
-import { useConfirmationDialogStore } from "@/app/(dashboard)/users/page.stores";
 import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
 import { queryClient } from "@/app/layout.providers";
-import { useAppStore, useRedirectStore } from "@/app/layout.stores";
+import { useAppStore } from "@/app/layout.stores";
 import { ExtendedUser } from "@/app/layout.types";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
@@ -26,14 +24,11 @@ export default function DashboardLayout({
   const { data: user, isLoading } = useGetUser();
   const { reset } = useAppStore();
   const hasAdminAccess = useAdminAccess();
-  const { reset: resetRedirect } = useRedirectStore();
   const { reset: resetAuthLayout } = useAuthLayoutStore();
   const { reset: resetQuizTable } = useQuizTableStore();
 
-  const { close: closeQuizDialog } = useQuizDialogStore();
   const { reset: resetResponseTable } = useResponseTableStore();
 
-  const { closeDialog: closeConfirmationDialog } = useConfirmationDialogStore();
   const { resetQuiz } = useQuizPlayerStore();
   const router = useRouter();
 
@@ -43,17 +38,13 @@ export default function DashboardLayout({
     queryClient.invalidateQueries();
 
     reset();
-    resetRedirect();
     resetAuthLayout();
     resetQuizTable();
-    closeQuizDialog();
     resetResponseTable();
-    closeConfirmationDialog();
     resetQuiz();
 
     router.push("/sign-in");
   };
-
 
   return (
     <div className="min-h-screen bg-background">
