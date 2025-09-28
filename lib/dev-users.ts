@@ -7,7 +7,7 @@ export interface DevUser {
 
 export const getDevUsers = () => {
   const fromEmailDomain =
-    process.env.NEXT_PUBLIC_FROM_EMAIL_DOMAIN || "example.com";
+    process.env.NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN || "example.com";
 
   return {
     superAdmin: {

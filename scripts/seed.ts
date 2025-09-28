@@ -3,11 +3,11 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function seed() {
-  const fromEmailDomain = process.env.NEXT_PUBLIC_FROM_EMAIL_DOMAIN;
+  const fromEmailDomain = process.env.NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN;
 
   if (!fromEmailDomain) {
     console.error(
-      "NEXT_PUBLIC_FROM_EMAIL_DOMAIN environment variable is required"
+      "NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN environment variable is required"
     );
     process.exit(1);
   }
