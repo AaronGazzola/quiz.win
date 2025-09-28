@@ -2,7 +2,7 @@
 
 import { configuration, privatePaths } from "@/configuration";
 import { signIn } from "@/lib/auth-client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthLayoutStore } from "./(auth)/layout.stores";
@@ -28,14 +28,14 @@ export const useGetUser = () => {
     queryKey: ["user"],
     queryFn: async () => {
       const { data, error } = await getUserAction();
-      if (!data || error) {
+      if (error) {
         if (privatePaths.includes(pathname)) {
           router.push(configuration.paths.signIn);
         }
         reset();
         resetAuthLayout();
+        throw error;
       }
-      if (error) throw error;
       setUser(data ?? null);
       setUserData(data ?? null);
       return data ?? null;
@@ -48,6 +48,7 @@ export const useSignIn = () => {
   const { setUser, setTempEmail } = useAppStore();
   const { setUserData } = useRedirectStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (signInData: SignInData) => {
@@ -80,6 +81,8 @@ export const useSignIn = () => {
         setUser(data);
         setUserData(data);
       }
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["user", "members"] });
       toast.success("Successfully signed in");
       router.push(configuration.paths.home);
     },

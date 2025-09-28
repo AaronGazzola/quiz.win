@@ -53,7 +53,7 @@ export default function DevSignInButtons({
       }
 
       router.push("/");
-    } catch (error) {
+    } catch {
     } finally {
       setLoadingUser(null);
     }

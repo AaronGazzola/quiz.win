@@ -49,10 +49,14 @@ export const getAuthenticatedClientWithOrgs = async () => {
 };
 
 export const hasOrgPermission = async (
-  _userId: string,
-  _organizationId: string,
-  _resource: string,
-  _action: string
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  userId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  organizationId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  resource: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  action: string
 ) => {
   try {
     // TODO: Implement permission checking when auth.api.hasPermission is available
@@ -65,9 +69,12 @@ export const hasOrgPermission = async (
 };
 
 export const hasOrgRole = async (
-  _userId: string,
-  _organizationId: string,
-  _role: string
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  userId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  organizationId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  role: string
 ) => {
   try {
     // TODO: Implement role checking when auth.api.hasRole is available

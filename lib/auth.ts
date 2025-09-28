@@ -33,7 +33,7 @@ export const auth = betterAuth({
           try {
             invitationData = JSON.parse(decodeURIComponent(invitationParam));
             isInvitation = true;
-          } catch (error) {
+          } catch {
           }
         }
 

@@ -145,7 +145,10 @@ export const canManageUsers = async (
   }
 };
 
-export const getUserOrganizations = async (_userId: string) => {
+export const getUserOrganizations = async (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  userId: string
+) => {
   try {
     return await auth.api.listOrganizations({
       headers: await headers(),
@@ -156,7 +159,10 @@ export const getUserOrganizations = async (_userId: string) => {
   }
 };
 
-export const getUserAdminOrganizations = async (_userId: string) => {
+export const getUserAdminOrganizations = async (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  userId: string
+) => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),

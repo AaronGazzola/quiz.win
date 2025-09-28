@@ -11,7 +11,7 @@ import { useConfirmationDialogStore } from "@/app/(dashboard)/users/page.stores"
 import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
 import { queryClient } from "@/app/layout.providers";
 import { useAppStore, useRedirectStore } from "@/app/layout.stores";
-import { DashboardLayoutSkeleton } from "@/components/DashboardLayoutSkeleton";
+import { ExtendedUser } from "@/app/layout.types";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { signOut } from "@/lib/auth-client";
@@ -54,13 +54,6 @@ export default function DashboardLayout({
     router.push("/sign-in");
   };
 
-  if (isLoading) {
-    return <DashboardLayoutSkeleton />;
-  }
-
-  if (!user) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,8 +88,9 @@ export default function DashboardLayout({
           <div className="flex items-center space-x-4">
             <OrganizationSelector />
             <UserAvatarMenu
-              user={user}
+              user={user as ExtendedUser | null}
               onSignOut={handleSignOut}
+              isLoading={isLoading}
             />
           </div>
         </div>

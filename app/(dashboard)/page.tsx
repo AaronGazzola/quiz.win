@@ -290,7 +290,7 @@ export default function DashboardPage() {
             {user ? (
               user.email
             ) : (
-              <div className="w-32 h-4 bg-muted rounded-lg"></div>
+              <span className="inline-block w-32 h-4 bg-muted rounded-lg"></span>
             )}
           </p>
         </div>

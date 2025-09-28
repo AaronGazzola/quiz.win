@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { LogOut, Moon, Sun, Monitor } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,11 +19,12 @@ import {
 import { ExtendedUser } from "@/app/layout.types"
 
 interface UserAvatarMenuProps {
-  user: ExtendedUser
+  user: ExtendedUser | null
   onSignOut: () => void
+  isLoading?: boolean
 }
 
-export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
+export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvatarMenuProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -30,7 +32,8 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
     setMounted(true)
   }, [])
 
-  const getInitials = (email: string) => {
+  const getInitials = (email: string | undefined) => {
+    if (!email) return "??"
     return email.slice(0, 2).toUpperCase()
   }
 
@@ -50,11 +53,11 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
     return "System"
   }
 
-  if (!mounted) {
+  if (!mounted || isLoading || !user) {
     return (
       <Avatar className="h-8 w-8 cursor-pointer">
         <AvatarFallback className="text-xs">
-          {getInitials(user.email)}
+          {isLoading || !user ? <Skeleton className="h-3 w-6 rounded" /> : getInitials(user.email)}
         </AvatarFallback>
       </Avatar>
     )
@@ -65,14 +68,14 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
       <DropdownMenuTrigger asChild>
         <Avatar className="h-8 w-8 cursor-pointer">
           <AvatarFallback className="text-xs">
-            {getInitials(user.email)}
+            {getInitials(user?.email)}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
