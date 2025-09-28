@@ -2,11 +2,11 @@
 
 import { useGetUser, useGetUserMembers } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Ban, BanIcon } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Ban } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { cn } from "@/lib/shadcn.utils";
-import { useGetUsers, useToggleUserBan, useViewportResize, useBulkToggleUserBan } from "./page.hooks";
+import { useGetUsers, useViewportResize, useBulkToggleUserBan } from "./page.hooks";
 import { useUserTableStore, useBulkOperationStore, useViewportPagination, useUserDetailDialogStore, useConfirmationDialogStore } from "./page.stores";
 import { UserDetailDialog } from "./UserDetailDialog";
 import { ConfirmationDialog } from "./ConfirmationDialog";
@@ -42,7 +42,6 @@ export default function UsersPage() {
   const { data: userWithMembers } = useGetUserMembers();
   const { selectedOrganizationIds } = useAppStore();
   const { data: usersData, isLoading } = useGetUsers(selectedOrganizationIds);
-  const toggleUserBanMutation = useToggleUserBan();
   const bulkToggleUserBanMutation = useBulkToggleUserBan();
 
   const users = usersData?.users || [];
@@ -117,35 +116,6 @@ export default function UsersPage() {
     }
   };
 
-  const handleToggleBan = (userId: string, currentBanned: boolean, userName: string) => {
-    if (currentBanned) {
-      openConfirmation(
-        'unban',
-        'Unban User',
-        `Are you sure you want to unban ${userName}?`,
-        () => {
-          toggleUserBanMutation.mutate({
-            userId,
-            banned: false,
-            banReason: undefined
-          });
-        }
-      );
-    } else {
-      openConfirmation(
-        'ban',
-        'Ban User',
-        `Are you sure you want to ban ${userName}? This will prevent them from accessing the system.`,
-        () => {
-          toggleUserBanMutation.mutate({
-            userId,
-            banned: true,
-            banReason: "Banned by admin"
-          });
-        }
-      );
-    }
-  };
 
   const handleBulkBan = () => {
     const selectedUserIds = Array.from(selectedItems);

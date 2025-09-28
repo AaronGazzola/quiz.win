@@ -19,7 +19,7 @@ export const processInvitationAction = async (
     }
 
     await auth.api.acceptInvitation({
-      invitationId,
+      body: { invitationId },
       headers: await headers(),
     });
 

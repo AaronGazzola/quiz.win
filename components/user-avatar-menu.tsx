@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ExtendedUser } from "@/app/layout.types"
-import { useGetUserMembers } from "@/app/layout.hooks"
 
 interface UserAvatarMenuProps {
   user: ExtendedUser
@@ -23,7 +22,6 @@ interface UserAvatarMenuProps {
 export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const { data: userWithMembers } = useGetUserMembers()
 
   React.useEffect(() => {
     setMounted(true)

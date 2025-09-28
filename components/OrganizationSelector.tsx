@@ -34,12 +34,12 @@ export function OrganizationSelector() {
       role: member.role,
     })) || [];
 
-  const adminStatusByOrg = getAdminStatusByOrganization(userWithMembers);
+  const adminStatusByOrg = getAdminStatusByOrganization(userWithMembers || null);
   const hasPartialAdmin = hasPartialAdminAccess(
-    userWithMembers,
+    userWithMembers || null,
     selectedOrganizationIds
   );
-  const isSuperAdminUser = isSuperAdmin(user);
+  const isSuperAdminUser = isSuperAdmin(user || null);
 
   const handleOrganizationToggle = (orgId: string, checked: boolean) => {
     if (checked) {

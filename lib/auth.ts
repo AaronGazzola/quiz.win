@@ -80,7 +80,8 @@ export const auth = betterAuth({
     admin(),
     organization({
       sendInvitationEmail: async (data) => {
-        const { email, organization, inviter, invitationId } = data;
+        const { email, organization, inviter, invitation } = data;
+        const invitationId = invitation.id;
 
         await resend.emails.send({
           from: process.env.FROM_EMAIL || "noreply@example.com",
@@ -89,7 +90,7 @@ export const auth = betterAuth({
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2>You've been invited to join ${organization.name}</h2>
-              <p>${inviter.name || inviter.email} has invited you to join their organization.</p>
+              <p>${inviter.user.name || inviter.user.email} has invited you to join their organization.</p>
               <p>Click the link below to accept the invitation and sign in:</p>
               <a href="${process.env.BETTER_AUTH_URL}/api/auth/accept-invitation?invitationId=${invitationId}" style="background-color: #007cba; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 16px 0;">
                 Accept Invitation & Sign In

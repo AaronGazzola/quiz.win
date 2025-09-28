@@ -6,8 +6,8 @@ import { processInvitationAction, getDashboardMetricsAction } from "./page.actio
 
 export const useProcessInvitation = () => {
   return useMutation({
-    mutationFn: async ({ organizationId, role }: { organizationId: string, role: string }) => {
-      const { data, error } = await processInvitationAction(organizationId, role);
+    mutationFn: async ({ organizationId }: { organizationId: string, role: string }) => {
+      const { data, error } = await processInvitationAction(organizationId);
       if (error) throw new Error(error);
       return data;
     },

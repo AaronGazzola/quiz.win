@@ -33,9 +33,9 @@ export default function InvitePage() {
       role: member.role,
     })) || [];
 
-  const adminStatusByOrg = getAdminStatusByOrganization(userWithMembers);
+  const adminStatusByOrg = getAdminStatusByOrganization(userWithMembers || null);
   const organizations = allOrganizations.filter((org) => adminStatusByOrg[org.id]);
-  const isSuperAdminUser = isSuperAdmin(user);
+  const isSuperAdminUser = isSuperAdmin(user || null);
   const loadingOrgs = !userWithMembers;
 
   const [emails, setEmails] = useState("");

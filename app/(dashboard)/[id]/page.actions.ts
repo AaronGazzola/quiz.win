@@ -77,7 +77,7 @@ export const getQuizResultAction = async (
     console.log(JSON.stringify({action:"getQuizResultAction",success:true}));
     return getActionResponse({ data: response as QuizResultData });
   } catch (error) {
-    console.log(JSON.stringify({action:"getQuizResultAction",error:error.message}));
+    console.log(JSON.stringify({action:"getQuizResultAction",error:error instanceof Error ? error.message : String(error)}));
     return getActionResponse({ error });
   }
 };

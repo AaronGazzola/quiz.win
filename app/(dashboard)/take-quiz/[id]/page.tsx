@@ -34,7 +34,7 @@ export default function TakeQuizPage() {
     if (quiz && answers.length === 0 && quiz.questions.length > 0) {
       initializeAnswers(quiz.questions.length);
     }
-  }, [quiz?.questions.length, answers.length, initializeAnswers]);
+  }, [quiz, answers.length, initializeAnswers]);
 
   if (!user) return null;
 
@@ -58,7 +58,7 @@ export default function TakeQuizPage() {
   }
 
   const handleNext = () => {
-    if (currentQuestionIndex < quiz?.questions.length - 1) {
+    if (quiz?.questions && currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestionIndex + 1);
     }
   };

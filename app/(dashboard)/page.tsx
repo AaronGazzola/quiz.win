@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetUser, useGetUserMembers } from "@/app/layout.hooks";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Users, BookOpen, TrendingUp, Settings } from "lucide-react";
 import { QuizOverview } from "@/components/QuizOverview";
 import { MembersTable } from "@/components/MembersTable";
@@ -16,12 +16,14 @@ export default function DashboardPage() {
   const { data: user } = useGetUser();
   const { data: userWithMembers } = useGetUserMembers();
   const { selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
-  const organizations = userWithMembers?.members?.map(member => ({
-    id: member.organizationId,
-    name: member.organization.name,
-    slug: member.organization.slug || "",
-    role: member.role,
-  })) || [];
+  const organizations = useMemo(() =>
+    userWithMembers?.members?.map(member => ({
+      id: member.organizationId,
+      name: member.organization.name,
+      slug: member.organization.slug || "",
+      role: member.role,
+    })) || []
+  , [userWithMembers?.members]);
   const processInvitationMutation = useProcessInvitation();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -162,8 +164,8 @@ export default function DashboardPage() {
         {/* Admin Section */}
         {(hasAdminAccess || isSuperAdmin) && (
           <div className="space-y-6">
-            <MembersTable organizationIds={selectedOrganizationIds} />
-            <InviteUsersCard organizationIds={selectedOrganizationIds} />
+            <MembersTable organizationId={selectedOrganizationIds[0] || ""} />
+            <InviteUsersCard organizationId={selectedOrganizationIds[0] || ""} />
           </div>
         )}
       </div>

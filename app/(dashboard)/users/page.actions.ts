@@ -158,7 +158,7 @@ export const getUsersAction = async (
           ...member.user,
           members: [member],
           _count: { members: 1 },
-        })) as UserWithDetails[],
+        })) as unknown as UserWithDetails[],
         totalPages,
         totalCount: filteredMembers.length
       }
@@ -199,10 +199,12 @@ export const changeUserRoleAction = async (
       }
     }
 
-    await auth.api.updateMember({
-      userId,
-      organizationId,
-      role: newRole,
+    await auth.api.updateMemberRole({
+      body: {
+        memberId: userId,
+        organizationId,
+        role: newRole,
+      },
       headers: await headers(),
     });
 
@@ -227,13 +229,17 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
     if (isSuper) {
       if (banned) {
         await auth.api.banUser({
-          userId,
-          banReason,
+          body: {
+            userId,
+            banReason,
+          },
           headers: await headers(),
         });
       } else {
         await auth.api.unbanUser({
-          userId,
+          body: {
+            userId,
+          },
           headers: await headers(),
         });
       }
@@ -267,13 +273,17 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
 
       if (banned) {
         await auth.api.banUser({
-          userId,
-          banReason,
+          body: {
+            userId,
+            banReason,
+          },
           headers: await headers(),
         });
       } else {
         await auth.api.unbanUser({
-          userId,
+          body: {
+            userId,
+          },
           headers: await headers(),
         });
       }
@@ -337,13 +347,17 @@ export const bulkToggleUserBanAction = async (
 
         if (banned) {
           await auth.api.banUser({
-            userId,
-            banReason,
+            body: {
+              userId,
+              banReason,
+            },
             headers: await headers(),
           });
         } else {
           await auth.api.unbanUser({
-            userId,
+            body: {
+              userId,
+            },
             headers: await headers(),
           });
         }

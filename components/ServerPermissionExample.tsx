@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { canManageUsers, canViewUsers, getUserAdminOrganizations } from "@/lib/role.utils";
+import { getUserAdminOrganizations } from "@/lib/role.utils";
 import { headers } from "next/headers";
 import { PermissionGuard } from "./PermissionGuard";
 

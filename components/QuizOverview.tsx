@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetQuizzes } from "@/app/(dashboard)/quizzes/page.hooks";
-import { useGetUser, useGetUserMembers } from "@/app/layout.hooks";
+import { useGetUserMembers } from "@/app/layout.hooks";
 import { canAccessAdminUI, isSuperAdmin } from "@/lib/client-role.utils";
 import { BookOpen, Calendar, Users } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +12,6 @@ interface QuizOverviewProps {
 
 export function QuizOverview({ organizationIds }: QuizOverviewProps) {
   const { data: quizData, isLoading } = useGetQuizzes(organizationIds);
-  const { data: user } = useGetUser();
   const { data: userWithMembers } = useGetUserMembers();
 
   const isSuperAdminUser = isSuperAdmin(userWithMembers || null);
