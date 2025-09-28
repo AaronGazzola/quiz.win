@@ -34,7 +34,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
   let testContexts: Record<string, TestContext>;
 
   beforeAll(async () => {
-    console.log('🔥 SEEDING REAL TEST DATABASE...');
     testData = await seedTestDatabase();
 
     testContexts = {
@@ -47,18 +46,14 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
       unauthenticated: { userId: null },
     };
 
-    console.log('✅ TEST DATABASE SEEDED');
-    console.log('🔍 BEGINNING REAL SECURITY VULNERABILITY DISCOVERY...');
   }, 60000);
 
   afterAll(async () => {
     await cleanTestDatabase();
     await disconnectTestDatabase();
-    console.log('🧹 TEST DATABASE CLEANED');
   });
 
   beforeEach(async () => {
-    console.log('🔄 Resetting test state...');
   });
 
   // AUTH SCHEMA TABLES - These should be COMPLETELY INACCESSIBLE
@@ -82,7 +77,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
             console.error(`Found ${result.length} records in ${tableName} table`);
             expect(true).toBe(false); // This should fail - direct access should not be allowed
           } catch (error) {
-            console.log(`✅ GOOD: ${tableName} table properly protected from direct access`);
             expect(true).toBe(true); // Expected behavior
           }
         });
@@ -98,7 +92,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
             console.error(`This indicates no Row Level Security (RLS) policies are implemented`);
             expect(true).toBe(false); // This is a vulnerability
           } catch (error) {
-            console.log(`✅ GOOD: ${tableName} table properly protected from direct access`);
             expect(true).toBe(true); // Expected behavior
           }
         });
@@ -118,7 +111,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
           console.error(`This indicates no Row Level Security (RLS) policies are implemented`);
           expect(allQuizzes.length).toBeGreaterThan(0);
         } catch (error) {
-          console.log(`✅ GOOD: Quiz access properly restricted: ${error}`);
           expect(error).toBeDefined();
         }
       });
@@ -135,7 +127,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
             where: { organizationId: testData.organizations[1].id }
           });
 
-          console.log(`🔍 Found ${orgAQuizzes.length} quizzes in Org A, ${orgBQuizzes.length} quizzes in Org B`);
 
           if (orgAQuizzes.length > 0 && orgBQuizzes.length > 0) {
             console.error(`🚨 CRITICAL VULNERABILITY: Can access quizzes from different organizations without user context filtering`);
@@ -170,7 +161,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
           expect(true).toBe(false); // This should not succeed without proper authorization
         } catch (error) {
-          console.log(`✅ GOOD: Quiz creation properly blocked: ${error}`);
           expect(error).toBeDefined();
         }
       });
@@ -188,7 +178,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
             }
           });
 
-          console.log(`🔍 Found ${allResponses.length} responses across all users and organizations`);
 
           if (allResponses.length > 0) {
             console.error(`🚨 PRIVACY VIOLATION: Can access all user responses without user context filtering`);
@@ -202,7 +191,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
           expect(allResponses.length).toBeGreaterThan(0);
         } catch (error) {
-          console.log(`✅ GOOD: Response access properly restricted: ${error}`);
           expect(error).toBeDefined();
         }
       });
@@ -227,7 +215,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
           expect(true).toBe(false); // This should not succeed
         } catch (error) {
-          console.log(`✅ GOOD: Cross-user response creation blocked: ${error}`);
           expect(error).toBeDefined();
         }
       });
@@ -240,7 +227,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
         try {
           const allProfiles = await prisma.profile.findMany({});
 
-          console.log(`🔍 Found ${allProfiles.length} user profiles`);
 
           if (allProfiles.length > 0) {
             console.error(`🚨 PRIVACY VIOLATION: Can access all user profiles without filtering`);
@@ -249,7 +235,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
           expect(allProfiles.length).toBeGreaterThan(0);
         } catch (error) {
-          console.log(`✅ GOOD: Profile access properly restricted: ${error}`);
           expect(error).toBeDefined();
         }
       });
@@ -277,7 +262,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
             expect(true).toBe(false); // This should not succeed
           }
         } catch (error) {
-          console.log(`✅ GOOD: Profile modification properly blocked: ${error}`);
           expect(error).toBeDefined();
         }
       });
@@ -286,17 +270,11 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
   describe('🔓 PERMISSION BYPASS TESTING', () => {
     it('should test if hasOrgPermission function actually restricts access', async () => {
-      console.log(`🔍 Testing hasOrgPermission function (skipped due to better-auth ES module issues)`);
-      console.log(`🚨 CRITICAL VULNERABILITY: hasOrgPermission always returns true (TODO implementation)`);
-      console.log(`This means ALL permission checks are bypassed`);
 
       expect(true).toBe(true); // This test demonstrates the vulnerability exists based on code analysis
     });
 
     it('should test if hasOrgRole function actually validates roles', async () => {
-      console.log(`🔍 Testing hasOrgRole function (skipped due to better-auth ES module issues)`);
-      console.log(`🚨 CRITICAL VULNERABILITY: hasOrgRole always returns true (TODO implementation)`);
-      console.log(`This means ANY user can claim ANY role`);
 
       expect(true).toBe(true); // This test demonstrates the vulnerability exists based on code analysis
     });
@@ -306,7 +284,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
     it('should simulate complete organizational data breach', async () => {
       const prisma = getTestPrismaClient();
 
-      console.log(`🎭 SIMULATING: Malicious user attempting to access all organizational data...`);
 
       try {
         const dataBreachResults = await Promise.all([
@@ -327,7 +304,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
         expect(quizzes.length + responses.length + profiles.length).toBeGreaterThan(0);
       } catch (error) {
-        console.log(`✅ GOOD: Data breach attempt blocked: ${error}`);
         expect(error).toBeDefined();
       }
     });
@@ -335,7 +311,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
     it('should test bulk data modification attack', async () => {
       const prisma = getTestPrismaClient();
 
-      console.log(`🎭 SIMULATING: Bulk modification attack...`);
 
       try {
         const bulkUpdateResult = await prisma.quiz.updateMany({
@@ -357,7 +332,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
         expect(bulkUpdateResult.count).toBeGreaterThan(0);
       } catch (error) {
-        console.log(`✅ GOOD: Bulk modification blocked: ${error}`);
         expect(error).toBeDefined();
       }
     });
@@ -365,31 +339,6 @@ describe('REAL DATABASE Organization Role Access Security Tests', () => {
 
   describe('📈 SECURITY VULNERABILITY SUMMARY', () => {
     it('should document all discovered vulnerabilities', async () => {
-      console.log(`\n🔥 SECURITY VULNERABILITY DISCOVERY COMPLETE 🔥\n`);
-
-      console.log(`📋 EXPECTED VULNERABILITIES BASED ON CODE ANALYSIS:`);
-      console.log(`❌ 1. Auth schema tables directly accessible via Prisma`);
-      console.log(`❌ 2. No Row Level Security (RLS) policies implemented`);
-      console.log(`❌ 3. hasOrgPermission() always returns true (TODO implementation)`);
-      console.log(`❌ 4. hasOrgRole() always returns true (TODO implementation)`);
-      console.log(`❌ 5. getAuthenticatedClient() returns unfiltered Prisma client`);
-      console.log(`❌ 6. No user context validation in database operations`);
-      console.log(`❌ 7. Cross-organization data access possible`);
-      console.log(`❌ 8. Personal data (profiles, responses) exposed globally`);
-      console.log(`❌ 9. Bulk operations possible without authorization`);
-      console.log(`❌ 10. No audit logging of data access attempts`);
-
-      console.log(`\n✅ RECOMMENDED SECURITY IMPLEMENTATIONS:`);
-      console.log(`✅ 1. Implement Row Level Security (RLS) policies in PostgreSQL`);
-      console.log(`✅ 2. Complete hasOrgPermission() and hasOrgRole() implementations`);
-      console.log(`✅ 3. Add user context filtering to getAuthenticatedClient()`);
-      console.log(`✅ 4. Implement query-level access control middleware`);
-      console.log(`✅ 5. Add organization membership validation to all operations`);
-      console.log(`✅ 6. Restrict auth schema access completely`);
-      console.log(`✅ 7. Add audit logging for all data access`);
-      console.log(`✅ 8. Implement input validation and sanitization`);
-      console.log(`✅ 9. Add rate limiting for bulk operations`);
-      console.log(`✅ 10. Regular security audits and penetration testing`);
 
       expect(true).toBe(true); // Always passes - this is documentation
     });

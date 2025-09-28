@@ -2,7 +2,7 @@
 
 The commands and numbers below are shorthand references to the corresponding prompts.
 
-1. `_clear_logs`: "Delete all console.logs in the repo, keep all console.warns and console.errors"
+1. `_clear_logs`: "Delete all console.logs in the repo. Don't remove logs from tests or script logs. Don't remove console.warns or console.errors"
 
 2. `_add_logs`: "Add stringified, minified diagnostic console logging to the referenced files or functions"
 

@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 import {
   useGetDashboardMetrics,
   useGetQuizResponses,
@@ -43,7 +43,7 @@ import {
 } from "./page.stores";
 import { QuizDialog } from "./QuizDialog";
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const { data: user } = useGetUser();
   const { data: userWithMembers } = useGetUserMembers();
   const { selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
@@ -1231,5 +1231,13 @@ export default function DashboardPage() {
         organizationId={selectedOrganizationIds[0] || ""}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

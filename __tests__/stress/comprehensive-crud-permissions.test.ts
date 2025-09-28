@@ -36,7 +36,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
   let userContexts: Record<string, TestContext>;
 
   beforeAll(async () => {
-    console.log('🚀 INITIALIZING COMPREHENSIVE CRUD PERMISSION TESTING...');
     testData = await seedTestDatabase();
 
     userContexts = {
@@ -49,17 +48,14 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
       unauthenticated: { userId: null },
     };
 
-    console.log('✅ TEST ENVIRONMENT READY - Beginning comprehensive permission validation...');
   }, 60000);
 
   afterAll(async () => {
     await cleanTestDatabase();
     await disconnectTestDatabase();
-    console.log('🧹 COMPREHENSIVE CRUD TESTING COMPLETE');
   });
 
   beforeEach(async () => {
-    console.log('🔄 Resetting test state...');
   });
 
   const authSchemaTables = ['user', 'session', 'account', 'verification', 'magicLink', 'organization', 'member', 'invitation'];
@@ -81,7 +77,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
               console.error(`🚨 SECURITY FAILURE: ${role} accessed ${tableName} table (${result.length} records)`);
               expect(true).toBe(false); // Auth schema should be inaccessible
             } catch (error) {
-              console.log(`✅ PASS: ${role} correctly blocked from ${tableName} table`);
               expect(true).toBe(true); // Expected: access should be blocked
             }
           });
@@ -107,7 +102,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             }
           });
 
-          console.log(`✅ PASS: Super admin created quiz ${newQuiz.id}`);
           expect(newQuiz.id).toBeDefined();
 
           await prisma.quiz.delete({ where: { id: newQuiz.id } });
@@ -123,7 +117,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
         try {
           const allQuizzes = await prisma.quiz.findMany({});
 
-          console.log(`✅ PASS: Super admin read ${allQuizzes.length} quizzes`);
           expect(allQuizzes.length).toBeGreaterThan(0);
         } catch (error) {
           console.error(`❌ FAIL: Super admin cannot read quizzes: ${error}`);
@@ -143,7 +136,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             data: { title: "Updated by Super Admin" }
           });
 
-          console.log(`✅ PASS: Super admin updated quiz ${updatedQuiz.id}`);
           expect(updatedQuiz.title).toBe("Updated by Super Admin");
 
           await prisma.quiz.update({
@@ -173,7 +165,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
 
           await prisma.quiz.delete({ where: { id: tempQuiz.id } });
 
-          console.log(`✅ PASS: Super admin deleted quiz ${tempQuiz.id}`);
           expect(true).toBe(true);
         } catch (error) {
           console.error(`❌ FAIL: Super admin cannot delete quiz: ${error}`);
@@ -199,7 +190,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             }
           });
 
-          console.log(`✅ PASS: Org A admin created quiz ${newQuiz.id} in their org`);
           expect(newQuiz.organizationId).toBe(orgAId);
 
           await prisma.quiz.delete({ where: { id: newQuiz.id } });
@@ -229,7 +219,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
           await prisma.quiz.delete({ where: { id: newQuiz.id } });
           expect(true).toBe(false);
         } catch (error) {
-          console.log(`✅ PASS: Org A admin correctly blocked from creating quiz in Org B`);
           expect(true).toBe(true);
         }
       });
@@ -243,7 +232,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             where: { organizationId: orgAId }
           });
 
-          console.log(`✅ PASS: Org A admin read ${orgQuizzes.length} quizzes from their org`);
           expect(orgQuizzes.every(q => q.organizationId === orgAId)).toBe(true);
         } catch (error) {
           console.error(`❌ FAIL: Org A admin cannot read quizzes from their org: ${error}`);
@@ -264,11 +252,9 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             console.error(`🚨 SECURITY FAILURE: Org A admin accessed ${orgBQuizzes.length} quizzes from Org B`);
             expect(true).toBe(false);
           } else {
-            console.log(`✅ PASS: Org A admin correctly blocked from accessing Org B quizzes`);
             expect(true).toBe(true);
           }
         } catch (error) {
-          console.log(`✅ PASS: Org A admin correctly blocked from accessing Org B quizzes`);
           expect(true).toBe(true);
         }
       });
@@ -284,7 +270,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             where: { organizationId: orgAId }
           });
 
-          console.log(`✅ PASS: Org A member read ${orgQuizzes.length} quizzes from their org`);
           expect(orgQuizzes.every(q => q.organizationId === orgAId)).toBe(true);
         } catch (error) {
           console.error(`❌ FAIL: Org A member cannot read quizzes from their org: ${error}`);
@@ -312,7 +297,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
           await prisma.quiz.delete({ where: { id: newQuiz.id } });
           expect(true).toBe(false);
         } catch (error) {
-          console.log(`✅ PASS: Org A member correctly blocked from creating quiz`);
           expect(true).toBe(true);
         }
       });
@@ -340,7 +324,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
           });
           expect(true).toBe(false);
         } catch (error) {
-          console.log(`✅ PASS: Org A member correctly blocked from updating quiz`);
           expect(true).toBe(true);
         }
       });
@@ -366,7 +349,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
           console.error(`🚨 SECURITY FAILURE: Org A member deleted quiz ${tempQuiz.id}`);
           expect(true).toBe(false);
         } catch (error) {
-          console.log(`✅ PASS: Org A member correctly blocked from deleting quiz`);
           expect(true).toBe(true);
 
           const tempQuiz = await prisma.quiz.findFirst({
@@ -391,11 +373,9 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             console.error(`🚨 SECURITY FAILURE: Unaffiliated user accessed ${allQuizzes.length} quizzes`);
             expect(true).toBe(false);
           } else {
-            console.log(`✅ PASS: Unaffiliated user correctly blocked from quiz access`);
             expect(true).toBe(true);
           }
         } catch (error) {
-          console.log(`✅ PASS: Unaffiliated user correctly blocked from quiz access`);
           expect(true).toBe(true);
         }
       });
@@ -412,11 +392,9 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             console.error(`🚨 SECURITY FAILURE: Unauthenticated user accessed ${allQuizzes.length} quizzes`);
             expect(true).toBe(false);
           } else {
-            console.log(`✅ PASS: Unauthenticated user correctly blocked from quiz access`);
             expect(true).toBe(true);
           }
         } catch (error) {
-          console.log(`✅ PASS: Unauthenticated user correctly blocked from quiz access`);
           expect(true).toBe(true);
         }
       });
@@ -442,7 +420,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             }
           });
 
-          console.log(`✅ PASS: User created their own response ${newResponse.id}`);
           expect(newResponse.userId).toBe(context.userId);
 
           await prisma.response.delete({ where: { id: newResponse.id } });
@@ -461,7 +438,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             where: { userId: context.userId! }
           });
 
-          console.log(`✅ PASS: User read ${userResponses.length} of their own responses`);
           expect(userResponses.every(r => r.userId === context.userId)).toBe(true);
         } catch (error) {
           console.error(`❌ FAIL: User cannot read their own responses: ${error}`);
@@ -483,11 +459,9 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             console.error(`🚨 SECURITY FAILURE: User accessed ${otherUserResponses.length} responses from another user`);
             expect(true).toBe(false);
           } else {
-            console.log(`✅ PASS: User correctly blocked from accessing other user responses`);
             expect(true).toBe(true);
           }
         } catch (error) {
-          console.log(`✅ PASS: User correctly blocked from accessing other user responses`);
           expect(true).toBe(true);
         }
       });
@@ -510,7 +484,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             }
           });
 
-          console.log(`✅ PASS: Org A admin viewed ${orgResponses.length} responses in their organization`);
           expect(orgResponses.every(r => r.quiz.organizationId === orgAId)).toBe(true);
         } catch (error) {
           console.error(`❌ FAIL: Org admin cannot view responses in their organization: ${error}`);
@@ -538,11 +511,9 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             console.error(`🚨 SECURITY FAILURE: Org A admin accessed ${otherOrgResponses.length} responses from Org B`);
             expect(true).toBe(false);
           } else {
-            console.log(`✅ PASS: Org A admin correctly blocked from accessing Org B responses`);
             expect(true).toBe(true);
           }
         } catch (error) {
-          console.log(`✅ PASS: Org A admin correctly blocked from accessing Org B responses`);
           expect(true).toBe(true);
         }
       });
@@ -569,7 +540,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             }
           });
 
-          console.log(`✅ PASS: User updated their own profile ${updatedProfile.id}`);
           expect(updatedProfile.userId).toBe(context.userId);
 
           await prisma.profile.update({
@@ -595,11 +565,9 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
             console.error(`🚨 SECURITY FAILURE: User accessed another user's profile`);
             expect(true).toBe(false);
           } else {
-            console.log(`✅ PASS: User correctly blocked from accessing other user profile`);
             expect(true).toBe(true);
           }
         } catch (error) {
-          console.log(`✅ PASS: User correctly blocked from accessing other user profile`);
           expect(true).toBe(true);
         }
       });
@@ -612,7 +580,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
         try {
           const allProfiles = await prisma.profile.findMany({});
 
-          console.log(`✅ PASS: Super admin accessed ${allProfiles.length} user profiles`);
           expect(allProfiles.length).toBeGreaterThan(0);
         } catch (error) {
           console.error(`❌ FAIL: Super admin cannot access user profiles: ${error}`);
@@ -624,22 +591,6 @@ describe('Comprehensive CRUD Permission Stress Tests', () => {
 
   describe('📈 COMPREHENSIVE PERMISSION SUMMARY', () => {
     it('should document permission test results', async () => {
-      console.log(`\n🎯 COMPREHENSIVE CRUD PERMISSION TESTING COMPLETE 🎯\n`);
-
-      console.log(`📊 EXPECTED PERMISSION MATRIX VALIDATION:`);
-      console.log(`✅ Auth Schema Protection: All auth tables blocked from application access`);
-      console.log(`✅ Super Admin Access: Unrestricted CRUD access across all organizations`);
-      console.log(`✅ Organization Admin Access: Full CRUD within own organization, blocked from others`);
-      console.log(`✅ Organization Member Access: Read-only within own organization, blocked elsewhere`);
-      console.log(`✅ User Data Privacy: Users can only access their own profiles/responses`);
-      console.log(`✅ Cross-Organization Isolation: Data properly scoped to organization membership`);
-      console.log(`✅ Authentication Requirement: Unauthenticated users blocked from all operations`);
-
-      console.log(`\n🔒 SECURITY BOUNDARIES VALIDATED:`);
-      console.log(`✅ Role-based access control enforced`);
-      console.log(`✅ Organization data isolation maintained`);
-      console.log(`✅ User data privacy protected`);
-      console.log(`✅ Authentication requirements enforced`);
 
       expect(true).toBe(true); // Always passes - this is documentation
     });
