@@ -4,24 +4,28 @@
 
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import QuizzesPage from "@/app/(dashboard)/quizzes/page";
+import DashboardPage from "@/app/(dashboard)/page";
 
 // Mock the hooks
 jest.mock("@/app/layout.hooks", () => ({
   useGetUser: jest.fn(),
 }));
 
-jest.mock("@/app/quizzes/page.hooks", () => ({
+jest.mock("@/app/(dashboard)/page.hooks", () => ({
   useGetQuizzes: jest.fn(),
-  useGetUserOrganizations: jest.fn(),
-  useBulkDeleteQuizzes: jest.fn(),
+  useGetDashboardMetrics: jest.fn(),
+  useProcessInvitation: jest.fn(),
+  useViewportResize: jest.fn(),
+  useViewportPagination: jest.fn(),
+  useGetQuizResponses: jest.fn(),
+  useExportResponses: jest.fn(),
 }));
 
-jest.mock("@/app/quizzes/page.stores", () => ({
+jest.mock("@/app/(dashboard)/page.stores", () => ({
   useQuizTableStore: jest.fn(),
   useBulkOperationStore: jest.fn(),
-  useViewportPagination: jest.fn(),
   useQuizDialogStore: jest.fn(),
+  useResponseTableStore: jest.fn(),
 }));
 
 // Mock the components
@@ -32,7 +36,7 @@ jest.mock("@/components/ui/dialog", () => ({
   DialogTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-describe("Dual-Table Quiz/Responses Page", () => {
+describe("Dashboard Quiz/Responses Dual-Table", () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -46,8 +50,8 @@ describe("Dual-Table Quiz/Responses Page", () => {
     jest.clearAllMocks();
 
     // Mock the stores
-    const { useQuizTableStore, useBulkOperationStore, useViewportPagination, useQuizDialogStore } =
-      require("@/app/quizzes/page.stores");
+    const { useQuizTableStore, useBulkOperationStore, useQuizDialogStore, useResponseTableStore } =
+      require("@/app/(dashboard)/page.stores");
 
     useQuizTableStore.mockReturnValue({
       search: "",
@@ -70,10 +74,6 @@ describe("Dual-Table Quiz/Responses Page", () => {
       setVisible: jest.fn(),
     });
 
-    useViewportPagination.mockReturnValue({
-      calculateItemsPerPage: jest.fn().mockReturnValue(10),
-    });
-
     useQuizDialogStore.mockReturnValue({
       isOpen: false,
       editingQuiz: null,
@@ -82,10 +82,28 @@ describe("Dual-Table Quiz/Responses Page", () => {
       close: jest.fn(),
     });
 
+    useResponseTableStore.mockReturnValue({
+      search: "",
+      sort: { column: "completedAt", direction: "desc" },
+      page: 0,
+      itemsPerPage: 10,
+      setSearch: jest.fn(),
+      setSort: jest.fn(),
+      setPage: jest.fn(),
+      reset: jest.fn(),
+    });
+
     // Mock the hooks
     const { useGetUser } = require("@/app/layout.hooks");
-    const { useGetQuizzes, useGetUserOrganizations, useBulkDeleteQuizzes } =
-      require("@/app/quizzes/page.hooks");
+    const {
+      useGetQuizzes,
+      useGetDashboardMetrics,
+      useProcessInvitation,
+      useViewportResize,
+      useViewportPagination,
+      useGetQuizResponses,
+      useExportResponses
+    } = require("@/app/(dashboard)/page.hooks");
 
     useGetUser.mockReturnValue({
       data: {
@@ -96,11 +114,41 @@ describe("Dual-Table Quiz/Responses Page", () => {
       }
     });
 
-    useGetUserOrganizations.mockReturnValue({
-      data: [
-        { id: "org1", name: "Organization 1", role: "admin" },
-        { id: "org2", name: "Organization 2", role: "member" },
-      ]
+    useGetDashboardMetrics.mockReturnValue({
+      data: {
+        totalQuizzes: 2,
+        completedToday: 5,
+        teamMembers: 10,
+        activeInvites: 2
+      },
+      isLoading: false
+    });
+
+    useProcessInvitation.mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
+    });
+
+    useViewportResize.mockImplementation((callback) => {
+      // Mock implementation
+    });
+
+    useViewportPagination.mockReturnValue({
+      calculateItemsPerPage: jest.fn().mockReturnValue(10),
+    });
+
+    useGetQuizResponses.mockReturnValue({
+      data: {
+        responses: [],
+        totalCount: 0,
+        totalPages: 0
+      },
+      isLoading: false
+    });
+
+    useExportResponses.mockReturnValue({
+      mutate: jest.fn(),
+      isPending: false,
     });
 
     useGetQuizzes.mockReturnValue({
@@ -127,16 +175,27 @@ describe("Dual-Table Quiz/Responses Page", () => {
       isLoading: false
     });
 
-    useBulkDeleteQuizzes.mockReturnValue({
-      mutate: jest.fn(),
-      isPending: false,
+    // Mock layout hooks
+    jest.mock("@/app/layout.hooks", () => ({
+      useGetUser: jest.fn(),
+      useGetUserMembers: jest.fn(),
+    }));
+
+    const { useGetUserMembers } = require("@/app/layout.hooks");
+    useGetUserMembers.mockReturnValue({
+      data: {
+        members: [
+          { role: "admin", organizationId: "org1", organization: { name: "Organization 1" } },
+          { role: "member", organizationId: "org2", organization: { name: "Organization 2" } },
+        ]
+      }
     });
   });
 
   const renderComponent = () => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <QuizzesPage />
+        <DashboardPage />
       </QueryClientProvider>
     );
   };
@@ -151,11 +210,11 @@ describe("Dual-Table Quiz/Responses Page", () => {
       expect(screen.getByText("3 questions")).toBeInTheDocument();
     });
 
-    it("should display organization filter when multiple organizations", async () => {
+    it("should display dashboard metrics", async () => {
       renderComponent();
 
-      expect(screen.getByRole("combobox")).toBeInTheDocument();
-      expect(screen.getByText("Organization 1")).toBeInTheDocument();
+      expect(screen.getByText("Total Quizzes")).toBeInTheDocument();
+      expect(screen.getByText("Completed Today")).toBeInTheDocument();
     });
 
     it("should show radio buttons for quiz selection", async () => {
@@ -240,7 +299,7 @@ describe("Dual-Table Quiz/Responses Page", () => {
 
   describe("Data Isolation", () => {
     it("should only show quizzes from user's organizations", async () => {
-      const { useGetQuizzes } = require("@/app/quizzes/page.hooks");
+      const { useGetQuizzes } = require("@/app/(dashboard)/page.hooks");
 
       // Mock data with quizzes from different organizations
       useGetQuizzes.mockReturnValue({
@@ -281,13 +340,14 @@ describe("Dual-Table Quiz/Responses Page", () => {
   });
 
   describe("Permission Validation", () => {
-    it("should show create button for admin users", () => {
+    it("should show team member metrics for admin users", () => {
       renderComponent();
 
-      expect(screen.getByText("Create Quiz")).toBeInTheDocument();
+      expect(screen.getByText("Team Members")).toBeInTheDocument();
+      expect(screen.getByText("Active Invites")).toBeInTheDocument();
     });
 
-    it("should not show create button for member users", () => {
+    it("should not show admin metrics for member users", () => {
       const { useGetUser } = require("@/app/layout.hooks");
       useGetUser.mockReturnValue({
         data: {
@@ -300,36 +360,15 @@ describe("Dual-Table Quiz/Responses Page", () => {
 
       renderComponent();
 
-      expect(screen.queryByText("Create Quiz")).not.toBeInTheDocument();
+      expect(screen.queryByText("Team Members")).not.toBeInTheDocument();
+      expect(screen.queryByText("Active Invites")).not.toBeInTheDocument();
     });
 
-    it("should show bulk operations for admin users", async () => {
-      const { useQuizTableStore } = require("@/app/quizzes/page.stores");
-      useQuizTableStore.mockReturnValue({
-        search: "",
-        sort: { column: null, direction: null },
-        page: 0,
-        itemsPerPage: 10,
-        selectedItems: new Set(["quiz1"]),
-        setSearch: jest.fn(),
-        setSort: jest.fn(),
-        setPage: jest.fn(),
-        setItemsPerPage: jest.fn(),
-        toggleSelected: jest.fn(),
-        selectAll: jest.fn(),
-        clearSelection: jest.fn(),
-      });
-
-      const { useBulkOperationStore } = require("@/app/quizzes/page.stores");
-      useBulkOperationStore.mockReturnValue({
-        isVisible: true,
-        isLoading: false,
-        setVisible: jest.fn(),
-      });
-
+    it("should show quiz management interface for all users", async () => {
       renderComponent();
 
-      expect(screen.getByText("1 selected")).toBeInTheDocument();
+      expect(screen.getByText("Quizzes")).toBeInTheDocument();
+      expect(screen.getByText("Select a quiz to view its responses")).toBeInTheDocument();
     });
   });
 });

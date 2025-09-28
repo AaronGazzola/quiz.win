@@ -10,9 +10,12 @@ import {
   getUserAction,
   getUserMembersAction,
   getUserProfileAction,
+  createOrganizationAction,
+  getAllOrganizationsAction,
 } from "./layout.actions";
 import { useAppStore, useRedirectStore } from "./layout.stores";
 import { SignInData } from "./layout.types";
+import { isSuperAdmin, canAccessAdminUI } from "@/lib/client-role.utils";
 
 export const useGetUser = () => {
   const { setUser, reset } = useAppStore();
@@ -48,99 +51,39 @@ export const useSignIn = () => {
 
   return useMutation({
     mutationFn: async (signInData: SignInData) => {
-      console.log(
-        JSON.stringify({
-          hook: "useSignIn",
-          step: "start",
-          data: { email: signInData.email?.substring(0, 3) + "***" },
-        })
-      );
 
       try {
-        console.log(
-          JSON.stringify({ hook: "useSignIn", step: "calling_signIn.email" })
-        );
         const { error } = await signIn.email({
           email: signInData.email,
           password: signInData.password,
         });
 
-        console.log(
-          JSON.stringify({
-            hook: "useSignIn",
-            step: "signIn.email_response",
-            error: error
-              ? { status: error.status, message: error.message }
-              : null,
-          })
-        );
 
         if (error?.status === 403) {
-          console.log(
-            JSON.stringify({ hook: "useSignIn", step: "setting_temp_email" })
-          );
           setTempEmail(signInData.email);
         }
 
         if (error) throw error;
 
-        console.log(
-          JSON.stringify({ hook: "useSignIn", step: "calling_getUserAction" })
-        );
         const { data: userData, error: userError } = await getUserAction();
 
-        console.log(
-          JSON.stringify({
-            hook: "useSignIn",
-            step: "getUserAction_response",
-            hasData: !!userData,
-            error: userError,
-          })
-        );
 
         if (userError) throw new Error(userError);
 
         return userData;
       } catch (err) {
-        console.log(
-          JSON.stringify({
-            hook: "useSignIn",
-            step: "error_caught",
-            error:
-              err instanceof Error
-                ? { name: err.name, message: err.message }
-                : err,
-          })
-        );
         throw err;
       }
     },
     onSuccess: (data) => {
-      console.log(
-        JSON.stringify({
-          hook: "useSignIn",
-          step: "onSuccess",
-          hasData: !!data,
-        })
-      );
       if (data) {
         setUser(data);
         setUserData(data);
       }
       toast.success("Successfully signed in");
-      console.log(
-        JSON.stringify({ hook: "useSignIn", step: "redirecting_to_home" })
-      );
       router.push(configuration.paths.home);
     },
     onError: (error: { status?: number; message?: string }) => {
-      console.log(
-        JSON.stringify({
-          hook: "useSignIn",
-          step: "onError",
-          error: { status: error?.status, message: error?.message },
-        })
-      );
       if (error?.status === 403) return;
       toast.error(error?.message || "Failed to sign in");
     },
@@ -173,6 +116,47 @@ export const useGetUserProfile = () => {
       return data ?? null;
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60 * 10,
+  });
+};
+
+export const useAdminAccess = () => {
+  const { data: userWithMembers } = useGetUserMembers();
+  const { selectedOrganizationIds } = useAppStore();
+
+  const isSuperAdminUser = isSuperAdmin(userWithMembers || null);
+  const hasAdminUI = canAccessAdminUI(userWithMembers || null, selectedOrganizationIds);
+
+  return isSuperAdminUser || hasAdminUI;
+};
+
+export const useCreateOrganization = () => {
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const { data, error } = await createOrganizationAction(name);
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Organization created successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create organization");
+    },
+  });
+};
+
+export const useGetAllOrganizations = () => {
+  const { user } = useAppStore();
+
+  return useQuery({
+    queryKey: ["organizations", "all"],
+    queryFn: async () => {
+      const { data, error } = await getAllOrganizationsAction();
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user?.id && user?.role === "super-admin",
     staleTime: 1000 * 60 * 10,
   });
 };

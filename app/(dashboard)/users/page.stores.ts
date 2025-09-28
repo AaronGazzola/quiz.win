@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { UserTableState, BulkOperationState, UserWithDetails, UserDetailDialogState, ConfirmationDialogState } from "./page.types";
+import { UserTableState, BulkOperationState, UserWithDetails, UserRoleManagementDialogState, ConfirmationDialogState, OrganizationRole } from "./page.types";
 
 const initialUserTableState = {
   search: "",
@@ -102,16 +102,29 @@ export const useViewportPagination = () => {
   return { calculateItemsPerPage, ROW_HEIGHT };
 };
 
-export const useUserDetailDialogStore = create<UserDetailDialogState>()((set) => ({
+export const useUserRoleManagementDialogStore = create<UserRoleManagementDialogState>()((set, get) => ({
   isOpen: false,
   selectedUser: null,
+  organizationRoles: [],
 
-  openDialog: (user: UserWithDetails) => {
-    set({ isOpen: true, selectedUser: user });
+  openDialog: (user: UserWithDetails, sharedOrganizations: OrganizationRole[]) => {
+    set({ isOpen: true, selectedUser: user, organizationRoles: sharedOrganizations });
   },
 
   closeDialog: () => {
-    set({ isOpen: false, selectedUser: null });
+    set({ isOpen: false, selectedUser: null, organizationRoles: [] });
+  },
+
+  updateRole: (organizationId: string, newRole: string) => {
+    const roles = get().organizationRoles.map(role =>
+      role.organizationId === organizationId ? { ...role, newRole } : role
+    );
+    set({ organizationRoles: roles });
+  },
+
+  resetRoles: () => {
+    const roles = get().organizationRoles.map(role => ({ ...role, newRole: role.currentRole }));
+    set({ organizationRoles: roles });
   },
 }));
 
@@ -120,13 +133,18 @@ export const useConfirmationDialogStore = create<ConfirmationDialogState>()((set
   type: null,
   title: "",
   message: "",
+  banReason: "",
   onConfirm: null,
 
-  openDialog: (type, title, message, onConfirm) => {
-    set({ isOpen: true, type, title, message, onConfirm });
+  openDialog: (type, title, message, onConfirm, banReason) => {
+    set({ isOpen: true, type, title, message, onConfirm, banReason: banReason || "" });
   },
 
   closeDialog: () => {
-    set({ isOpen: false, type: null, title: "", message: "", onConfirm: null });
+    set({ isOpen: false, type: null, title: "", message: "", banReason: "", onConfirm: null });
+  },
+
+  setBanReason: (reason: string) => {
+    set({ banReason: reason });
   },
 }));

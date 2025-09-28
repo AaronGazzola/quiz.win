@@ -136,7 +136,7 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
     await memberContext.close();
   });
 
-  test('Quizzes page dual-table functionality', async ({ browser }) => {
+  test('Dashboard quiz dual-table functionality', async ({ browser }) => {
     const adminContext = await browser.newContext();
     await setupAuthContext(adminContext, mockOrgAdminSession);
     const page = await adminContext.newPage();
@@ -162,10 +162,10 @@ test.describe('Dashboard Pages - Role-Based Access', () => {
       });
     });
 
-    await page.goto('/quizzes');
+    await page.goto('/');
 
-    // Check that quiz table loads
-    await expect(page.getByText('Quiz Management')).toBeVisible();
+    // Check that quiz table loads on dashboard
+    await expect(page.getByText('Quizzes')).toBeVisible();
     await expect(page.getByText('Test Quiz 1')).toBeVisible();
 
     // Check for radio button selection
@@ -281,8 +281,8 @@ test.describe('Permission Boundaries', () => {
     await page.goto('/users');
     await expect(page.getByText('user1@org1.com')).toBeVisible();
 
-    // Test quizzes page data isolation
-    await page.goto('/quizzes');
+    // Test quizzes data isolation on dashboard
+    await page.goto('/');
     await expect(page.getByText('Org1 Quiz')).toBeVisible();
 
     await context.close();

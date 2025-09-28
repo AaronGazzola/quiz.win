@@ -7,7 +7,6 @@ async function assignAdmin() {
 
   if (!email) {
     console.error("Please provide an email address");
-    console.log("Usage: npm run admin <email>");
     process.exit(1);
   }
 
@@ -26,9 +25,6 @@ async function assignAdmin() {
       data: { role: "super-admin" },
     });
 
-    console.log(`✅ Successfully assigned super-admin role to ${updatedUser.email}`);
-    console.log(`User ID: ${updatedUser.id}`);
-    console.log(`Role: ${updatedUser.role}`);
   } catch (error) {
     console.error("❌ Error assigning admin role:", error);
     process.exit(1);

@@ -25,72 +25,36 @@ export default function DevSignInButtons({
   }
 
   const handleDevSignIn = async (user: DevUser) => {
-    console.log(
-      JSON.stringify({
-        devSignIn: "component_start",
-        userEmail: user.email?.substring(0, 3) + "***",
-      })
-    );
 
     setLoadingUser(user.email);
     onSigningIn?.(user.email);
 
     try {
-      console.log(
-        JSON.stringify({
-          devSignIn: "calling_signIn_email",
-          email: user.email?.substring(0, 3) + "***",
-        })
-      );
 
       const { error } = await signIn.email({
         email: user.email,
         password: "Password123!",
       });
 
-      console.log(
-        JSON.stringify({ devSignIn: "signIn_result", hasError: !!error })
-      );
 
       if (error) {
-        console.log(
-          JSON.stringify({ devSignIn: "signIn_error", error: error.message })
-        );
         return;
       }
 
-      console.log(
-        JSON.stringify({ devSignIn: "signIn_success_fetching_user" })
-      );
       const { data: userData, error: userError } = await getUserAction();
 
       if (userError) {
-        console.log(
-          JSON.stringify({ devSignIn: "getUserAction_error", error: userError })
-        );
         return;
       }
 
       if (userData) {
         setUser(userData);
         setUserData(userData);
-        console.log(JSON.stringify({ devSignIn: "user_data_set_success" }));
       }
 
-      console.log(JSON.stringify({ devSignIn: "signIn_success_redirecting" }));
       router.push("/");
     } catch (error) {
-      console.log(
-        JSON.stringify({
-          devSignIn: "catch_error",
-          error:
-            error instanceof Error
-              ? { name: error.name, message: error.message }
-              : error,
-        })
-      );
     } finally {
-      console.log(JSON.stringify({ devSignIn: "cleanup" }));
       setLoadingUser(null);
     }
   };

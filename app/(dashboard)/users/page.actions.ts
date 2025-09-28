@@ -92,6 +92,10 @@ export const getUsersAction = async (
             id: true,
             name: true,
             slug: true,
+            logo: true,
+            metadata: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
       },
@@ -147,20 +151,34 @@ export const getUsersAction = async (
       });
     }
 
-    const take = itemsPerPage || 10;
-    const skip = page && itemsPerPage ? page * itemsPerPage : 0;
-    const paginatedMembers = filteredMembers.slice(skip, skip + take);
-    const totalPages = Math.ceil(filteredMembers.length / take);
+    const userMap = new Map<string, UserWithDetails>();
 
-    return getActionResponse({
-      data: {
-        users: paginatedMembers.map(member => ({
+    filteredMembers.forEach(member => {
+      const userId = member.user.id;
+      if (userMap.has(userId)) {
+        const existingUser = userMap.get(userId)!;
+        existingUser.members.push(member);
+        existingUser._count.members += 1;
+      } else {
+        userMap.set(userId, {
           ...member.user,
           members: [member],
           _count: { members: 1 },
-        })) as unknown as UserWithDetails[],
+        });
+      }
+    });
+
+    const uniqueUsers = Array.from(userMap.values());
+    const take = itemsPerPage || 10;
+    const skip = page && itemsPerPage ? page * itemsPerPage : 0;
+    const paginatedUsers = uniqueUsers.slice(skip, skip + take);
+    const totalPages = Math.ceil(uniqueUsers.length / take);
+
+    return getActionResponse({
+      data: {
+        users: paginatedUsers,
         totalPages,
-        totalCount: filteredMembers.length
+        totalCount: uniqueUsers.length
       }
     });
   } catch (error) {
@@ -199,9 +217,20 @@ export const changeUserRoleAction = async (
       }
     }
 
+    const targetMember = await db.member.findFirst({
+      where: {
+        userId: userId,
+        organizationId
+      }
+    });
+
+    if (!targetMember) {
+      return getActionResponse({ error: "Member not found" });
+    }
+
     await auth.api.updateMemberRole({
       body: {
-        memberId: userId,
+        memberId: targetMember.id,
         organizationId,
         role: newRole,
       },
@@ -365,6 +394,73 @@ export const bulkToggleUserBanAction = async (
         successCount++;
       } catch (error) {
         console.error(`Failed to ${banned ? 'ban' : 'unban'} user ${userId}:`, error);
+      }
+    }
+
+    return getActionResponse({ data: successCount });
+  } catch (error) {
+    return getActionResponse({ error });
+  }
+};
+
+export const updateMultipleUserRolesAction = async (
+  userId: string,
+  roleChanges: { organizationId: string; newRole: string }[]
+): Promise<ActionResponse<number>> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return getActionResponse({ error: "Not authenticated" });
+    }
+
+    const { db } = await getAuthenticatedClient();
+    const isSuper = await isSuperAdmin();
+    let successCount = 0;
+
+    for (const change of roleChanges) {
+      try {
+        if (!isSuper) {
+          const userAdminMembership = await db.member.findFirst({
+            where: {
+              userId: session.user.id,
+              organizationId: change.organizationId,
+              role: { in: ["admin", "owner"] }
+            }
+          });
+
+          if (!userAdminMembership) {
+            console.error(`User does not have admin access to organization ${change.organizationId}`);
+            continue;
+          }
+        }
+
+        const targetMember = await db.member.findFirst({
+          where: {
+            userId: userId,
+            organizationId: change.organizationId
+          }
+        });
+
+        if (!targetMember) {
+          console.error(`Member not found for user ${userId} in organization ${change.organizationId}`);
+          continue;
+        }
+
+        await auth.api.updateMemberRole({
+          body: {
+            memberId: targetMember.id,
+            organizationId: change.organizationId,
+            role: change.newRole,
+          },
+          headers: await headers(),
+        });
+
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to update role for organization ${change.organizationId}:`, error);
       }
     }
 

@@ -38,13 +38,17 @@ export const getQuizForTakingAction = async (
       return getActionResponse({ error: "Quiz not found or inactive" });
     }
 
-    const userOrganizations = await getUserOrganizations(session.user.id);
-    const hasAccess = userOrganizations.some(
-      (org) => org.id === quiz.organizationId
-    );
+    const isSuperAdmin = session.user.role === "super-admin";
 
-    if (!hasAccess) {
-      return getActionResponse({ error: "Access denied to this quiz" });
+    if (!isSuperAdmin) {
+      const userOrganizations = await getUserOrganizations(session.user.id);
+      const hasAccess = userOrganizations.some(
+        (org) => org.id === quiz.organizationId
+      );
+
+      if (!hasAccess) {
+        return getActionResponse({ error: "Access denied to this quiz" });
+      }
     }
 
     return getActionResponse({ data: quiz as QuizForTaking });

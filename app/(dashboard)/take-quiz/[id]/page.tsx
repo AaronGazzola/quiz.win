@@ -1,11 +1,22 @@
 "use client";
 
 import { useGetUser } from "@/app/layout.hooks";
-import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Clock, CheckCircle, XCircle } from "lucide-react";
+import { queryClient } from "@/app/layout.providers";
 import { cn } from "@/lib/shadcn.utils";
-import { useGetQuizForTaking, useSubmitResponse, useGetExistingResponse } from "./page.hooks";
+import {
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  XCircle,
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  useGetExistingResponse,
+  useGetQuizForTaking,
+  useSubmitResponse,
+} from "./page.hooks";
 import { useQuizPlayerStore } from "./page.stores";
 
 export default function TakeQuizPage() {
@@ -14,8 +25,11 @@ export default function TakeQuizPage() {
   const { data: user } = useGetUser();
   const quizId = Array.isArray(id) ? id[0] : id;
 
-  const { data: quiz, isLoading: quizLoading } = useGetQuizForTaking(quizId || "");
-  const { data: existingResponse, isLoading: responseLoading } = useGetExistingResponse(quizId || "");
+  const { data: quiz, isLoading: quizLoading } = useGetQuizForTaking(
+    quizId || ""
+  );
+  const { data: existingResponse, isLoading: responseLoading } =
+    useGetExistingResponse(quizId || "");
   const submitResponseMutation = useSubmitResponse();
 
   const {
@@ -24,8 +38,8 @@ export default function TakeQuizPage() {
     isSubmitting,
     setCurrentQuestion,
     setAnswer,
-    completeQuiz,
-    initializeAnswers
+    initializeAnswers,
+    resetQuiz,
   } = useQuizPlayerStore();
 
   const [startTime] = useState(Date.now());
@@ -42,13 +56,16 @@ export default function TakeQuizPage() {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-6"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-8"></div>
+          <div className="h-8 bg-muted rounded w-1/2 mb-6"></div>
+          <div className="h-4 bg-muted rounded w-1/4 mb-8"></div>
           <div className="space-y-4">
-            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div className="h-6 bg-muted rounded w-3/4"></div>
             <div className="space-y-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div
+                  key={i}
+                  className="h-10 bg-muted rounded"
+                ></div>
               ))}
             </div>
           </div>
@@ -72,7 +89,9 @@ export default function TakeQuizPage() {
   if (!quiz) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-4">Quiz not found</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
+          Quiz not found
+        </h1>
         <button
           onClick={() => router.back()}
           className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -85,26 +104,32 @@ export default function TakeQuizPage() {
 
   if (existingResponse && existingResponse.score !== null) {
     const userAnswers = Array.isArray(existingResponse.answers)
-      ? existingResponse.answers as { questionId: string; selectedAnswer: string; isCorrect: boolean }[]
+      ? (existingResponse.answers as {
+          questionId: string;
+          selectedAnswer: string;
+          isCorrect: boolean;
+        }[])
       : [];
     const scorePercentage = Math.round((existingResponse.score || 0) * 100);
-    const correctAnswers = userAnswers.filter(a => a.isCorrect).length;
+    const correctAnswers = userAnswers.filter((a) => a.isCorrect).length;
     const currentQuestion = quiz.questions[currentQuestionIndex];
-    const currentUserAnswer = userAnswers.find(a => a.questionId === currentQuestion?.id);
+    const currentUserAnswer = userAnswers.find(
+      (a) => a.questionId === currentQuestion?.id
+    );
     const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="mb-6">
           <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 mb-4"
+            onClick={() => router.push("/")}
+            className="flex items-center text-muted-foreground hover:text-foreground mb-4"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back to Dashboard
           </button>
 
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+          <div className="bg-card border border-border rounded-lg p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 flex items-center">
@@ -112,7 +137,9 @@ export default function TakeQuizPage() {
                   {quiz.title} - Review
                 </h1>
                 {quiz.description && (
-                  <p className="text-gray-600 dark:text-gray-300 mt-1">{quiz.description}</p>
+                  <p className="text-muted-foreground mt-1">
+                    {quiz.description}
+                  </p>
                 )}
               </div>
               <div className="text-right">
@@ -128,16 +155,17 @@ export default function TakeQuizPage() {
             <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
               <div className="flex items-center">
                 <Clock className="w-4 h-4 mr-1" />
-                Completed on {new Date(existingResponse.completedAt).toLocaleDateString()}
+                Completed on{" "}
+                {new Date(existingResponse.completedAt).toLocaleDateString()}
               </div>
               <div>
                 Question {currentQuestionIndex + 1} of {quiz.questions.length}
               </div>
             </div>
 
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-4">
+            <div className="w-full bg-muted rounded-full h-2 mt-4">
               <div
-                className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
+                className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -145,18 +173,21 @@ export default function TakeQuizPage() {
         </div>
 
         {currentQuestion && (
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8">
+          <div className="bg-card border border-border rounded-lg p-8">
             <div className="mb-6">
-              <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50 mb-4">
+              <h2 className="text-xl font-medium text-foreground mb-4">
                 {currentQuestion.question}
               </h2>
 
               <div className="space-y-3">
                 {currentQuestion.options.map((option, optionIndex) => {
-                  const isUserSelected = currentUserAnswer?.selectedAnswer === option;
+                  const isUserSelected =
+                    currentUserAnswer?.selectedAnswer === option;
                   const isCorrect = currentQuestion.correctAnswer === option;
-                  const isUserCorrect = currentUserAnswer?.isCorrect && isUserSelected;
-                  const isUserWrong = !currentUserAnswer?.isCorrect && isUserSelected;
+                  const isUserCorrect =
+                    currentUserAnswer?.isCorrect && isUserSelected;
+                  const isUserWrong =
+                    !currentUserAnswer?.isCorrect && isUserSelected;
 
                   return (
                     <div
@@ -164,12 +195,12 @@ export default function TakeQuizPage() {
                       className={cn(
                         "flex items-center p-4 border-2 rounded-lg",
                         isUserCorrect
-                          ? "border-green-500 bg-green-50 dark:bg-green-950 dark:border-green-400"
+                          ? "border-green-500 bg-green-50 dark:bg-green-950/20 dark:border-green-500"
                           : isUserWrong
-                          ? "border-red-500 bg-red-50 dark:bg-red-950 dark:border-red-400"
-                          : isCorrect
-                          ? "border-green-300 bg-green-25 dark:bg-green-900/20 dark:border-green-500"
-                          : "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
+                            ? "border-red-500 bg-red-50 dark:bg-red-950/20 dark:border-red-500"
+                            : isCorrect
+                              ? "border-green-300 bg-green-50/50 dark:bg-green-900/20 dark:border-green-500"
+                              : "border-border bg-muted"
                       )}
                     >
                       <div
@@ -177,27 +208,29 @@ export default function TakeQuizPage() {
                           "flex-shrink-0 w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center",
                           isUserSelected
                             ? isUserCorrect
-                              ? "border-green-500 bg-green-500 dark:border-green-400 dark:bg-green-400"
-                              : "border-red-500 bg-red-500 dark:border-red-400 dark:bg-red-400"
+                              ? "border-green-500 bg-green-500"
+                              : "border-red-500 bg-red-500"
                             : isCorrect
-                            ? "border-green-500 bg-green-500 dark:border-green-400 dark:bg-green-400"
-                            : "border-gray-300 dark:border-gray-500"
+                              ? "border-green-500 bg-green-500"
+                              : "border-border"
                         )}
                       >
                         {(isUserSelected || isCorrect) && (
                           <div className="w-2 h-2 rounded-full bg-white" />
                         )}
                       </div>
-                      <span className={cn(
-                        "flex-1",
-                        isUserSelected || isCorrect
-                          ? "text-gray-900 dark:text-gray-100 font-medium"
-                          : "text-gray-600 dark:text-gray-400"
-                      )}>
+                      <span
+                        className={cn(
+                          "flex-1",
+                          isUserSelected || isCorrect
+                            ? "text-foreground font-medium"
+                            : "text-muted-foreground"
+                        )}
+                      >
                         {option}
                       </span>
                       {isUserSelected && (
-                        <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <span className="ml-2 text-sm font-medium text-muted-foreground">
                           Your answer
                         </span>
                       )}
@@ -212,19 +245,21 @@ export default function TakeQuizPage() {
               </div>
 
               {currentUserAnswer && (
-                <div className="mt-4 p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="mt-4 p-3 rounded-lg bg-muted border border-border">
                   <div className="flex items-center text-sm">
                     {currentUserAnswer.isCorrect ? (
-                      <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400 mr-2" />
+                      <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-500 dark:text-red-400 mr-2" />
+                      <XCircle className="w-4 h-4 text-red-500 mr-2" />
                     )}
-                    <span className={cn(
-                      "font-medium",
-                      currentUserAnswer.isCorrect
-                        ? "text-green-700 dark:text-green-300"
-                        : "text-red-700 dark:text-red-300"
-                    )}>
+                    <span
+                      className={cn(
+                        "font-medium",
+                        currentUserAnswer.isCorrect
+                          ? "text-green-700 dark:text-green-300"
+                          : "text-red-700 dark:text-red-300"
+                      )}
+                    >
                       {currentUserAnswer.isCorrect ? "Correct!" : "Incorrect"}
                     </span>
                   </div>
@@ -232,11 +267,11 @@ export default function TakeQuizPage() {
               )}
             </div>
 
-            <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center pt-6 border-t border-border">
               <button
                 onClick={handlePrevious}
                 disabled={currentQuestionIndex === 0}
-                className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -244,7 +279,9 @@ export default function TakeQuizPage() {
 
               <div className="flex space-x-2">
                 {quiz.questions.map((_, index) => {
-                  const questionAnswer = userAnswers.find(a => a.questionId === quiz.questions[index].id);
+                  const questionAnswer = userAnswers.find(
+                    (a) => a.questionId === quiz.questions[index].id
+                  );
                   return (
                     <button
                       key={index}
@@ -252,12 +289,12 @@ export default function TakeQuizPage() {
                       className={cn(
                         "w-8 h-8 rounded-full text-sm font-medium border-2",
                         index === currentQuestionIndex
-                          ? "border-blue-500 bg-blue-500 text-white dark:border-blue-400 dark:bg-blue-400"
+                          ? "border-primary bg-primary text-primary-foreground"
                           : questionAnswer?.isCorrect
-                          ? "border-green-500 bg-green-500 text-white dark:border-green-400 dark:bg-green-400"
-                          : questionAnswer
-                          ? "border-red-500 bg-red-500 text-white dark:border-red-400 dark:bg-red-400"
-                          : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500"
+                            ? "border-green-500 bg-green-500 text-white"
+                            : questionAnswer
+                              ? "border-red-500 bg-red-500 text-white"
+                              : "border-border text-muted-foreground hover:border-muted-foreground"
                       )}
                     >
                       {index + 1}
@@ -269,7 +306,7 @@ export default function TakeQuizPage() {
               <button
                 onClick={handleNext}
                 disabled={currentQuestionIndex === quiz.questions.length - 1}
-                className="flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -280,7 +317,6 @@ export default function TakeQuizPage() {
       </div>
     );
   }
-
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
@@ -295,24 +331,26 @@ export default function TakeQuizPage() {
     const responses = quiz.questions.map((question, index) => ({
       questionId: question.id,
       selectedAnswer: answers[index],
-      isCorrect: answers[index] === question.correctAnswer
+      isCorrect: answers[index] === question.correctAnswer,
     }));
 
-    const score = responses.filter(r => r.isCorrect).length / responses.length;
+    const score =
+      responses.filter((r) => r.isCorrect).length / responses.length;
     const timeSpentMinutes = Math.round((Date.now() - startTime) / 60000);
 
     await submitResponseMutation.mutateAsync({
       quizId: quiz.id,
       answers: responses,
       score,
-      timeSpent: timeSpentMinutes
+      timeSpent: timeSpentMinutes,
     });
 
-    completeQuiz();
-    router.push(`/quiz-results/${quiz.id}`);
+    queryClient.invalidateQueries({ queryKey: ["existing-response", quiz.id] });
+    resetQuiz();
+    setCurrentQuestion(0);
   };
 
-  const answeredCount = answers.filter(answer => answer !== null).length;
+  const answeredCount = answers.filter((answer) => answer !== null).length;
   const allAnswered = answeredCount === quiz.questions.length;
 
   return (
@@ -320,7 +358,7 @@ export default function TakeQuizPage() {
       <div className="mb-6">
         <button
           onClick={() => router.back()}
-          className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 mb-4"
+          className="flex items-center text-muted-foreground hover:text-foreground mb-4"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back
@@ -328,12 +366,14 @@ export default function TakeQuizPage() {
 
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">{quiz.title}</h1>
+            <h1 className="text-2xl font-semibold text-foreground">
+              {quiz.title}
+            </h1>
             {quiz.description && (
-              <p className="text-gray-600 dark:text-gray-300 mt-1">{quiz.description}</p>
+              <p className="text-muted-foreground mt-1">{quiz.description}</p>
             )}
           </div>
-          <div className="text-right text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-right text-sm text-muted-foreground">
             <div className="flex items-center">
               <Clock className="w-4 h-4 mr-1" />
               Question {currentQuestionIndex + 1} of {quiz.questions.length}
@@ -344,18 +384,18 @@ export default function TakeQuizPage() {
           </div>
         </div>
 
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-8">
+        <div className="w-full bg-muted rounded-full h-2 mb-8">
           <div
-            className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
+            className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {currentQuestion && (
-        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8">
+        <div className="bg-card border border-border rounded-lg p-8">
           <div className="mb-6">
-            <h2 className="text-xl font-medium text-gray-900 dark:text-gray-50 mb-4">
+            <h2 className="text-xl font-medium text-foreground mb-4">
               {currentQuestion.question}
             </h2>
 
@@ -366,8 +406,8 @@ export default function TakeQuizPage() {
                   className={cn(
                     "flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors",
                     currentAnswer === option
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-400"
-                      : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-muted-foreground"
                   )}
                 >
                   <input
@@ -382,25 +422,25 @@ export default function TakeQuizPage() {
                     className={cn(
                       "flex-shrink-0 w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center",
                       currentAnswer === option
-                        ? "border-blue-500 bg-blue-500 dark:border-blue-400 dark:bg-blue-400"
-                        : "border-gray-300 dark:border-gray-500"
+                        ? "border-primary bg-primary"
+                        : "border-border"
                     )}
                   >
                     {currentAnswer === option && (
                       <div className="w-2 h-2 rounded-full bg-white" />
                     )}
                   </div>
-                  <span className="text-gray-900 dark:text-gray-100">{option}</span>
+                  <span className="text-foreground">{option}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-center pt-6 border-t border-border">
             <button
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
-              className="flex items-center px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
               Previous
@@ -414,10 +454,10 @@ export default function TakeQuizPage() {
                   className={cn(
                     "w-8 h-8 rounded-full text-sm font-medium border-2",
                     index === currentQuestionIndex
-                      ? "border-blue-500 bg-blue-500 text-white dark:border-blue-400 dark:bg-blue-400"
+                      ? "border-primary bg-primary text-primary-foreground"
                       : answers[index] !== null
-                      ? "border-green-500 bg-green-500 text-white dark:border-green-400 dark:bg-green-400"
-                      : "border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500"
+                        ? "border-green-500 bg-green-500 text-white"
+                        : "border-border text-muted-foreground hover:border-muted-foreground"
                   )}
                 >
                   {index + 1}
@@ -429,15 +469,17 @@ export default function TakeQuizPage() {
               <button
                 onClick={handleSubmitQuiz}
                 disabled={submitResponseMutation.isPending || isSubmitting}
-                className="flex items-center px-6 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitResponseMutation.isPending || isSubmitting ? "Submitting..." : "Submit Quiz"}
+                {submitResponseMutation.isPending || isSubmitting
+                  ? "Submitting..."
+                  : "Submit Quiz"}
               </button>
             ) : (
               <button
                 onClick={handleNext}
                 disabled={isLastQuestion}
-                className="flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { TableState, BulkOperationState, QuizWithDetails, ResponseTableState } from "./page.types";
+import { TableState, BulkOperationState, QuizWithDetails, ResponseTableState, ResponseDetailState } from "./page.types";
 
 const initialTableState = {
   search: "",
@@ -96,6 +96,7 @@ const initialResponseTableState = {
   sort: { column: "completedAt", direction: "desc" as "asc" | "desc" | null },
   page: 0,
   itemsPerPage: 10,
+  selectedResponseId: null,
 };
 
 export const useResponseTableStore = create<ResponseTableState>()((set, get) => ({
@@ -117,5 +118,23 @@ export const useResponseTableStore = create<ResponseTableState>()((set, get) => 
   },
   setPage: (page) => set({ page }),
   setItemsPerPage: (itemsPerPage) => set({ itemsPerPage, page: 0 }),
+  setSelectedResponseId: (responseId) => set({ selectedResponseId: responseId }),
+  toggleSelected: (id) => {
+    const { selectedResponseId } = get();
+    set({ selectedResponseId: selectedResponseId === id ? null : id });
+  },
+  clearSelection: () => set({ selectedResponseId: null }),
   reset: () => set(initialResponseTableState),
+}));
+
+const initialResponseDetailState = {
+  selectedResponseId: null,
+  viewMode: "responses" as "responses" | "response-detail",
+};
+
+export const useResponseDetailStore = create<ResponseDetailState>()((set) => ({
+  ...initialResponseDetailState,
+  setSelectedResponseId: (responseId) => set({ selectedResponseId: responseId }),
+  setViewMode: (mode) => set({ viewMode: mode }),
+  reset: () => set(initialResponseDetailState),
 }));

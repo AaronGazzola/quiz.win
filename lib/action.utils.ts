@@ -17,7 +17,6 @@ export const getActionResponse = <T>({
       (typeof error === "object" && error !== null && "toString" in error && typeof error.toString === "function" ? error.toString() : null) ||
       String(error) ||
       "An unexpected error occurred";
-    console.log(JSON.stringify({ error: errorMessage }, null, 0));
     return {
       success: false,
       error: errorMessage,

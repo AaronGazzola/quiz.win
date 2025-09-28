@@ -12,14 +12,12 @@ export const getQuizResultAction = async (
   targetUserId?: string
 ): Promise<ActionResponse<QuizResultData | null>> => {
   try {
-    console.log(JSON.stringify({action:"getQuizResultAction",quizId,targetUserId}));
 
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
     if (!session?.user) {
-      console.log(JSON.stringify({action:"getQuizResultAction",error:"unauthorized"}));
       return getActionResponse({ error: "Unauthorized" });
     }
 
@@ -28,7 +26,6 @@ export const getQuizResultAction = async (
     const userIdToQuery = targetUserId || currentUserId;
     const isViewingOtherUser = targetUserId && targetUserId !== currentUserId;
 
-    console.log(JSON.stringify({action:"getQuizResultAction",currentUserId,userIdToQuery,isViewingOtherUser}));
 
     const response = await db.response.findFirst({
       where: {
@@ -46,7 +43,6 @@ export const getQuizResultAction = async (
       },
     });
 
-    console.log(JSON.stringify({action:"getQuizResultAction",responseFound:!!response,quizOrganizationId:response?.quiz?.organizationId}));
 
     if (!response) {
       return getActionResponse({ error: "Quiz result not found" });
@@ -56,28 +52,27 @@ export const getQuizResultAction = async (
       const isSuperAdminUser = await isSuperAdmin();
       const canManageResponsesForOrg = await canManageResponses(currentUserId, response.quiz.organizationId);
 
-      console.log(JSON.stringify({action:"getQuizResultAction",permissionCheck:{isSuperAdminUser,canManageResponsesForOrg}}));
 
       if (!isSuperAdminUser && !canManageResponsesForOrg) {
         return getActionResponse({ error: "Access denied: insufficient permissions to view other users' responses" });
       }
     }
 
-    const userOrganizations = await getUserOrganizations(currentUserId);
-    const hasAccess = userOrganizations.some(
-      (org) => org.id === response.quiz.organizationId
-    );
+    const isSuperAdminUser = await isSuperAdmin();
 
-    console.log(JSON.stringify({action:"getQuizResultAction",hasOrgAccess:hasAccess}));
+    if (!isSuperAdminUser) {
+      const userOrganizations = await getUserOrganizations(currentUserId);
+      const hasAccess = userOrganizations.some(
+        (org) => org.id === response.quiz.organizationId
+      );
 
-    if (!hasAccess) {
-      return getActionResponse({ error: "Access denied to this quiz result" });
+      if (!hasAccess) {
+        return getActionResponse({ error: "Access denied to this quiz result" });
+      }
     }
 
-    console.log(JSON.stringify({action:"getQuizResultAction",success:true}));
     return getActionResponse({ data: response as QuizResultData });
   } catch (error) {
-    console.log(JSON.stringify({action:"getQuizResultAction",error:error instanceof Error ? error.message : String(error)}));
     return getActionResponse({ error });
   }
 };

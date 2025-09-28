@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useGetUser, useGetUserMembers } from "@/app/layout.hooks";
+import { useGetUser, useGetUserMembers, useCreateOrganization } from "@/app/layout.hooks";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AddOrganizationDialog } from "@/components/AddOrganizationDialog";
-import { useCreateOrganization, useSendInvitations } from "./page.hooks";
+import { useSendInvitations } from "./page.hooks";
 import { cn } from "@/lib/shadcn.utils";
 import { queryClient } from "@/app/layout.providers";
 import {

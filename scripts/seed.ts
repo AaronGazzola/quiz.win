@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { auth } from "../lib/auth";
+import "better-auth/node";
 
 const prisma = new PrismaClient();
 
@@ -91,29 +92,36 @@ async function seed() {
     for (const userData of usersData) {
       console.log(`Creating user: ${userData.email}`);
 
-      const signUpResult = await auth.api.signUpEmail({
-        body: {
+      const signupRequest = new Request(`${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           email: userData.email,
           password: "Password123!",
           name: userData.name,
-        },
+        }),
       });
 
-      if (!signUpResult.user) {
+      const response = await auth.handler(signupRequest);
+      const result = await response.json();
+
+      if (!result.user) {
         throw new Error(`Failed to create user: ${userData.email}`);
       }
 
-      users.push(signUpResult.user);
+      users.push(result.user);
 
       if (userData.role) {
         await prisma.user.update({
-          where: { id: signUpResult.user.id },
+          where: { id: result.user.id },
           data: { role: userData.role },
         });
       }
 
       await prisma.user.update({
-        where: { id: signUpResult.user.id },
+        where: { id: result.user.id },
         data: { emailVerified: true },
       });
     }
@@ -550,8 +558,11 @@ async function seed() {
       },
     ];
 
+    console.log("❓ Creating questions and storing references...");
+    const createdQuestions: Record<string, Array<{ id: string; question: string; correctAnswer: string; order: number }>> = {};
+
     for (const questionSet of questionSets) {
-      await Promise.all(
+      const questions = await Promise.all(
         questionSet.questions.map((question) =>
           prisma.question.create({
             data: {
@@ -561,98 +572,117 @@ async function seed() {
           })
         )
       );
+      createdQuestions[questionSet.quizId] = questions.map(q => ({
+        id: q.id,
+        question: q.question,
+        correctAnswer: q.correctAnswer,
+        order: q.order
+      }));
     }
 
     console.log("📊 Creating quiz responses...");
+
+    const createAnswersArray = (quizId: string, answersByOrder: Record<string, string>) => {
+      const questions = createdQuestions[quizId];
+      return questions.map(question => {
+        const selectedAnswer = answersByOrder[question.order.toString()] || null;
+        return {
+          questionId: question.id,
+          selectedAnswer,
+          isCorrect: selectedAnswer === question.correctAnswer
+        };
+      });
+    };
+
     const responses = [
       {
         quizId: quizzes[0].id,
         userId: users[4].id,
-        answers: {
+        answers: createAnswersArray(quizzes[0].id, {
           "1": "var myVar = 5;",
           "2": "push()",
           "3": "Both value and type",
           "4": "function myFunction() {}",
-        },
-        score: 100,
+        }),
+        score: 1.0,
         completedAt: new Date("2024-01-15T10:30:00Z"),
       },
       {
         quizId: quizzes[0].id,
         userId: users[5].id,
-        answers: {
+        answers: createAnswersArray(quizzes[0].id, {
           "1": "var myVar = 5;",
           "2": "add()",
           "3": "Both value and type",
           "4": "function myFunction() {}",
-        },
-        score: 75,
+        }),
+        score: 0.75,
         completedAt: new Date("2024-01-16T14:20:00Z"),
       },
       {
         quizId: quizzes[1].id,
         userId: users[4].id,
-        answers: {
+        answers: createAnswersArray(quizzes[1].id, {
           "1": "To handle side effects",
           "2": "Through props",
           "3": "A syntax extension",
-        },
-        score: 100,
+        }),
+        score: 1.0,
         completedAt: new Date("2024-01-20T09:15:00Z"),
       },
       {
         quizId: quizzes[1].id,
         userId: users[5].id,
-        answers: {
+        answers: createAnswersArray(quizzes[1].id, {
           "1": "To manage state",
           "2": "Through props",
           "3": "A syntax extension",
-        },
-        score: 67,
+        }),
+        score: 0.67,
         completedAt: new Date("2024-01-21T16:45:00Z"),
       },
       {
         quizId: quizzes[2].id,
         userId: users[8].id,
-        answers: {
+        answers: createAnswersArray(quizzes[2].id, {
           "1": "A unique identifier for records",
           "2": "Organizing data efficiently",
           "3": "Atomicity, Consistency, Isolation, Durability",
-        },
-        score: 100,
+        }),
+        score: 1.0,
         completedAt: new Date("2024-01-25T11:30:00Z"),
       },
       {
         quizId: quizzes[3].id,
         userId: users[9].id,
-        answers: {
+        answers: createAnswersArray(quizzes[3].id, {
           "1": "Initiation",
           "2": "Task scheduling",
           "3": "Minimum Viable Product",
-        },
-        score: 100,
+        }),
+        score: 1.0,
         completedAt: new Date("2024-02-01T08:20:00Z"),
       },
       {
         quizId: quizzes[4].id,
         userId: users[12].id,
-        answers: {
+        answers: createAnswersArray(quizzes[4].id, {
           "1": "Cross-Site Scripting",
           "2": "A security vulnerability",
           "3": "HTTP Secure",
-        },
-        score: 67,
+        }),
+        score: 0.67,
         completedAt: new Date("2024-02-05T13:10:00Z"),
       },
       {
         quizId: quizzes[5].id,
         userId: users[4].id,
-        answers: {
+        answers: createAnswersArray(quizzes[5].id, {
           "1": "Representational State Transfer",
           "2": "PUT",
           "3": "To maintain backward compatibility",
-        },
-        score: 100,
+        }),
+        score: 1.0,
         completedAt: new Date("2024-02-10T15:45:00Z"),
       },
     ];

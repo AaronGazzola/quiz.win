@@ -1,23 +1,23 @@
 "use client";
 
-import { useGetUser, useGetUserMembers } from "@/app/layout.hooks";
+import { useGetUser, useAdminAccess } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
 import { Search, ChevronUp, ChevronDown, Ban } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { cn } from "@/lib/shadcn.utils";
 import { useGetUsers, useViewportResize, useBulkToggleUserBan } from "./page.hooks";
-import { useUserTableStore, useBulkOperationStore, useViewportPagination, useUserDetailDialogStore, useConfirmationDialogStore } from "./page.stores";
-import { UserDetailDialog } from "./UserDetailDialog";
+import { useUserTableStore, useBulkOperationStore, useViewportPagination, useUserRoleManagementDialogStore, useConfirmationDialogStore } from "./page.stores";
+import { UserWithDetails, OrganizationRole } from "./page.types";
 import { ConfirmationDialog } from "./ConfirmationDialog";
-import { RoleBadge } from "@/components/RoleBadge";
+import { UserRoleManagementDialog } from "./UserRoleManagementDialog";
 import { useAppStore } from "@/app/layout.stores";
-import { canAccessAdminUI, isSuperAdmin } from "@/lib/client-role.utils";
 
 export default function UsersPage() {
   const { data: user } = useGetUser();
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
+  const canManageUsers = useAdminAccess();
 
   const {
     search,
@@ -36,10 +36,9 @@ export default function UsersPage() {
 
   const { isVisible: bulkVisible, isLoading: bulkLoading } = useBulkOperationStore();
   const { calculateItemsPerPage } = useViewportPagination();
-  const { openDialog: openUserDetail } = useUserDetailDialogStore();
+  const { openDialog: openRoleManagementDialog } = useUserRoleManagementDialogStore();
   const { openDialog: openConfirmation } = useConfirmationDialogStore();
 
-  const { data: userWithMembers } = useGetUserMembers();
   const { selectedOrganizationIds } = useAppStore();
   const { data: usersData, isLoading } = useGetUsers(selectedOrganizationIds);
   const bulkToggleUserBanMutation = useBulkToggleUserBan();
@@ -47,9 +46,6 @@ export default function UsersPage() {
   const users = usersData?.users || [];
   const totalPages = usersData?.totalPages || 0;
   const totalItems = usersData?.totalCount || 0;
-
-  const isSuperAdminUser = isSuperAdmin(userWithMembers || null);
-  const canManageUsers = isSuperAdminUser || canAccessAdminUI(userWithMembers || null, selectedOrganizationIds);
 
   useViewportResize((height) => {
     const newItemsPerPage = calculateItemsPerPage(height);
@@ -136,6 +132,24 @@ export default function UsersPage() {
     );
   };
 
+  const handleRowClick = (userData: UserWithDetails) => {
+    const sharedOrganizations: OrganizationRole[] = [];
+
+    if (selectedOrganizationIds && selectedOrganizationIds.length > 0 && userData.members) {
+      userData.members.forEach(member => {
+        if (selectedOrganizationIds.includes(member.organizationId)) {
+          sharedOrganizations.push({
+            organizationId: member.organizationId,
+            organizationName: member.organization.name,
+            currentRole: member.role,
+            newRole: member.role
+          });
+        }
+      });
+    }
+
+    openRoleManagementDialog(userData, sharedOrganizations);
+  };
 
   const getOrganizationsDisplay = (userMembers: { organization: { name: string } }[]) => {
     if (userMembers.length === 0) return "No organizations";
@@ -225,15 +239,6 @@ export default function UsersPage() {
                   </button>
                 </th>
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  <button
-                    onClick={() => handleSort("role")}
-                    className="flex items-center space-x-1 hover:text-foreground"
-                  >
-                    <span>Role</span>
-                    {getSortIcon("role")}
-                  </button>
-                </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Organizations
@@ -259,14 +264,13 @@ export default function UsersPage() {
                     <td className="px-6 py-4"><div className="w-4 h-4 bg-muted rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-48" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-20" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                     {search ? `No users found matching "${search}"` : "No users found"}
                   </td>
                 </tr>
@@ -275,7 +279,7 @@ export default function UsersPage() {
                   <tr
                     key={userData.id}
                     className="hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => openUserDetail(userData)}
+                    onClick={() => handleRowClick(userData)}
                   >
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
@@ -294,13 +298,6 @@ export default function UsersPage() {
                       {userData.email}
                     </td>
 
-                    <td className="px-6 py-4">
-                      <RoleBadge
-                        role={userData.role}
-                        variant="compact"
-                        organizationName={userData.members?.[0]?.organization?.name}
-                      />
-                    </td>
 
                     <td className="px-6 py-4 text-sm text-muted-foreground">
                       {getOrganizationsDisplay(userData.members)}
@@ -363,7 +360,7 @@ export default function UsersPage() {
       )}
 
       {/* Dialogs */}
-      <UserDetailDialog />
+      <UserRoleManagementDialog />
       <ConfirmationDialog />
     </div>
   );

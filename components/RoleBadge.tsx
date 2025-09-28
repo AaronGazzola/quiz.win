@@ -22,35 +22,35 @@ export function RoleBadge({
         return {
           label: "Super Admin",
           icon: Shield,
-          bgClass: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+          bgClass: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300",
           iconColor: "text-purple-600",
         };
       case "owner":
         return {
           label: "Owner",
           icon: ShieldCheck,
-          bgClass: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+          bgClass: "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300",
           iconColor: "text-amber-600",
         };
       case "admin":
         return {
           label: "Admin",
           icon: ShieldCheck,
-          bgClass: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+          bgClass: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300",
           iconColor: "text-blue-600",
         };
       case "member":
         return {
           label: "Member",
           icon: User,
-          bgClass: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          bgClass: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300",
           iconColor: "text-green-600",
         };
       default:
         return {
           label: "User",
           icon: User,
-          bgClass: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+          bgClass: "bg-muted text-muted-foreground",
           iconColor: "text-gray-600",
         };
     }

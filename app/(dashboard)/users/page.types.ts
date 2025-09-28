@@ -41,21 +41,33 @@ export interface BulkOperationState {
   setLoading: (loading: boolean) => void;
 }
 
-export interface UserDetailDialogState {
+export interface OrganizationRole {
+  organizationId: string;
+  organizationName: string;
+  currentRole: string;
+  newRole: string;
+}
+
+export interface UserRoleManagementDialogState {
   isOpen: boolean;
   selectedUser: UserWithDetails | null;
-  openDialog: (user: UserWithDetails) => void;
+  organizationRoles: OrganizationRole[];
+  openDialog: (user: UserWithDetails, sharedOrganizations: OrganizationRole[]) => void;
   closeDialog: () => void;
+  updateRole: (organizationId: string, newRole: string) => void;
+  resetRoles: () => void;
 }
 
 export interface ConfirmationDialogState {
   isOpen: boolean;
-  type: 'ban' | 'unban' | 'changeRole' | 'bulkBan' | 'bulkUnban' | 'bulkChangeRole' | null;
+  type: 'ban' | 'unban' | 'changeRole' | 'bulkBan' | 'bulkUnban' | 'bulkChangeRole' | 'saveRoles' | null;
   title: string;
   message: string;
+  banReason?: string;
   onConfirm: (() => void) | null;
-  openDialog: (type: ConfirmationDialogState['type'], title: string, message: string, onConfirm: () => void) => void;
+  openDialog: (type: ConfirmationDialogState['type'], title: string, message: string, onConfirm: () => void, banReason?: string) => void;
   closeDialog: () => void;
+  setBanReason: (reason: string) => void;
 }
 
 export interface RoleAssignmentData {
@@ -68,6 +80,14 @@ export interface BulkRoleAssignmentData {
   userIds: string[];
   organizationId: string;
   newRole: string;
+}
+
+export interface MultipleRoleAssignmentData {
+  userId: string;
+  roleChanges: {
+    organizationId: string;
+    newRole: string;
+  }[];
 }
 
 export interface BanUserData {

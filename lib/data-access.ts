@@ -1,4 +1,6 @@
 import { getUserOrganizations, getUserAdminOrganizations } from "./role.utils";
+import { auth } from "./auth";
+import { headers } from "next/headers";
 
 export const getOrgScopedData = async <T>(
   _userId: string,
@@ -26,6 +28,14 @@ export const validateOrgAccess = async (
   action: "read" | "write" | "admin"
 ): Promise<boolean> => {
   try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
     if (action === "admin") {
       const adminOrgs = await getUserAdminOrganizations(userId);
       return adminOrgs.some(org => org.id === organizationId);
@@ -50,6 +60,20 @@ export const getOrgScopedQuizzes = async (
   userId: string,
   organizationId?: string
 ) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (session?.user?.role === "super-admin") {
+    if (!organizationId) {
+      const allOrgs = await auth.api.listOrganizations({
+        headers: await headers(),
+      });
+      return allOrgs.map(org => org.id);
+    }
+    return [organizationId];
+  }
+
   const memberOrgs = await getUserMemberOrganizations(userId);
 
   if (!organizationId) {
@@ -68,6 +92,20 @@ export const getOrgScopedUsers = async (
   userId: string,
   organizationId?: string
 ) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (session?.user?.role === "super-admin") {
+    if (!organizationId) {
+      const allOrgs = await auth.api.listOrganizations({
+        headers: await headers(),
+      });
+      return allOrgs.map(org => org.id);
+    }
+    return [organizationId];
+  }
+
   const adminOrgs = await getUserAdminOrganizationsData(userId);
 
   if (!organizationId) {
@@ -83,14 +121,33 @@ export const getOrgScopedUsers = async (
 };
 
 export const withOrgPermission = async <T>(
-  _userId: string,
-  _organizationId: string,
-  _resource: "quiz" | "response" | "user",
-  _action: "read" | "create" | "update" | "delete" | "invite",
+  userId: string,
+  organizationId: string,
+  resource: "quiz" | "response" | "user",
+  action: "read" | "create" | "update" | "delete" | "invite",
   operation: () => Promise<T>
 ): Promise<T> => {
-  // TODO: Implement permission checking when auth.api.hasPermission is available
-  // For now, allow access
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (session?.user?.role === "super-admin") {
+    return await operation();
+  }
+
+  const hasPermission = await validateOrgAccess(userId, organizationId,
+    action === "read" ? "read" :
+    resource === "user" || action === "invite" ? "admin" : "write"
+  );
+
+  if (!hasPermission) {
+    throw new OrgAccessError(
+      `Permission denied for ${action} on ${resource}`,
+      organizationId,
+      userId
+    );
+  }
+
   return await operation();
 };
 

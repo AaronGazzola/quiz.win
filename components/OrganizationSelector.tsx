@@ -1,7 +1,8 @@
 "use client";
 
-import { useGetUserMembers } from "@/app/layout.hooks";
+import { useGetUserMembers, useAdminAccess, useCreateOrganization, useGetAllOrganizations } from "@/app/layout.hooks";
 import { useAppStore } from "@/app/layout.stores";
+import { queryClient } from "@/app/layout.providers";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,46 +23,60 @@ import { AddOrganizationDialog } from "./AddOrganizationDialog";
 
 export function OrganizationSelector() {
   const { data: userWithMembers } = useGetUserMembers();
-  const { user, selectedOrganizationIds, setSelectedOrganizationIds } =
+  const { data: allOrganizations } = useGetAllOrganizations();
+  const { selectedOrganizationIds, setSelectedOrganizationIds } =
     useAppStore();
+
+  console.log(JSON.stringify({t:'OrgSelector:render',sIds:selectedOrganizationIds}));
+  const hasAdminAccess = useAdminAccess();
+  const createOrgMutation = useCreateOrganization();
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
-  const organizations =
-    userWithMembers?.members?.map((member) => ({
-      id: member.organizationId,
-      name: member.organization.name,
-      role: member.role,
-    })) || [];
+  const isSuperAdminUser = isSuperAdmin(userWithMembers || null);
 
-  const adminStatusByOrg = getAdminStatusByOrganization(userWithMembers || null);
+  const organizations = isSuperAdminUser && allOrganizations
+    ? allOrganizations.map((org) => ({
+        id: org.id,
+        name: org.name,
+        role: "admin" as const,
+      }))
+    : userWithMembers?.members?.map((member) => ({
+        id: member.organizationId,
+        name: member.organization.name,
+        role: member.role,
+      })) || [];
+
+  console.log(JSON.stringify({t:'OrgSelector:orgs',count:organizations.length,orgIds:organizations.map(o=>o.id),isSuperAdmin:isSuperAdminUser}));
+
+  const adminStatusByOrg = isSuperAdminUser && allOrganizations
+    ? Object.fromEntries(allOrganizations.map(org => [org.id, true]))
+    : getAdminStatusByOrganization(userWithMembers || null);
   const hasPartialAdmin = hasPartialAdminAccess(
     userWithMembers || null,
     selectedOrganizationIds
   );
-  const isSuperAdminUser = isSuperAdmin(user || null);
 
   const handleOrganizationToggle = (orgId: string, checked: boolean) => {
+    console.log(JSON.stringify({t:'OrgSelector:toggle',orgId,checked,prevIds:selectedOrganizationIds}));
     if (checked) {
-      setSelectedOrganizationIds([...selectedOrganizationIds, orgId]);
+      const newIds = [...selectedOrganizationIds, orgId];
+      console.log(JSON.stringify({t:'OrgSelector:adding',newIds}));
+      setSelectedOrganizationIds(newIds);
     } else {
-      setSelectedOrganizationIds(
-        selectedOrganizationIds.filter((id) => id !== orgId)
-      );
+      const newIds = selectedOrganizationIds.filter((id) => id !== orgId);
+      console.log(JSON.stringify({t:'OrgSelector:removing',newIds}));
+      setSelectedOrganizationIds(newIds);
     }
   };
 
   const handleCreateOrganization = async (name: string) => {
-    setIsCreating(true);
     try {
-      console.log(JSON.stringify({ action: "creating_organization", name }));
+      await createOrgMutation.mutateAsync(name);
       setShowAddDialog(false);
-    } catch (error) {
-      console.log(
-        JSON.stringify({ action: "create_organization_error", error })
-      );
-    } finally {
-      setIsCreating(false);
+      queryClient.invalidateQueries({ queryKey: ["organizations", "all"] });
+      queryClient.invalidateQueries({ queryKey: ["user", "members"] });
+    } catch {
+
     }
   };
 
@@ -100,6 +115,7 @@ export function OrganizationSelector() {
               {organizations.map((org) => {
                 const isSelected = selectedOrganizationIds.includes(org.id);
                 const isAdmin = adminStatusByOrg[org.id];
+                console.log(JSON.stringify({t:'OrgSelector:renderItem',orgId:org.id,name:org.name,isSelected,isAdmin}));
 
                 return (
                   <DropdownMenuCheckboxItem
@@ -123,8 +139,7 @@ export function OrganizationSelector() {
             </>
           )}
 
-          {(isSuperAdminUser ||
-            organizations.some((org) => adminStatusByOrg[org.id])) && (
+          {hasAdminAccess && (
             <DropdownMenuItem
               onClick={() => setShowAddDialog(true)}
               className="cursor-pointer"
@@ -140,7 +155,7 @@ export function OrganizationSelector() {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onConfirm={handleCreateOrganization}
-        loading={isCreating}
+        loading={createOrgMutation.isPending}
       />
     </>
   );

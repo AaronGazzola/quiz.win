@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { LogOut, Moon, Sun } from "lucide-react"
+import { LogOut, Moon, Sun, Monitor } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -10,6 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ExtendedUser } from "@/app/layout.types"
@@ -31,8 +34,20 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
     return email.slice(0, 2).toUpperCase()
   }
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark")
+  const setLightTheme = () => setTheme("light")
+  const setDarkTheme = () => setTheme("dark")
+  const setSystemTheme = () => setTheme("system")
+
+  const getThemeIcon = () => {
+    if (theme === "dark") return <Moon className="mr-2 h-4 w-4" />
+    if (theme === "light") return <Sun className="mr-2 h-4 w-4" />
+    return <Monitor className="mr-2 h-4 w-4" />
+  }
+
+  const getThemeLabel = () => {
+    if (theme === "dark") return "Dark"
+    if (theme === "light") return "Light"
+    return "System"
   }
 
   if (!mounted) {
@@ -61,14 +76,26 @@ export function UserAvatarMenu({ user, onSignOut }: UserAvatarMenuProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer">
-          {theme === "dark" ? (
-            <Sun className="mr-2 h-4 w-4" />
-          ) : (
-            <Moon className="mr-2 h-4 w-4" />
-          )}
-          {theme === "dark" ? "Light" : "Dark"} mode
-        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="cursor-pointer">
+            {getThemeIcon()}
+            {getThemeLabel()} mode
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem onClick={setLightTheme} className="cursor-pointer">
+              <Sun className="mr-2 h-4 w-4" />
+              Light
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={setDarkTheme} className="cursor-pointer">
+              <Moon className="mr-2 h-4 w-4" />
+              Dark
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={setSystemTheme} className="cursor-pointer">
+              <Monitor className="mr-2 h-4 w-4" />
+              System
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />

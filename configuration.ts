@@ -13,7 +13,6 @@ export const privatePaths = [
   "/users",
   "/invite",
   "/take-quiz",
-  "/quiz-results",
 ];
 
 export const adminPaths = [

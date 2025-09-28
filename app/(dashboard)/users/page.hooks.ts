@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getUsersAction, toggleUserBanAction, changeUserRoleAction, bulkToggleUserBanAction } from "./page.actions";
+import { getUsersAction, toggleUserBanAction, changeUserRoleAction, bulkToggleUserBanAction, updateMultipleUserRolesAction } from "./page.actions";
 import { useUserTableStore } from "./page.stores";
 import { useEffect } from "react";
 
@@ -117,6 +117,30 @@ export const useBulkToggleUserBan = () => {
   });
 };
 
+export const useUpdateMultipleUserRoles = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      roleChanges
+    }: {
+      userId: string;
+      roleChanges: { organizationId: string; newRole: string }[];
+    }) => {
+      const { data, error } = await updateMultipleUserRolesAction(userId, roleChanges);
+      if (error) throw new Error(error);
+      return data;
+    },
+    onSuccess: (successCount) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success(`${successCount} role(s) updated successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update user roles");
+    },
+  });
+};
 
 export const useViewportResize = (callback: (height: number) => void) => {
   useEffect(() => {

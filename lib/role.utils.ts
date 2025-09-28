@@ -1,22 +1,51 @@
 import { auth } from "./auth";
 import { headers } from "next/headers";
 
-export const isOrgAdmin = async (_userId: string, _organizationId: string): Promise<boolean> => {
+interface OrganizationWithRole {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  createdAt: Date;
+  logo?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export const isOrgAdmin = async (userId: string, organizationId: string): Promise<boolean> => {
   try {
-    // TODO: Implement role checking when auth.api.hasRole is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    const adminOrgs = await getUserAdminOrganizations(userId);
+    return adminOrgs.some(org => org.id === organizationId);
   } catch (error) {
     console.error("Error checking org admin role:", error);
     return false;
   }
 };
 
-export const isOrgOwner = async (_userId: string, _organizationId: string): Promise<boolean> => {
+export const isOrgOwner = async (userId: string, organizationId: string): Promise<boolean> => {
   try {
-    // TODO: Implement role checking when auth.api.hasRole is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    const allOrgs = await auth.api.listOrganizations({
+      headers: await headers(),
+    });
+
+    return allOrgs.some((org) =>
+      org.id === organizationId && (org as OrganizationWithRole).role === "owner"
+    );
   } catch (error) {
     console.error("Error checking org owner role:", error);
     return false;
@@ -36,13 +65,19 @@ export const isSuperAdmin = async (): Promise<boolean> => {
 };
 
 export const canManageQuizzes = async (
-  _userId: string,
-  _organizationId: string
+  userId: string,
+  organizationId: string
 ): Promise<boolean> => {
   try {
-    // TODO: Implement permission checking when auth.api.hasPermission is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    return await isOrgAdmin(userId, organizationId);
   } catch (error) {
     console.error("Error checking quiz management permission:", error);
     return false;
@@ -50,13 +85,20 @@ export const canManageQuizzes = async (
 };
 
 export const canViewQuizzes = async (
-  _userId: string,
-  _organizationId: string
+  userId: string,
+  organizationId: string
 ): Promise<boolean> => {
   try {
-    // TODO: Implement permission checking when auth.api.hasPermission is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    const userOrgs = await getUserOrganizations(userId);
+    return userOrgs.some(org => org.id === organizationId);
   } catch (error) {
     console.error("Error checking quiz view permission:", error);
     return false;
@@ -64,13 +106,19 @@ export const canViewQuizzes = async (
 };
 
 export const canManageResponses = async (
-  _userId: string,
-  _organizationId: string
+  userId: string,
+  organizationId: string
 ): Promise<boolean> => {
   try {
-    // TODO: Implement permission checking when auth.api.hasPermission is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    return await isOrgAdmin(userId, organizationId);
   } catch (error) {
     console.error("Error checking response management permission:", error);
     return false;
@@ -78,13 +126,19 @@ export const canManageResponses = async (
 };
 
 export const canManageUsers = async (
-  _userId: string,
-  _organizationId: string
+  userId: string,
+  organizationId: string
 ): Promise<boolean> => {
   try {
-    // TODO: Implement permission checking when auth.api.hasPermission is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    return await isOrgAdmin(userId, organizationId);
   } catch (error) {
     console.error("Error checking user management permission:", error);
     return false;
@@ -104,22 +158,23 @@ export const getUserOrganizations = async (_userId: string) => {
 
 export const getUserAdminOrganizations = async (_userId: string) => {
   try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return await auth.api.listOrganizations({
+        headers: await headers(),
+      });
+    }
+
     const allOrgs = await auth.api.listOrganizations({
       headers: await headers(),
     });
 
-    const adminOrgs = [];
-    for (const org of allOrgs) {
-      // TODO: Implement role checking when auth.api.hasRole is available
-      // For now, assume user is admin/owner of all orgs
-      const isAdmin = true;
-      const isOwner = true;
-      if (isAdmin || isOwner) {
-        adminOrgs.push(org);
-      }
-    }
-
-    return adminOrgs;
+    return allOrgs.filter((org) =>
+      (org as OrganizationWithRole).role === "admin" || (org as OrganizationWithRole).role === "owner"
+    );
   } catch (error) {
     console.error("Error fetching user admin organizations:", error);
     return [];
@@ -141,13 +196,19 @@ export const getOrgRoleLabel = (role: string): string => {
 
 
 export const canViewUsers = async (
-  _userId: string,
-  _organizationId: string
+  userId: string,
+  organizationId: string
 ): Promise<boolean> => {
   try {
-    // TODO: Implement permission checking when auth.api.hasPermission is available
-    // For now, return true to allow access
-    return true;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    return await isOrgAdmin(userId, organizationId);
   } catch (error) {
     console.error("Error checking user view permission:", error);
     return false;
