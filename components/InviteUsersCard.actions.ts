@@ -15,14 +15,19 @@ export interface InvitationData {
 export const inviteUsersAction = async (
   data: InvitationData
 ): Promise<ActionResponse<{ invited: number; existing: number; invalid: string[] }>> => {
+  console.log(JSON.stringify({inviteAction:"start",emailCount:data.emails.length,orgId:data.organizationId,role:data.role}));
+
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
     if (!session?.user) {
+      console.log(JSON.stringify({inviteAction:"unauthorized"}));
       return getActionResponse({ error: "Unauthorized" });
     }
+
+    console.log(JSON.stringify({inviteAction:"auth_check",userId:session.user.id}));
 
     const { db } = await getAuthenticatedClient();
 
@@ -38,7 +43,10 @@ export const inviteUsersAction = async (
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
     const isSuperAdmin = session.user.role === "super-admin";
 
+    console.log(JSON.stringify({inviteAction:"permission_check",isAdmin,isSuperAdmin,userRole:userMembership?.role}));
+
     if (!isAdmin && !isSuperAdmin) {
+      console.log(JSON.stringify({inviteAction:"access_denied"}));
       return getActionResponse({ error: "Access denied" });
     }
 
@@ -46,10 +54,14 @@ export const inviteUsersAction = async (
     const validEmails = data.emails.filter(email => emailRegex.test(email));
     const invalidEmails = data.emails.filter(email => !emailRegex.test(email));
 
+    console.log(JSON.stringify({inviteAction:"email_validation",valid:validEmails.length,invalid:invalidEmails.length}));
+
     let invited = 0;
     let existing = 0;
 
     for (const email of validEmails) {
+      console.log(JSON.stringify({inviteAction:"processing_email",email:email?.substring(0,3)+"***"}));
+
       const existingUser = await db.user.findUnique({
         where: { email },
       });
@@ -65,6 +77,7 @@ export const inviteUsersAction = async (
         });
 
         if (existingMember) {
+          console.log(JSON.stringify({inviteAction:"existing_member",email:email?.substring(0,3)+"***"}));
           existing++;
           continue;
         }
@@ -80,6 +93,7 @@ export const inviteUsersAction = async (
       });
 
       if (existingInvitation) {
+        console.log(JSON.stringify({inviteAction:"existing_invitation",email:email?.substring(0,3)+"***"}));
         existing++;
         continue;
       }
@@ -100,8 +114,11 @@ export const inviteUsersAction = async (
         },
       });
 
+      console.log(JSON.stringify({inviteAction:"invitation_created",email:email?.substring(0,3)+"***",role:data.role}));
       invited++;
     }
+
+    console.log(JSON.stringify({inviteAction:"complete",invited,existing,invalid:invalidEmails.length}));
 
     return getActionResponse({
       data: {
@@ -111,6 +128,7 @@ export const inviteUsersAction = async (
       },
     });
   } catch (error) {
+    console.log(JSON.stringify({inviteAction:"error",error:error instanceof Error?error.message:"unknown"}));
     return getActionResponse({ error });
   }
 };
@@ -125,14 +143,19 @@ export const getPendingInvitationsAction = async (
   expiresAt: Date;
   status: string;
 }[]>> => {
+  console.log(JSON.stringify({getPendingInvitations:"start",orgId:organizationId}));
+
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
     if (!session?.user) {
+      console.log(JSON.stringify({getPendingInvitations:"unauthorized"}));
       return getActionResponse({ error: "Unauthorized" });
     }
+
+    console.log(JSON.stringify({getPendingInvitations:"auth_check",userId:session.user.id}));
 
     const { db } = await getAuthenticatedClient();
 
@@ -148,9 +171,14 @@ export const getPendingInvitationsAction = async (
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
     const isSuperAdmin = session.user.role === "super-admin";
 
+    console.log(JSON.stringify({getPendingInvitations:"permission_check",isAdmin,isSuperAdmin,userRole:userMembership?.role}));
+
     if (!isAdmin && !isSuperAdmin) {
+      console.log(JSON.stringify({getPendingInvitations:"access_denied"}));
       return getActionResponse({ error: "Access denied" });
     }
+
+    console.log(JSON.stringify({getPendingInvitations:"fetching_invitations"}));
 
     const invitations = await db.invitation.findMany({
       where: {
@@ -171,8 +199,11 @@ export const getPendingInvitationsAction = async (
       },
     });
 
+    console.log(JSON.stringify({getPendingInvitations:"complete",count:invitations.length}));
+
     return getActionResponse({ data: invitations });
   } catch (error) {
+    console.log(JSON.stringify({getPendingInvitations:"error",error:error instanceof Error?error.message:"unknown"}));
     return getActionResponse({ error });
   }
 };
@@ -180,14 +211,19 @@ export const getPendingInvitationsAction = async (
 export const revokeInvitationAction = async (
   invitationId: string
 ): Promise<ActionResponse<{ success: boolean }>> => {
+  console.log(JSON.stringify({revokeInvitation:"start",invitationId}));
+
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
     if (!session?.user) {
+      console.log(JSON.stringify({revokeInvitation:"unauthorized"}));
       return getActionResponse({ error: "Unauthorized" });
     }
+
+    console.log(JSON.stringify({revokeInvitation:"auth_check",userId:session.user.id}));
 
     const { db } = await getAuthenticatedClient();
 
@@ -196,8 +232,11 @@ export const revokeInvitationAction = async (
     });
 
     if (!invitation) {
+      console.log(JSON.stringify({revokeInvitation:"not_found",invitationId}));
       return getActionResponse({ error: "Invitation not found" });
     }
+
+    console.log(JSON.stringify({revokeInvitation:"invitation_found",email:invitation.email?.substring(0,3)+"***",orgId:invitation.organizationId}));
 
     const userMembership = await db.member.findUnique({
       where: {
@@ -211,16 +250,24 @@ export const revokeInvitationAction = async (
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
     const isSuperAdmin = session.user.role === "super-admin";
 
+    console.log(JSON.stringify({revokeInvitation:"permission_check",isAdmin,isSuperAdmin,userRole:userMembership?.role}));
+
     if (!isAdmin && !isSuperAdmin) {
+      console.log(JSON.stringify({revokeInvitation:"access_denied"}));
       return getActionResponse({ error: "Access denied" });
     }
+
+    console.log(JSON.stringify({revokeInvitation:"deleting_invitation"}));
 
     await db.invitation.delete({
       where: { id: invitationId },
     });
 
+    console.log(JSON.stringify({revokeInvitation:"complete",invitationId}));
+
     return getActionResponse({ data: { success: true } });
   } catch (error) {
+    console.log(JSON.stringify({revokeInvitation:"error",error:error instanceof Error?error.message:"unknown"}));
     return getActionResponse({ error });
   }
 };

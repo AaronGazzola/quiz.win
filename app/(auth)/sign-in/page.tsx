@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { signIn } from "@/lib/auth-client";
 import { useSearchParams } from "next/navigation";
+import DevSignInButtons from "./DevSignInButtons";
 
 function SignInForm() {
   const [email, setEmail] = useState("");
@@ -77,6 +78,8 @@ function SignInForm() {
           {isLoading ? "Sending..." : "Send Magic Link"}
         </button>
       </form>
+
+      <DevSignInButtons onSigningIn={(email) => setEmail(email)} />
     </div>
   );
 }
