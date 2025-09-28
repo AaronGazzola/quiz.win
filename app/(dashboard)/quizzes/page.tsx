@@ -45,7 +45,7 @@ export default function QuizzesPage() {
   const { selectedOrganizationIds } = useAppStore();
   const { data: quizData, isLoading } = useGetQuizzes(selectedOrganizationIds);
 
-  const { data: responsesData, isLoading: responsesLoading } = useGetQuizResponses(selectedQuizId);
+  const { data: responsesData, isLoading: responsesLoading } = useGetQuizResponses(selectedQuizId, selectedOrganizationIds);
   const exportResponsesMutation = useExportResponses();
 
   const quizzes = quizData?.quizzes || [];
@@ -121,6 +121,7 @@ export default function QuizzesPage() {
       exportResponsesMutation.mutate({
         quizId: selectedQuiz.id,
         quizTitle: selectedQuiz.title,
+        organizationIds: selectedOrganizationIds,
       });
     }
   };

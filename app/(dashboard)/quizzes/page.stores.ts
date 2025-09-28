@@ -56,6 +56,7 @@ export const useBulkOperationStore = create<BulkOperationState>()((set) => ({
   ...initialBulkState,
   setVisible: (isVisible) => set({ isVisible }),
   setLoading: (isLoading) => set({ isLoading }),
+  reset: () => set(initialBulkState),
 }));
 
 export const useViewportPagination = () => {

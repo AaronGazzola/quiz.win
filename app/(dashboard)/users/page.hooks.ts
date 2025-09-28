@@ -8,11 +8,12 @@ import { useEffect } from "react";
 
 export const useGetUsers = (organizationIds?: string[]) => {
   const { search, sort, page, itemsPerPage } = useUserTableStore();
+  const orgIdsKey = organizationIds?.join(',') || '';
 
   return useQuery({
     queryKey: [
       "users",
-      organizationIds,
+      orgIdsKey,
       search,
       sort.column,
       sort.direction,

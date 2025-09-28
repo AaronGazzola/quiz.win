@@ -21,8 +21,10 @@ export const useProcessInvitation = () => {
 };
 
 export const useGetDashboardMetrics = (organizationIds?: string[]) => {
+  const orgIdsKey = organizationIds?.join(',') || '';
+
   return useQuery({
-    queryKey: ["dashboard-metrics", organizationIds],
+    queryKey: ["dashboard-metrics", orgIdsKey],
     queryFn: async () => {
       const { data, error } = await getDashboardMetricsAction(organizationIds);
       if (error) throw new Error(error);

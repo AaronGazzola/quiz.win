@@ -1,19 +1,23 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  getQuizzesAction,
-  createQuizAction,
-  updateQuizAction,
-  deleteQuizAction,
   bulkDeleteQuizzesAction,
+  createQuizAction,
+  deleteQuizAction,
   getQuizResponsesAction,
-  GetQuizzesParams,
   GetQuizResponsesParams,
+  getQuizzesAction,
+  GetQuizzesParams,
+  updateQuizAction,
 } from "./page.actions";
-import { useQuizTableStore, useBulkOperationStore, useResponseTableStore } from "./page.stores";
+import {
+  useBulkOperationStore,
+  useQuizTableStore,
+  useResponseTableStore,
+} from "./page.stores";
 
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -34,15 +38,32 @@ export const useDebounce = <T>(value: T, delay: number): T => {
 export const useGetQuizzes = (organizationIds?: string[]) => {
   const { search, sort, page, itemsPerPage } = useQuizTableStore();
   const debouncedSearch = useDebounce(search, 300);
+  const orgIdsKey = organizationIds?.join(",") || "";
 
-  const queryParams: GetQuizzesParams = useMemo(() => ({
-    organizationIds,
-    search: debouncedSearch,
-    sortColumn: sort.column || undefined,
-    sortDirection: sort.direction || undefined,
-    page,
-    itemsPerPage,
-  }), [organizationIds, debouncedSearch, sort.column, sort.direction, page, itemsPerPage]);
+  console.log({ orgIdsKey, organizationIds });
+
+  const queryParams: GetQuizzesParams = useMemo(
+    () => ({
+      organizationIds,
+      search: debouncedSearch,
+      sortColumn: sort.column || undefined,
+      sortDirection: sort.direction || undefined,
+      page,
+      itemsPerPage,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      orgIdsKey,
+      debouncedSearch,
+      sort.column,
+      sort.direction,
+      page,
+      itemsPerPage,
+      organizationIds,
+    ]
+  );
+
+  console.log({ queryParams });
 
   return useQuery({
     queryKey: ["quizzes", queryParams],
@@ -75,8 +96,13 @@ export const useUpdateQuiz = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateQuizAction>[1] }) =>
-      updateQuizAction(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Parameters<typeof updateQuizAction>[1];
+    }) => updateQuizAction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       toast.success("Quiz updated successfully");
@@ -147,22 +173,37 @@ export const useViewportResize = (callback: (height: number) => void) => {
   }, [callback]);
 };
 
-export const useGetQuizResponses = (quizId: string | null) => {
+export const useGetQuizResponses = (
+  quizId: string | null,
+  organizationIds?: string[]
+) => {
   const { search, sort, page, itemsPerPage } = useResponseTableStore();
   const debouncedSearch = useDebounce(search, 300);
+  const orgIdsKey = organizationIds?.join(",") || "";
 
   const queryParams: GetQuizResponsesParams | null = useMemo(() => {
     if (!quizId) return null;
 
     return {
       quizId,
+      organizationIds,
       search: debouncedSearch,
       sortColumn: sort.column || undefined,
       sortDirection: sort.direction || undefined,
       page,
       itemsPerPage,
     };
-  }, [quizId, debouncedSearch, sort.column, sort.direction, page, itemsPerPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    quizId,
+    orgIdsKey,
+    debouncedSearch,
+    sort.column,
+    sort.direction,
+    page,
+    itemsPerPage,
+    organizationIds,
+  ]);
 
   return useQuery({
     queryKey: ["quiz-responses", queryParams],
@@ -180,9 +221,18 @@ export const useGetQuizResponses = (quizId: string | null) => {
 
 export const useExportResponses = () => {
   return useMutation({
-    mutationFn: async ({ quizId, quizTitle }: { quizId: string; quizTitle: string }) => {
+    mutationFn: async ({
+      quizId,
+      quizTitle,
+      organizationIds,
+    }: {
+      quizId: string;
+      quizTitle: string;
+      organizationIds?: string[];
+    }) => {
       const params: GetQuizResponsesParams = {
         quizId,
+        organizationIds,
         page: 0,
         itemsPerPage: 10000,
       };
@@ -191,8 +241,14 @@ export const useExportResponses = () => {
       if (error) throw new Error(error);
       if (!data) throw new Error("No data to export");
 
-      const csvHeaders = ["User Name", "User Email", "Score", "Completed At", "Answers"];
-      const csvRows = data.responses.map(response => [
+      const csvHeaders = [
+        "User Name",
+        "User Email",
+        "Score",
+        "Completed At",
+        "Answers",
+      ];
+      const csvRows = data.responses.map((response) => [
         response.user.name || "N/A",
         response.user.email,
         response.score?.toString() || "N/A",
@@ -202,7 +258,9 @@ export const useExportResponses = () => {
 
       const csvContent = [
         csvHeaders.join(","),
-        ...csvRows.map(row => row.map(field => `"${field.replace(/"/g, '""')}"`).join(","))
+        ...csvRows.map((row) =>
+          row.map((field) => `"${field.replace(/"/g, '""')}"`).join(",")
+        ),
       ].join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -210,7 +268,10 @@ export const useExportResponses = () => {
       const url = URL.createObjectURL(blob);
 
       link.setAttribute("href", url);
-      link.setAttribute("download", `${quizTitle}_responses_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        "download",
+        `${quizTitle}_responses_${new Date().toISOString().split("T")[0]}.csv`
+      );
       link.style.visibility = "hidden";
 
       document.body.appendChild(link);
@@ -227,4 +288,3 @@ export const useExportResponses = () => {
     },
   });
 };
-

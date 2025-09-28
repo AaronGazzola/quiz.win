@@ -1,0 +1,4 @@
+- [ ] fix org adding
+  - [ ] any user should be able to create an org
+  - [ ] Adding an org via the invite page works, but not from the org selector component
+  - [ ]

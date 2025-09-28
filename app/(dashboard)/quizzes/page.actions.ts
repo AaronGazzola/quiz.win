@@ -18,6 +18,7 @@ export interface GetQuizzesParams {
 
 export interface GetQuizResponsesParams {
   quizId: string;
+  organizationIds?: string[];
   search?: string;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
@@ -57,22 +58,19 @@ export const getQuizzesAction = async (
     // Get all organizations the user is a member of
     const userMemberships = await db.member.findMany({
       where: { userId: session.user.id },
-      select: { organizationId: true }
+      select: { organizationId: true },
     });
 
-    const userOrgIds = userMemberships.map(m => m.organizationId);
+    const userOrgIds = userMemberships.map((m) => m.organizationId);
 
     if (userOrgIds.length === 0) {
       return getActionResponse({
-        data: { quizzes: [], totalCount: 0, totalPages: 0 }
+        data: { quizzes: [], totalCount: 0, totalPages: 0 },
       });
     }
 
-    // Filter by user's organizations and optionally by specific organizationIds
-    let targetOrgIds = userOrgIds;
-    if (organizationIds && organizationIds.length > 0) {
-      targetOrgIds = organizationIds.filter(id => userOrgIds.includes(id));
-    }
+    const targetOrgIds =
+      organizationIds?.filter((id) => userOrgIds.includes(id)) || [];
 
     const where = {
       organizationId: { in: targetOrgIds },
@@ -84,7 +82,9 @@ export const getQuizzesAction = async (
       }),
     };
 
-    const orderBy = sortColumn ? { [sortColumn]: sortDirection } : { createdAt: "desc" as const };
+    const orderBy = sortColumn
+      ? { [sortColumn]: sortDirection }
+      : { createdAt: "desc" as const };
 
     const [quizzes, totalCount] = await Promise.all([
       db.quiz.findMany({
@@ -184,7 +184,9 @@ export const updateQuizAction = async (
   }
 };
 
-export const deleteQuizAction = async (id: string): Promise<ActionResponse<Quiz>> => {
+export const deleteQuizAction = async (
+  id: string
+): Promise<ActionResponse<Quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -268,6 +270,7 @@ export const getQuizResponsesAction = async (
 
     const {
       quizId,
+      organizationIds,
       search = "",
       sortColumn = "completedAt",
       sortDirection = "desc",
@@ -285,6 +288,17 @@ export const getQuizResponsesAction = async (
       return getActionResponse({ error: "Quiz not found" });
     }
 
+    // If organizationIds are provided, verify the quiz belongs to one of them
+    if (
+      organizationIds &&
+      organizationIds.length > 0 &&
+      !organizationIds.includes(quiz.organizationId)
+    ) {
+      return getActionResponse({
+        data: { responses: [], totalCount: 0, totalPages: 0 },
+      });
+    }
+
     // Check if user is admin of the quiz's organization
     const userMembership = await db.member.findFirst({
       where: {
@@ -297,15 +311,25 @@ export const getQuizResponsesAction = async (
     const isSuperAdmin = session.user.role === "super-admin";
 
     if (!userMembership && !isSuperAdmin) {
-      return getActionResponse({ error: "Insufficient permissions to view responses" });
+      return getActionResponse({
+        error: "Insufficient permissions to view responses",
+      });
     }
 
     // Build search conditions
     const searchConditions = search
       ? {
           OR: [
-            { user: { name: { contains: search, mode: "insensitive" as const } } },
-            { user: { email: { contains: search, mode: "insensitive" as const } } },
+            {
+              user: {
+                name: { contains: search, mode: "insensitive" as const },
+              },
+            },
+            {
+              user: {
+                email: { contains: search, mode: "insensitive" as const },
+              },
+            },
           ],
         }
       : {};
@@ -316,7 +340,8 @@ export const getQuizResponsesAction = async (
     };
 
     // Build order by clause
-    let orderBy: Record<string, string> | { user: { [key: string]: string } } = { completedAt: "desc" };
+    let orderBy: Record<string, string> | { user: { [key: string]: string } } =
+      { completedAt: "desc" };
     if (sortColumn === "score") {
       orderBy = { score: sortDirection };
     } else if (sortColumn === "completedAt") {
@@ -359,4 +384,3 @@ export const getQuizResponsesAction = async (
     return getActionResponse({ error });
   }
 };
-

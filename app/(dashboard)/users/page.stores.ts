@@ -1,15 +1,19 @@
 import { create } from "zustand";
 import { UserTableState, BulkOperationState, UserWithDetails, UserDetailDialogState, ConfirmationDialogState } from "./page.types";
 
-export const useUserTableStore = create<UserTableState>()((set, get) => ({
+const initialUserTableState = {
   search: "",
   sort: {
     column: "",
-    direction: null,
+    direction: null as "asc" | "desc" | null,
   },
   page: 0,
   itemsPerPage: 10,
   selectedItems: new Set<string>(),
+};
+
+export const useUserTableStore = create<UserTableState>()((set, get) => ({
+  ...initialUserTableState,
 
   setSearch: (search: string) => {
     set({ search, page: 0 });
@@ -57,11 +61,19 @@ export const useUserTableStore = create<UserTableState>()((set, get) => ({
   clearSelection: () => {
     set({ selectedItems: new Set<string>() });
   },
+
+  reset: () => {
+    set(initialUserTableState);
+  },
 }));
 
-export const useBulkOperationStore = create<BulkOperationState>()((set) => ({
+const initialBulkOperationState = {
   isVisible: false,
   isLoading: false,
+};
+
+export const useBulkOperationStore = create<BulkOperationState>()((set) => ({
+  ...initialBulkOperationState,
 
   setVisible: (visible: boolean) => {
     set({ isVisible: visible });
@@ -69,6 +81,10 @@ export const useBulkOperationStore = create<BulkOperationState>()((set) => ({
 
   setLoading: (loading: boolean) => {
     set({ isLoading: loading });
+  },
+
+  reset: () => {
+    set(initialBulkOperationState);
   },
 }));
 
