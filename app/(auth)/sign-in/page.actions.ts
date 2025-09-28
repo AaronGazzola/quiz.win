@@ -1,10 +1,8 @@
 "use server";
 
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
-import { PrismaClient } from "@prisma/client";
+import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { nanoid } from "nanoid";
-
-const prisma = new PrismaClient();
 
 export const generateDevMagicLink = async (
   email: string,
@@ -35,7 +33,9 @@ export const generateDevMagicLink = async (
       })
     );
 
-    const user = await prisma.user.findUnique({
+    const { db } = await getAuthenticatedClient();
+
+    const user = await db.user.findUnique({
       where: { email },
     });
 
@@ -66,7 +66,7 @@ export const generateDevMagicLink = async (
       })
     );
 
-    await prisma.magicLink.create({
+    await db.magicLink.create({
       data: {
         email,
         token,

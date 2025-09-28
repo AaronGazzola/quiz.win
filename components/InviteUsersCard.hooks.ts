@@ -6,13 +6,14 @@ import {
   inviteUsersAction,
   getPendingInvitationsAction,
   revokeInvitationAction,
+  InvitationData,
 } from "./InviteUsersCard.actions";
 
 export const useInviteUsers = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => {
+    mutationFn: (data: InvitationData) => {
       console.log(JSON.stringify({useInviteUsers:"mutation_start",emailCount:data.emails.length,orgId:data.organizationId,role:data.role}));
       return inviteUsersAction(data);
     },
@@ -83,7 +84,7 @@ export const useRevokeInvitation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (invitationId) => {
+    mutationFn: (invitationId: string) => {
       console.log(JSON.stringify({useRevokeInvitation:"mutation_start",invitationId}));
       return revokeInvitationAction(invitationId);
     },
