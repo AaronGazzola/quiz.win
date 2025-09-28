@@ -2,8 +2,8 @@
 
 import { getDevUsers, DevUser } from "@/lib/dev-users";
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { generateDevMagicLink } from "./page.actions";
+import { useSearchParams, useRouter } from "next/navigation";
+import { signIn } from "@/lib/auth-client";
 
 interface DevSignInButtonsProps {
   onSigningIn?: (email: string) => void;
@@ -12,6 +12,7 @@ interface DevSignInButtonsProps {
 export default function DevSignInButtons({ onSigningIn }: DevSignInButtonsProps) {
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
   if (process.env.NODE_ENV === "production") {
@@ -19,23 +20,32 @@ export default function DevSignInButtons({ onSigningIn }: DevSignInButtonsProps)
   }
 
   const handleDevSignIn = async (user: DevUser) => {
+    console.log(JSON.stringify({devSignIn:"component_start",userEmail:user.email?.substring(0,3)+"***",callbackUrl}));
+
     setLoadingUser(user.email);
     onSigningIn?.(user.email);
 
     try {
-      const { data: magicLinkUrl, error } = await generateDevMagicLink(user.email, callbackUrl);
+      console.log(JSON.stringify({devSignIn:"calling_signIn_email",email:user.email?.substring(0,3)+"***"}));
+
+      const { error } = await signIn.email({
+        email: user.email,
+        password: "Password123!",
+      });
+
+      console.log(JSON.stringify({devSignIn:"signIn_result",hasError:!!error}));
 
       if (error) {
-        console.error("Failed to generate dev magic link:", error);
+        console.log(JSON.stringify({devSignIn:"signIn_error",error:error.message}));
         return;
       }
 
-      if (magicLinkUrl) {
-        window.location.href = magicLinkUrl;
-      }
+      console.log(JSON.stringify({devSignIn:"signIn_success_redirecting",callbackUrl}));
+      router.push(callbackUrl);
     } catch (error) {
-      console.error("Dev sign-in error:", error);
+      console.log(JSON.stringify({devSignIn:"catch_error",error:error instanceof Error?{name:error.name,message:error.message}:error}));
     } finally {
+      console.log(JSON.stringify({devSignIn:"cleanup"}));
       setLoadingUser(null);
     }
   };

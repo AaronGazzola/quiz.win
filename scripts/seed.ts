@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { auth } from "../lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -29,100 +30,93 @@ async function seed() {
     await prisma.user.deleteMany();
 
     console.log("👥 Creating users...");
-    const users = await Promise.all([
-      prisma.user.create({
-        data: {
-          email: `superadmin@${fromEmailDomain}`,
-          name: "System Super Admin",
-          role: "super-admin",
-          emailVerified: true,
+
+    const usersData = [
+      {
+        email: `superadmin@${fromEmailDomain}`,
+        name: "System Super Admin",
+        role: "super-admin",
+      },
+      {
+        email: `org1owner1@${fromEmailDomain}`,
+        name: "TechCorp Owner",
+      },
+      {
+        email: `org1admin1@${fromEmailDomain}`,
+        name: "TechCorp Admin One",
+      },
+      {
+        email: `org1admin2@${fromEmailDomain}`,
+        name: "TechCorp Admin Two",
+      },
+      {
+        email: `org1member1@${fromEmailDomain}`,
+        name: "TechCorp Member One",
+      },
+      {
+        email: `org1member2@${fromEmailDomain}`,
+        name: "TechCorp Member Two",
+      },
+      {
+        email: `org2owner1@${fromEmailDomain}`,
+        name: "EduSoft Owner",
+      },
+      {
+        email: `org2admin1@${fromEmailDomain}`,
+        name: "EduSoft Admin",
+      },
+      {
+        email: `org2member1@${fromEmailDomain}`,
+        name: "EduSoft Member One",
+      },
+      {
+        email: `org2member2@${fromEmailDomain}`,
+        name: "EduSoft Member Two",
+      },
+      {
+        email: `org3owner1@${fromEmailDomain}`,
+        name: "DevSkills Owner",
+      },
+      {
+        email: `org3admin1@${fromEmailDomain}`,
+        name: "DevSkills Admin",
+      },
+      {
+        email: `org3member1@${fromEmailDomain}`,
+        name: "DevSkills Member",
+      },
+    ];
+
+    const users = [];
+    for (const userData of usersData) {
+      console.log(`Creating user: ${userData.email}`);
+
+      const signUpResult = await auth.api.signUpEmail({
+        body: {
+          email: userData.email,
+          password: "Password123!",
+          name: userData.name,
         },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org1owner1@${fromEmailDomain}`,
-          name: "TechCorp Owner",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org1admin1@${fromEmailDomain}`,
-          name: "TechCorp Admin One",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org1admin2@${fromEmailDomain}`,
-          name: "TechCorp Admin Two",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org1member1@${fromEmailDomain}`,
-          name: "TechCorp Member One",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org1member2@${fromEmailDomain}`,
-          name: "TechCorp Member Two",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org2owner1@${fromEmailDomain}`,
-          name: "EduSoft Owner",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org2admin1@${fromEmailDomain}`,
-          name: "EduSoft Admin",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org2member1@${fromEmailDomain}`,
-          name: "EduSoft Member One",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org2member2@${fromEmailDomain}`,
-          name: "EduSoft Member Two",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org3owner1@${fromEmailDomain}`,
-          name: "DevSkills Owner",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org3admin1@${fromEmailDomain}`,
-          name: "DevSkills Admin",
-          emailVerified: true,
-        },
-      }),
-      prisma.user.create({
-        data: {
-          email: `org3member1@${fromEmailDomain}`,
-          name: "DevSkills Member",
-          emailVerified: true,
-        },
-      }),
-    ]);
+      });
+
+      if (!signUpResult.user) {
+        throw new Error(`Failed to create user: ${userData.email}`);
+      }
+
+      users.push(signUpResult.user);
+
+      if (userData.role) {
+        await prisma.user.update({
+          where: { id: signUpResult.user.id },
+          data: { role: userData.role },
+        });
+      }
+
+      await prisma.user.update({
+        where: { id: signUpResult.user.id },
+        data: { emailVerified: true },
+      });
+    }
 
     console.log("🏢 Creating organizations...");
     const organizations = await Promise.all([

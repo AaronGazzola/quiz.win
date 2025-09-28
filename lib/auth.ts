@@ -12,12 +12,19 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   emailAndPassword: {
-    enabled: false,
+    enabled: process.env.NODE_ENV !== "production",
+    requireEmailVerification: false,
   },
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        console.log(JSON.stringify({magicLink:"start",email:email?.substring(0,3)+"***",url:url?.substring(0,50)+"..."}));
+        console.log(
+          JSON.stringify({
+            magicLink: "start",
+            email: email?.substring(0, 3) + "***",
+            url: url?.substring(0, 50) + "...",
+          })
+        );
 
         const urlParams = new URLSearchParams(url.split("?")[1]);
         const callbackUrl = urlParams.get("callbackURL") || "";
@@ -25,7 +32,13 @@ export const auth = betterAuth({
           callbackUrl.split("?")[1]
         )?.get("invitation");
 
-        console.log(JSON.stringify({magicLink:"parse_params",callbackUrl:callbackUrl?.substring(0,50)+"...",hasInvitation:!!invitationParam}));
+        console.log(
+          JSON.stringify({
+            magicLink: "parse_params",
+            callbackUrl: callbackUrl?.substring(0, 50) + "...",
+            hasInvitation: !!invitationParam,
+          })
+        );
 
         let isInvitation = false;
         let invitationData = null;
@@ -34,14 +47,31 @@ export const auth = betterAuth({
           try {
             invitationData = JSON.parse(decodeURIComponent(invitationParam));
             isInvitation = true;
-            console.log(JSON.stringify({magicLink:"invitation_parsed",orgName:invitationData?.organizationName,role:invitationData?.role}));
+            console.log(
+              JSON.stringify({
+                magicLink: "invitation_parsed",
+                orgName: invitationData?.organizationName,
+                role: invitationData?.role,
+              })
+            );
           } catch (error) {
-            console.log(JSON.stringify({magicLink:"parse_error",error:error instanceof Error?error.message:"unknown"}));
+            console.log(
+              JSON.stringify({
+                magicLink: "parse_error",
+                error: error instanceof Error ? error.message : "unknown",
+              })
+            );
           }
         }
 
         if (isInvitation && invitationData) {
-          console.log(JSON.stringify({magicLink:"sending_invitation_email",orgName:invitationData.organizationName,role:invitationData.role}));
+          console.log(
+            JSON.stringify({
+              magicLink: "sending_invitation_email",
+              orgName: invitationData.organizationName,
+              role: invitationData.role,
+            })
+          );
           await resend.emails.send({
             from: process.env.FROM_EMAIL || "noreply@example.com",
             to: email,
@@ -60,9 +90,14 @@ export const auth = betterAuth({
               </div>
             `,
           });
-          console.log(JSON.stringify({magicLink:"invitation_email_sent",email:email?.substring(0,3)+"***"}));
+          console.log(
+            JSON.stringify({
+              magicLink: "invitation_email_sent",
+              email: email?.substring(0, 3) + "***",
+            })
+          );
         } else {
-          console.log(JSON.stringify({magicLink:"sending_signin_email"}));
+          console.log(JSON.stringify({ magicLink: "sending_signin_email" }));
           await resend.emails.send({
             from: process.env.FROM_EMAIL || "noreply@example.com",
             to: email,
@@ -80,7 +115,12 @@ export const auth = betterAuth({
               </div>
             `,
           });
-          console.log(JSON.stringify({magicLink:"signin_email_sent",email:email?.substring(0,3)+"***"}));
+          console.log(
+            JSON.stringify({
+              magicLink: "signin_email_sent",
+              email: email?.substring(0, 3) + "***",
+            })
+          );
         }
       },
       expiresIn: 300,
@@ -92,7 +132,15 @@ export const auth = betterAuth({
         const { email, organization, inviter, invitation } = data;
         const invitationId = invitation.id;
 
-        console.log(JSON.stringify({orgInvite:"start",email:email?.substring(0,3)+"***",orgName:organization.name,inviterId:inviter.user.id,invitationId}));
+        console.log(
+          JSON.stringify({
+            orgInvite: "start",
+            email: email?.substring(0, 3) + "***",
+            orgName: organization.name,
+            inviterId: inviter.user.id,
+            invitationId,
+          })
+        );
 
         await resend.emails.send({
           from: process.env.FROM_EMAIL || "noreply@example.com",
@@ -113,7 +161,13 @@ export const auth = betterAuth({
           `,
         });
 
-        console.log(JSON.stringify({orgInvite:"email_sent",email:email?.substring(0,3)+"***",orgName:organization.name}));
+        console.log(
+          JSON.stringify({
+            orgInvite: "email_sent",
+            email: email?.substring(0, 3) + "***",
+            orgName: organization.name,
+          })
+        );
       },
     }),
   ],
