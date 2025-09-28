@@ -3,10 +3,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function seed() {
-  const fromEmailDomain = process.env.FROM_EMAIL_DOMAIN;
+  const fromEmailDomain = process.env.NEXT_PUBLIC_FROM_EMAIL_DOMAIN;
 
   if (!fromEmailDomain) {
-    console.error("FROM_EMAIL_DOMAIN environment variable is required");
+    console.error(
+      "NEXT_PUBLIC_FROM_EMAIL_DOMAIN environment variable is required"
+    );
     process.exit(1);
   }
 
@@ -686,8 +688,12 @@ async function seed() {
     console.log(`🔑 EduSoft Owner: org2owner1@${fromEmailDomain}`);
     console.log(`🔑 DevSkills Owner: org3owner1@${fromEmailDomain}`);
     console.log(`\n🔗 Cross-org memberships:`);
-    console.log(`- org1admin1@${fromEmailDomain} (admin in TechCorp & EduSoft)`);
-    console.log(`- org1member1@${fromEmailDomain} (member in TechCorp & DevSkills)`);
+    console.log(
+      `- org1admin1@${fromEmailDomain} (admin in TechCorp & EduSoft)`
+    );
+    console.log(
+      `- org1member1@${fromEmailDomain} (member in TechCorp & DevSkills)`
+    );
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     process.exit(1);
