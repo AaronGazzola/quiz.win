@@ -36,14 +36,6 @@ enum NotificationType {
   @@schema("public")
 }
 
-enum MailStatus {
-  processed
-  pending
-  error
-
-  @@schema("public")
-}
-
 model User {
   id                    String                    @id
   name                  String
@@ -63,7 +55,6 @@ model User {
   referralRedemptions   ReferralRedemption[]      @relation("ReferralRedemptions")
   notifications         Notification[]
   notificationPreferences NotificationPreferences?
-  mailItems             Mail[]
 
   @@unique([email])
   @@map("user")
@@ -140,13 +131,6 @@ model Profile {
   id                    String    @id @default(cuid())
   firstName             String
   lastName              String
-  dateOfBirth           String
-  nationality           String
-  street                String?
-  city                  String?
-  state                 String?
-  postalCode            String?
-  country               String?
   acceptPrivacy         Boolean
   acceptTerms           Boolean
   hearAbout             String?
@@ -162,49 +146,6 @@ model Profile {
   @@schema("public")
 }
 
-model ReferralCode {
-  id             String                @id @default(cuid())
-  code           String                @unique
-  userId         String                @unique
-  discountAmount Decimal               @default(10.00) @db.Money
-  discountType   DiscountType          @default(amount)
-  isActive       Boolean               @default(true)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  redemptions    ReferralRedemption[]
-
-  @@map("referral_code")
-  @@schema("public")
-}
-
-model ReferralRedemption {
-  id               String        @id @default(cuid())
-  referralCodeId   String
-  redeemedByUserId String
-  subscriptionId   String?
-  redeemedAt       DateTime      @default(now())
-  referralCode     ReferralCode  @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
-  redeemedBy       User          @relation("ReferralRedemptions", fields: [redeemedByUserId], references: [id], onDelete: Cascade)
-  subscription     Subscription? @relation(fields: [subscriptionId], references: [id])
-
-  @@unique([referralCodeId, redeemedByUserId])
-  @@map("referral_redemption")
-  @@schema("public")
-}
-
-model PendingReferralCode {
-  id        String    @id @default(cuid())
-  emailHash String    @unique
-  code      String
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  @@map("pending_referral_code")
-  @@schema("public")
-}
-
 model Notification {
   id        String           @id @default(cuid())
   userId    String
@@ -215,7 +156,7 @@ model Notification {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mail      Mail?            @relation(fields: [mailId], references: [id], onDelete: SetNull)
+
 
   @@map("notification")
   @@schema("public")
@@ -256,10 +197,12 @@ await auth.api.createInvitation({
 ```
 
 Required parameters:
+
 - `email`: The email address of the user to invite (string)
 - `role`: The role to assign ("admin" | "member" | "guest")
 
 Optional parameters:
+
 - `organizationId`: The organization ID (defaults to active organization)
 - `resend`: Whether to resend if already invited (boolean)
 - `teamId`: The team ID to invite to (string)
