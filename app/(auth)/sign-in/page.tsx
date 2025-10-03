@@ -94,11 +94,11 @@ function SignInForm() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case "super-admin":
-        return "bg-purple-100 text-purple-800 border-purple-300";
+        return "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30";
       case "admin":
-        return "bg-blue-100 text-blue-800 border-blue-300";
+        return "bg-primary/10 text-primary border-primary/30";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -112,11 +112,11 @@ function SignInForm() {
     return (
       <div className="w-full max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold">Welcome to School LMS</h2>
+          <h2 className="text-3xl font-bold text-foreground">Welcome to School LMS</h2>
           <p className="text-muted-foreground mt-2">Enter your password to continue</p>
         </div>
 
-        <div className="bg-white shadow-lg rounded-lg p-8 border border-gray-200">
+        <div className="bg-card shadow-lg rounded-lg p-8 border border-border">
           <div className="space-y-4">
             <div>
               <input
@@ -124,7 +124,7 @@ function SignInForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isVerifying}
-                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center tracking-widest disabled:opacity-50"
+                className="w-full px-4 py-3 text-lg border border-input bg-background text-foreground rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring text-center tracking-widest disabled:opacity-50 placeholder:text-muted-foreground"
                 placeholder="Enter password"
                 autoFocus
               />
@@ -132,7 +132,7 @@ function SignInForm() {
 
             {isVerifying && (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             )}
           </div>
@@ -144,7 +144,7 @@ function SignInForm() {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">Select Your Account</h2>
+        <h2 className="text-3xl font-bold text-foreground">Select Your Account</h2>
         <p className="text-muted-foreground mt-2">Choose an account to sign in</p>
       </div>
 
@@ -154,13 +154,13 @@ function SignInForm() {
             key={user.id}
             onClick={() => handleUserSelect(user)}
             disabled={loadingUserId !== null}
-            className="relative bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-400 rounded-lg p-6 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-left group"
+            className="relative bg-card hover:bg-accent border-2 border-border hover:border-primary rounded-lg p-6 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-left group"
           >
             <div className="flex flex-col items-center space-y-3">
               <div className="text-5xl">{getAvatar(user)}</div>
 
               <div className="text-center w-full">
-                <div className="font-semibold text-lg text-gray-900 truncate">
+                <div className="font-semibold text-lg text-foreground truncate">
                   {user.name || user.email}
                 </div>
 
@@ -170,8 +170,8 @@ function SignInForm() {
               </div>
 
               {loadingUserId === user.id && (
-                <div className="absolute inset-0 bg-white/80 rounded-lg flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
               )}
             </div>

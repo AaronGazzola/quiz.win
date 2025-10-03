@@ -89,12 +89,12 @@ export default function TakeQuizPage() {
   if (!quiz) {
     return (
       <div className="max-w-4xl mx-auto p-6 text-center">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
+        <h1 className="text-2xl font-semibold text-foreground mb-4">
           Quiz not found
         </h1>
         <button
           onClick={() => router.back()}
-          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="text-primary hover:text-primary/80 transition-colors"
         >
           Go back
         </button>
@@ -132,7 +132,7 @@ export default function TakeQuizPage() {
           <div className="bg-card border border-border rounded-lg p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 flex items-center">
+                <h1 className="text-2xl font-semibold text-foreground flex items-center">
                   <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400 mr-2" />
                   {quiz.title} - Review
                 </h1>
@@ -146,13 +146,13 @@ export default function TakeQuizPage() {
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {scorePercentage}%
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-sm text-muted-foreground">
                   {correctAnswers} of {quiz.questions.length} correct
                 </div>
               </div>
             </div>
 
-            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
+            <div className="text-sm text-muted-foreground flex items-center justify-between">
               <div className="flex items-center">
                 <Clock className="w-4 h-4 mr-1" />
                 Completed on{" "}
@@ -195,11 +195,11 @@ export default function TakeQuizPage() {
                       className={cn(
                         "flex items-center p-4 border-2 rounded-lg",
                         isUserCorrect
-                          ? "border-green-500 bg-green-50 dark:bg-green-950/20 dark:border-green-500"
+                          ? "border-green-600 bg-green-600/10 dark:bg-green-500/20 dark:border-green-500"
                           : isUserWrong
-                            ? "border-red-500 bg-red-50 dark:bg-red-950/20 dark:border-red-500"
+                            ? "border-destructive bg-destructive/10 dark:bg-destructive/20 dark:border-destructive"
                             : isCorrect
-                              ? "border-green-300 bg-green-50/50 dark:bg-green-900/20 dark:border-green-500"
+                              ? "border-green-500/50 bg-green-500/5 dark:bg-green-500/10 dark:border-green-500/50"
                               : "border-border bg-muted"
                       )}
                     >
@@ -208,10 +208,10 @@ export default function TakeQuizPage() {
                           "flex-shrink-0 w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center",
                           isUserSelected
                             ? isUserCorrect
-                              ? "border-green-500 bg-green-500"
-                              : "border-red-500 bg-red-500"
+                              ? "border-green-600 bg-green-600"
+                              : "border-destructive bg-destructive"
                             : isCorrect
-                              ? "border-green-500 bg-green-500"
+                              ? "border-green-600 bg-green-600"
                               : "border-border"
                         )}
                       >
@@ -250,14 +250,14 @@ export default function TakeQuizPage() {
                     {currentUserAnswer.isCorrect ? (
                       <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-500 mr-2" />
+                      <XCircle className="w-4 h-4 text-destructive mr-2" />
                     )}
                     <span
                       className={cn(
                         "font-medium",
                         currentUserAnswer.isCorrect
-                          ? "text-green-700 dark:text-green-300"
-                          : "text-red-700 dark:text-red-300"
+                          ? "text-green-700 dark:text-green-400"
+                          : "text-destructive"
                       )}
                     >
                       {currentUserAnswer.isCorrect ? "Correct!" : "Incorrect"}
@@ -291,9 +291,9 @@ export default function TakeQuizPage() {
                         index === currentQuestionIndex
                           ? "border-primary bg-primary text-primary-foreground"
                           : questionAnswer?.isCorrect
-                            ? "border-green-500 bg-green-500 text-white"
+                            ? "border-green-600 bg-green-600 text-white dark:text-white"
                             : questionAnswer
-                              ? "border-red-500 bg-red-500 text-white"
+                              ? "border-destructive bg-destructive text-destructive-foreground"
                               : "border-border text-muted-foreground hover:border-muted-foreground"
                       )}
                     >
@@ -456,7 +456,7 @@ export default function TakeQuizPage() {
                     index === currentQuestionIndex
                       ? "border-primary bg-primary text-primary-foreground"
                       : answers[index] !== null
-                        ? "border-green-500 bg-green-500 text-white"
+                        ? "border-green-600 bg-green-600 text-white dark:text-white"
                         : "border-border text-muted-foreground hover:border-muted-foreground"
                   )}
                 >
@@ -469,7 +469,7 @@ export default function TakeQuizPage() {
               <button
                 onClick={handleSubmitQuiz}
                 disabled={submitResponseMutation.isPending || isSubmitting}
-                className="flex items-center px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-6 py-2 bg-green-600 dark:bg-green-600 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitResponseMutation.isPending || isSubmitting
                   ? "Submitting..."

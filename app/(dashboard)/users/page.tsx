@@ -76,8 +76,8 @@ export default function UsersPage() {
     return (
       <div className="flex flex-col h-full items-center justify-center p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-2">Access Denied</h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">Access Denied</h1>
+          <p className="text-muted-foreground">
             You need admin permissions to access user management.
           </p>
         </div>
@@ -181,13 +181,13 @@ export default function UsersPage() {
     <div ref={containerRef} className="flex flex-col h-full p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">User Management</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-50 mt-1">Manage users and their access</p>
+          <h1 className="text-2xl font-semibold text-foreground">User Management</h1>
+          <p className="text-sm text-muted-foreground dark:text-gray-50 mt-1">Manage users and their access</p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
               type="text"
               placeholder="Search users..."
@@ -377,7 +377,7 @@ export default function UsersPage() {
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Showing {page * itemsPerPage + 1} to {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems} results
           </div>
 
@@ -385,7 +385,7 @@ export default function UsersPage() {
             <button
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -400,7 +400,7 @@ export default function UsersPage() {
                     "px-3 py-1 text-sm border rounded-md",
                     pageNum === page
                       ? "bg-blue-600 text-white border-blue-600"
-                      : "border-gray-300 hover:bg-gray-50"
+                      : "border-input hover:bg-accent transition-colors"
                   )}
                 >
                   {pageNum + 1}
@@ -411,7 +411,7 @@ export default function UsersPage() {
             <button
               onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

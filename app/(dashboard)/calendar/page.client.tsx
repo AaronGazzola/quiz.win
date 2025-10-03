@@ -44,17 +44,17 @@ export function CalendarClient() {
   const getEventTypeColor = (eventType: string) => {
     switch (eventType) {
       case "Holiday":
-        return "bg-red-100 text-red-800";
+        return "bg-destructive/10 text-destructive dark:bg-destructive/20";
       case "ParentTeacherConference":
-        return "bg-blue-100 text-blue-800";
+        return "bg-primary/10 text-primary dark:bg-primary/20";
       case "Assembly":
-        return "bg-purple-100 text-purple-800";
+        return "bg-purple-500/10 text-purple-700 dark:text-purple-300 dark:bg-purple-500/20";
       case "FieldTrip":
-        return "bg-green-100 text-green-800";
+        return "bg-green-500/10 text-green-700 dark:text-green-300 dark:bg-green-500/20";
       case "ExamPeriod":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-500/10 text-orange-700 dark:text-orange-300 dark:bg-orange-500/20";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-muted text-muted-foreground";
     }
   };
 
