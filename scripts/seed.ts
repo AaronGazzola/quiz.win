@@ -25,6 +25,8 @@ async function seed() {
 
   try {
     console.log("🧹 Cleaning existing data...");
+    await prisma.announcement.deleteMany();
+    await prisma.message.deleteMany();
     await prisma.response.deleteMany();
     await prisma.question.deleteMany();
     await prisma.assessment.deleteMany();
@@ -499,6 +501,96 @@ async function seed() {
       )
     );
 
+    console.log("📨 Creating sample messages...");
+
+    const messages = [
+      {
+        senderId: users[7].id,
+        recipientId: users[3].id,
+        subject: "Question about homework",
+        content: "Hi Mrs. Johnson, could you please clarify the homework assignment for this week?",
+        conversationId: [users[7].id, users[3].id].sort().join("-"),
+        campusId: organizations[0].id,
+        isRead: true,
+      },
+      {
+        senderId: users[3].id,
+        recipientId: users[7].id,
+        subject: "Re: Question about homework",
+        content: "Hello David, the homework is on pages 45-47 in the textbook. Students should complete exercises 1-10.",
+        conversationId: [users[7].id, users[3].id].sort().join("-"),
+        campusId: organizations[0].id,
+        isRead: false,
+      },
+      {
+        senderId: users[8].id,
+        recipientId: users[4].id,
+        subject: "Parent-Teacher Conference",
+        content: "Dear Mr. Anderson, I would like to schedule a meeting to discuss Oliver's progress in science.",
+        conversationId: [users[8].id, users[4].id].sort().join("-"),
+        campusId: organizations[0].id,
+        isRead: true,
+      },
+    ];
+
+    await Promise.all(
+      messages.map((message) =>
+        prisma.message.create({
+          data: message,
+        })
+      )
+    );
+
+    console.log("📢 Creating sample announcements...");
+
+    const announcements = [
+      {
+        title: "Parent-Teacher Conference Week",
+        content: "Parent-teacher conferences will be held next week from March 10-14. Please check your email for your scheduled time slot.",
+        authorId: users[1].id,
+        campusId: organizations[0].id,
+        targetAudience: "AllParents",
+        isPinned: true,
+        publishedAt: new Date("2025-03-01T08:00:00Z"),
+      },
+      {
+        title: "Science Fair Reminder",
+        content: "The annual science fair is coming up on March 25th. All students should have their projects ready by March 20th for preliminary review.",
+        authorId: users[4].id,
+        campusId: organizations[0].id,
+        targetAudience: "AllParents",
+        isPinned: false,
+        publishedAt: new Date("2025-03-03T09:00:00Z"),
+      },
+      {
+        title: "Staff Meeting - Professional Development",
+        content: "All teachers are invited to attend the professional development session on Friday at 3:00 PM in the conference room. Topic: Integrating Technology in the Classroom.",
+        authorId: users[1].id,
+        campusId: organizations[0].id,
+        targetAudience: "AllTeachers",
+        isPinned: false,
+        publishedAt: new Date("2025-03-04T10:00:00Z"),
+      },
+      {
+        title: "Grade 5 Field Trip Permission Slips Due",
+        content: "Grade 5 parents: Permission slips for the museum field trip are due by March 15th. Please sign and return them with your child.",
+        authorId: users[5].id,
+        campusId: organizations[0].id,
+        targetAudience: "Grade",
+        grade: "Grade 5",
+        isPinned: false,
+        publishedAt: new Date("2025-03-05T11:00:00Z"),
+      },
+    ];
+
+    await Promise.all(
+      announcements.map((announcement) =>
+        prisma.announcement.create({
+          data: announcement,
+        })
+      )
+    );
+
     console.log("✅ Database seeded successfully!");
     console.log("\n📈 Summary:");
     console.log(`- ${users.length} users created`);
@@ -509,6 +601,8 @@ async function seed() {
       `- ${questionSets.reduce((acc, set) => acc + set.questions.length, 0)} questions created`
     );
     console.log(`- ${responses.length} student responses created`);
+    console.log(`- ${messages.length} messages created`);
+    console.log(`- ${announcements.length} announcements created`);
     console.log(
       `\n🔑 System Admin: superadmin@${fromEmailDomain} (password: ${devPassword})`
     );

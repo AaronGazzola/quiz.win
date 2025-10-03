@@ -94,6 +94,18 @@ export default function DashboardLayout({
               >
                 Assessments
               </Link>
+              <Link
+                href="/messages"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Messages
+              </Link>
+              <Link
+                href="/announcements"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Announcements
+              </Link>
               {hasAdminAccess && (
                 <>
                   <Link

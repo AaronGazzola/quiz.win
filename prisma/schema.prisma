@@ -347,3 +347,44 @@ model ClassroomEnrollment {
   @@unique([classroomId, studentId])
   @@schema("public")
 }
+
+enum TargetAudience {
+  AllParents
+  AllTeachers
+  Classroom
+  Grade
+
+  @@schema("public")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  senderId       String
+  recipientId    String
+  subject        String
+  content        String
+  conversationId String
+  isRead         Boolean  @default(false)
+  campusId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@schema("public")
+}
+
+model Announcement {
+  id             String          @id @default(cuid())
+  title          String
+  content        String
+  authorId       String
+  campusId       String
+  targetAudience TargetAudience
+  classroomId    String?
+  grade          String?
+  isPinned       Boolean         @default(false)
+  publishedAt    DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@schema("public")
+}

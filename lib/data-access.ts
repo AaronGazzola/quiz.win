@@ -236,3 +236,40 @@ export const withCampusPermission = async <T>(
 
   return await operation();
 };
+
+export const canManageContent = async (
+  userId: string,
+  campusId: string
+): Promise<boolean> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      return true;
+    }
+
+    const adminOrgs = await getUserAdminOrganizations(userId);
+    const isAdmin = adminOrgs.some(org => org.id === campusId);
+
+    if (isAdmin) {
+      return true;
+    }
+
+    const { default: { PrismaClient } } = await import("@prisma/client");
+    const db = new PrismaClient();
+
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: { teacherProfile: true },
+    });
+
+    await db.$disconnect();
+
+    return user?.userType === "Teacher" && user?.teacherProfile?.campusId === campusId;
+  } catch (error) {
+    console.error("Error checking content management permission:", error);
+    return false;
+  }
+};
