@@ -91,7 +91,7 @@ export function OrganizationSelector() {
             className="rounded-full"
           >
             <Building2 className="h-4 w-4 mr-2" />
-            Organization
+            Campus
             {selectedCount > 0 && (
               <span className="ml-2 text-xs bg-primary text-primary-foreground rounded-full px-2 py-0.5">
                 {selectedCount}
@@ -108,7 +108,7 @@ export function OrganizationSelector() {
         >
           {organizations.length === 0 ? (
             <div className="px-2 py-4 text-sm text-muted-foreground text-center">
-              No organizations found
+              No campuses found
             </div>
           ) : (
             <>
@@ -145,7 +145,7 @@ export function OrganizationSelector() {
               className="cursor-pointer"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Organization
+              Add Campus
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

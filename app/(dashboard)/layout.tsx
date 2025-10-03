@@ -55,24 +55,66 @@ export default function DashboardLayout({
               href="/"
               className="flex items-center text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
             >
-              LMS Dashboard
+              Abraham Lincoln Academy
             </Link>
             <nav className="hidden md:flex space-x-6">
+              <Link
+                href="/"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/classrooms"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Classrooms
+              </Link>
+              <Link
+                href="/students"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Students
+              </Link>
+              <Link
+                href="/teachers"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Teachers
+              </Link>
+              <Link
+                href="/parents"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Parents
+              </Link>
+              <Link
+                href="/assessments"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Assessments
+              </Link>
               {hasAdminAccess && (
-                <Link
-                  href="/invite"
-                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  Invite Users
-                </Link>
-              )}
-              {hasAdminAccess && (
-                <Link
-                  href="/users"
-                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  User Management
-                </Link>
+                <>
+                  <Link
+                    href="/campus"
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Campus
+                  </Link>
+                  <Link
+                    href="/users"
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Users
+                  </Link>
+                  <Link
+                    href="/invite"
+                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Invitations
+                  </Link>
+                </>
               )}
             </nav>
           </div>
