@@ -1,85 +1,183 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { signIn } from "@/lib/auth-client";
-import { useSearchParams } from "next/navigation";
-import DevSignInButtons from "./DevSignInButtons";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getPasswordLengthAction, verifyPasswordAction, getAllUsersAction } from "./page.actions";
+import { getUserAction } from "../../layout.actions";
+import { useAppStore, useRedirectStore } from "../../layout.stores";
+import { Loader2 } from "lucide-react";
+
+interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  role: string;
+  image: string | null;
+}
 
 function SignInForm() {
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordLength, setPasswordLength] = useState<number | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const router = useRouter();
+  const { setUser } = useAppStore();
+  const { setUserData } = useRedirectStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
+  useEffect(() => {
+    const fetchPasswordLength = async () => {
+      const { data } = await getPasswordLengthAction();
+      setPasswordLength(data);
+    };
+    fetchPasswordLength();
+  }, []);
 
-    setIsLoading(true);
+  useEffect(() => {
+    const verifyPassword = async () => {
+      if (!passwordLength || password.length !== passwordLength) return;
+
+      setIsVerifying(true);
+      const { data: isValid } = await verifyPasswordAction(password);
+
+      if (isValid) {
+        const { data: usersData } = await getAllUsersAction();
+        if (usersData) {
+          setUsers(usersData);
+          setIsAuthenticated(true);
+        }
+      } else {
+        setPassword("");
+      }
+      setIsVerifying(false);
+    };
+
+    verifyPassword();
+  }, [password, passwordLength]);
+
+  const handleUserSelect = async (user: User) => {
+    setLoadingUserId(user.id);
+
     try {
-      await signIn.magicLink({
-        email,
-        callbackURL: callbackUrl,
+      const { error } = await signIn.email({
+        email: user.email,
+        password: password,
       });
-      setIsEmailSent(true);
-    } catch (error) {
-      console.error("Failed to send magic link:", error);
-    } finally {
-      setIsLoading(false);
+
+      if (error) {
+        setLoadingUserId(null);
+        return;
+      }
+
+      const { data: userData, error: userError } = await getUserAction();
+
+      if (userError) {
+        setLoadingUserId(null);
+        return;
+      }
+
+      if (userData) {
+        setUser(userData);
+        setUserData(userData);
+      }
+
+      router.push(callbackUrl);
+    } catch {
+      setLoadingUserId(null);
     }
   };
 
-  if (isEmailSent) {
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "super-admin":
+        return "bg-purple-100 text-purple-800 border-purple-300";
+      case "admin":
+        return "bg-blue-100 text-blue-800 border-blue-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300";
+    }
+  };
+
+  const getAvatar = (user: User) => {
+    if (user.image) return user.image;
+    if (user.role === "super-admin") return "👨‍💼";
+    return "👤";
+  };
+
+  if (!isAuthenticated) {
     return (
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
-        <p className="text-muted-foreground mb-4">
-          We&apos;ve sent a magic link to <strong>{email}</strong>
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Click the link in your email to sign in. The link will expire in 5 minutes.
-        </p>
+      <div className="w-full max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold">Welcome to School LMS</h2>
+          <p className="text-muted-foreground mt-2">Enter your password to continue</p>
+        </div>
+
+        <div className="bg-white shadow-lg rounded-lg p-8 border border-gray-200">
+          <div className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isVerifying}
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center tracking-widest disabled:opacity-50"
+                placeholder="Enter password"
+                autoFocus
+              />
+            </div>
+
+            {isVerifying && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="w-full max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold">Welcome to LMS</h2>
-        <p className="text-muted-foreground mt-2">Sign in with your email address</p>
+        <h2 className="text-3xl font-bold">Select Your Account</h2>
+        <p className="text-muted-foreground mt-2">Choose an account to sign in</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-muted-foreground">
-            Email address
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter your email"
-            disabled={isLoading}
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {users.map((user) => (
+          <button
+            key={user.id}
+            onClick={() => handleUserSelect(user)}
+            disabled={loadingUserId !== null}
+            className="relative bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-blue-400 rounded-lg p-6 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-left group"
+          >
+            <div className="flex flex-col items-center space-y-3">
+              <div className="text-5xl">{getAvatar(user)}</div>
 
-        <button
-          type="submit"
-          disabled={isLoading || !email}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? "Sending..." : "Send Magic Link"}
-        </button>
-      </form>
+              <div className="text-center w-full">
+                <div className="font-semibold text-lg text-gray-900 truncate">
+                  {user.name || user.email}
+                </div>
 
-      <DevSignInButtons onSigningIn={(email) => setEmail(email)} />
+                <div className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold border ${getRoleColor(user.role)}`}>
+                  {user.role.toUpperCase()}
+                </div>
+              </div>
+
+              {loadingUserId === user.id && (
+                <div className="absolute inset-0 bg-white/80 rounded-lg flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                </div>
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
