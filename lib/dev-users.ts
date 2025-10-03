@@ -3,6 +3,7 @@ export interface DevUser {
   name: string;
   role?: string;
   orgRole?: string;
+  avatar?: string;
 }
 
 export const getDevUsers = () => {
@@ -14,74 +15,87 @@ export const getDevUsers = () => {
       email: `superadmin@${fromEmailDomain}`,
       name: "System Super Admin",
       role: "super-admin",
+      avatar: "👨‍💼",
     } as DevUser,
 
     techCorp: [
       {
         email: `org1owner1@${fromEmailDomain}`,
-        name: "TechCorp Owner",
+        name: "Principal Sarah Johnson",
         orgRole: "owner",
+        avatar: "👩‍💼",
       },
       {
         email: `org1admin1@${fromEmailDomain}`,
-        name: "TechCorp Admin One",
+        name: "Admin Director Mike Chen",
         orgRole: "admin",
+        avatar: "👨‍💼",
       },
       {
         email: `org1admin2@${fromEmailDomain}`,
-        name: "TechCorp Admin Two",
+        name: "Admin Coordinator Lisa Brown",
         orgRole: "admin",
+        avatar: "👩‍💼",
       },
       {
         email: `org1member1@${fromEmailDomain}`,
-        name: "TechCorp Member One",
+        name: "Teacher John Martinez",
         orgRole: "member",
+        avatar: "👨‍🏫",
       },
       {
         email: `org1member2@${fromEmailDomain}`,
-        name: "TechCorp Member Two",
+        name: "Teacher Emma Wilson",
         orgRole: "member",
+        avatar: "👩‍🏫",
       },
     ] as DevUser[],
 
     eduSoft: [
       {
         email: `org2owner1@${fromEmailDomain}`,
-        name: "EduSoft Owner",
+        name: "Principal David Park",
         orgRole: "owner",
+        avatar: "👨‍💼",
       },
       {
         email: `org2admin1@${fromEmailDomain}`,
-        name: "EduSoft Admin",
+        name: "Admin Director Rachel Kim",
         orgRole: "admin",
+        avatar: "👩‍💼",
       },
       {
         email: `org2member1@${fromEmailDomain}`,
-        name: "EduSoft Member One",
+        name: "Teacher Carlos Rodriguez",
         orgRole: "member",
+        avatar: "👨‍🏫",
       },
       {
         email: `org2member2@${fromEmailDomain}`,
-        name: "EduSoft Member Two",
+        name: "Teacher Amanda Lee",
         orgRole: "member",
+        avatar: "👩‍🏫",
       },
     ] as DevUser[],
 
     devSkills: [
       {
         email: `org3owner1@${fromEmailDomain}`,
-        name: "DevSkills Owner",
+        name: "Principal Jennifer Taylor",
         orgRole: "owner",
+        avatar: "👩‍💼",
       },
       {
         email: `org3admin1@${fromEmailDomain}`,
-        name: "DevSkills Admin",
+        name: "Admin Director Robert Smith",
         orgRole: "admin",
+        avatar: "👨‍💼",
       },
       {
         email: `org3member1@${fromEmailDomain}`,
-        name: "DevSkills Member",
+        name: "Teacher Maria Garcia",
         orgRole: "member",
+        avatar: "👩‍🏫",
       },
     ] as DevUser[],
   };

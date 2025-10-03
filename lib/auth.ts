@@ -12,7 +12,7 @@ export const auth = betterAuth({
     provider: "postgresql",
   }),
   emailAndPassword: {
-    enabled: process.env.NODE_ENV !== "production",
+    enabled: true,
     requireEmailVerification: false,
   },
   plugins: [
