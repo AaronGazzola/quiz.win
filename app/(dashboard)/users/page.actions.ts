@@ -88,6 +88,9 @@ export const getUsersAction = async (
             createdAt: true,
             updatedAt: true,
             image: true,
+            teacherProfile: true,
+            studentProfile: true,
+            parentProfile: true,
           },
         },
         campus: {

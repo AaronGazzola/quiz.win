@@ -2,9 +2,10 @@
 
 import { useGetUser, useAdminAccess } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Ban } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Ban, CheckCircle, XCircle } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/shadcn.utils";
 import { useGetUsers, useViewportResize, useBulkToggleUserBan } from "./page.hooks";
 import { useUserTableStore, useBulkOperationStore, useViewportPagination, useUserRoleManagementDialogStore, useConfirmationDialogStore } from "./page.stores";
@@ -157,6 +158,25 @@ export default function UsersPage() {
     return `${userMembers[0].campus.name} (+${userMembers.length - 1} more)`;
   };
 
+  const getProfileStatus = (userData: UserWithDetails) => {
+    if (userData.userType === "Teacher" && userData.teacherProfile) {
+      return { complete: true, type: "Teacher" };
+    }
+    if (userData.userType === "Student" && userData.studentProfile) {
+      return { complete: true, type: "Student" };
+    }
+    if (userData.userType === "Parent" && userData.parentProfile) {
+      return { complete: true, type: "Parent" };
+    }
+    if (userData.userType === "Admin") {
+      return { complete: true, type: "Admin" };
+    }
+    if (userData.userType) {
+      return { complete: false, type: userData.userType };
+    }
+    return { complete: null, type: null };
+  };
+
   return (
     <div ref={containerRef} className="flex flex-col h-full p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -241,6 +261,14 @@ export default function UsersPage() {
 
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  User Type
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Profile Status
+                </th>
+
+                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Organizations
                 </th>
 
@@ -264,13 +292,15 @@ export default function UsersPage() {
                     <td className="px-6 py-4"><div className="w-4 h-4 bg-muted rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-48" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                     {search ? `No users found matching "${search}"` : "No users found"}
                   </td>
                 </tr>
@@ -298,6 +328,36 @@ export default function UsersPage() {
                       {userData.email}
                     </td>
 
+                    <td className="px-6 py-4">
+                      {userData.userType ? (
+                        <Badge variant="secondary">{userData.userType}</Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {(() => {
+                        const status = getProfileStatus(userData);
+                        if (status.complete === null) {
+                          return <span className="text-sm text-muted-foreground">—</span>;
+                        }
+                        if (status.complete) {
+                          return (
+                            <div className="flex items-center gap-1 text-green-600">
+                              <CheckCircle className="w-4 h-4" />
+                              <span className="text-sm">Complete</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex items-center gap-1 text-orange-600">
+                            <XCircle className="w-4 h-4" />
+                            <span className="text-sm">Incomplete</span>
+                          </div>
+                        );
+                      })()}
+                    </td>
 
                     <td className="px-6 py-4 text-sm text-muted-foreground">
                       {getOrganizationsDisplay(userData.members)}
