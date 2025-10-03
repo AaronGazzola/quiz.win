@@ -52,56 +52,78 @@ async function seed() {
     const usersData = [
       {
         email: `superadmin@${fromEmailDomain}`,
-        name: "System Super Admin",
+        name: "System Administrator",
         role: "super-admin",
       },
       {
-        email: `org1owner1@${fromEmailDomain}`,
-        name: "TechCorp Owner",
+        email: `lagos.admin@${fromEmailDomain}`,
+        name: "Dr. Adebayo Okonkwo",
+        role: "admin",
       },
       {
-        email: `org1admin1@${fromEmailDomain}`,
-        name: "TechCorp Admin One",
+        email: `abuja.admin@${fromEmailDomain}`,
+        name: "Mrs. Chimamanda Nwosu",
+        role: "admin",
       },
       {
-        email: `org1admin2@${fromEmailDomain}`,
-        name: "TechCorp Admin Two",
+        email: `sarah.mathematics@${fromEmailDomain}`,
+        name: "Mrs. Sarah Johnson",
+        role: "teacher",
       },
       {
-        email: `org1member1@${fromEmailDomain}`,
-        name: "TechCorp Member One",
+        email: `james.science@${fromEmailDomain}`,
+        name: "Mr. James Anderson",
+        role: "teacher",
       },
       {
-        email: `org1member2@${fromEmailDomain}`,
-        name: "TechCorp Member Two",
+        email: `emily.english@${fromEmailDomain}`,
+        name: "Ms. Emily Chen",
+        role: "teacher",
       },
       {
-        email: `org2owner1@${fromEmailDomain}`,
-        name: "EduSoft Owner",
+        email: `michael.history@${fromEmailDomain}`,
+        name: "Mr. Michael Brown",
+        role: "teacher",
       },
       {
-        email: `org2admin1@${fromEmailDomain}`,
-        name: "EduSoft Admin",
+        email: `david.parent@${fromEmailDomain}`,
+        name: "David Williams",
+        role: "parent",
       },
       {
-        email: `org2member1@${fromEmailDomain}`,
-        name: "EduSoft Member One",
+        email: `mary.parent@${fromEmailDomain}`,
+        name: "Mary Thompson",
+        role: "parent",
       },
       {
-        email: `org2member2@${fromEmailDomain}`,
-        name: "EduSoft Member Two",
+        email: `john.parent@${fromEmailDomain}`,
+        name: "John Davis",
+        role: "parent",
       },
       {
-        email: `org3owner1@${fromEmailDomain}`,
-        name: "DevSkills Owner",
+        email: `sophia.student@${fromEmailDomain}`,
+        name: "Sophia Williams",
+        role: "student",
       },
       {
-        email: `org3admin1@${fromEmailDomain}`,
-        name: "DevSkills Admin",
+        email: `oliver.student@${fromEmailDomain}`,
+        name: "Oliver Thompson",
+        role: "student",
       },
       {
-        email: `org3member1@${fromEmailDomain}`,
-        name: "DevSkills Member",
+        email: `emma.student@${fromEmailDomain}`,
+        name: "Emma Davis",
+        role: "student",
+      },
+      {
+        email: `liam.student@${fromEmailDomain}`,
+        name: "Liam Martinez",
+        role: "student",
+      },
+      {
+        email: `ava.student@${fromEmailDomain}`,
+        name: "Ava Garcia",
+        role: "student",
       },
     ];
 
@@ -143,35 +165,31 @@ async function seed() {
       });
     }
 
-    console.log("🏢 Creating organizations...");
+    console.log("🏢 Creating campuses...");
     const organizations = await Promise.all([
       prisma.organization.create({
         data: {
-          name: "TechCorp Learning",
-          slug: "techcorp-learning",
+          name: "Abraham Lincoln Academy - Lagos Campus",
+          slug: "alaa-lagos",
           metadata: {
-            description: "Enterprise technology training solutions",
-            industry: "Technology",
+            description: "Premier American-curriculum school in Lagos, Nigeria",
+            location: "Victoria Island, Lagos",
+            principal: "Dr. Adebayo Okonkwo",
+            capacity: 500,
+            phone: "+234-1-234-5678",
           },
         },
       }),
       prisma.organization.create({
         data: {
-          name: "EduSoft Academy",
-          slug: "edusoft-academy",
+          name: "Abraham Lincoln Academy - Abuja Campus",
+          slug: "alaa-abuja",
           metadata: {
-            description: "Educational software development training",
-            industry: "Software",
-          },
-        },
-      }),
-      prisma.organization.create({
-        data: {
-          name: "DevSkills Institute",
-          slug: "devskills-institute",
-          metadata: {
-            description: "Advanced developer skills and security training",
-            industry: "Education",
+            description: "Premier American-curriculum school in Abuja, Nigeria",
+            location: "Maitama District, Abuja",
+            principal: "Mrs. Chimamanda Nwosu",
+            capacity: 400,
+            phone: "+234-9-876-5432",
           },
         },
       }),
@@ -193,83 +211,22 @@ async function seed() {
       )
     );
 
-    console.log("🤝 Creating organization memberships...");
+    console.log("🤝 Creating campus memberships...");
     const memberships = [
-      {
-        userId: users[0].id,
-        organizationId: organizations[0].id,
-        role: "owner",
-      },
-      {
-        userId: users[1].id,
-        organizationId: organizations[0].id,
-        role: "owner",
-      },
-      {
-        userId: users[2].id,
-        organizationId: organizations[0].id,
-        role: "admin",
-      },
-      {
-        userId: users[3].id,
-        organizationId: organizations[0].id,
-        role: "admin",
-      },
-      {
-        userId: users[4].id,
-        organizationId: organizations[0].id,
-        role: "member",
-      },
-      {
-        userId: users[5].id,
-        organizationId: organizations[0].id,
-        role: "member",
-      },
-      {
-        userId: users[6].id,
-        organizationId: organizations[1].id,
-        role: "owner",
-      },
-      {
-        userId: users[7].id,
-        organizationId: organizations[1].id,
-        role: "admin",
-      },
-      {
-        userId: users[8].id,
-        organizationId: organizations[1].id,
-        role: "member",
-      },
-      {
-        userId: users[9].id,
-        organizationId: organizations[1].id,
-        role: "member",
-      },
-      {
-        userId: users[2].id,
-        organizationId: organizations[1].id,
-        role: "admin",
-      },
-      {
-        userId: users[10].id,
-        organizationId: organizations[2].id,
-        role: "owner",
-      },
-      {
-        userId: users[11].id,
-        organizationId: organizations[2].id,
-        role: "admin",
-      },
-      {
-        userId: users[12].id,
-        organizationId: organizations[2].id,
-        role: "member",
-      },
-      {
-        userId: users[4].id,
-        organizationId: organizations[2].id,
-        role: "member",
-      },
+      { userId: users[1].id, organizationId: organizations[0].id, role: "admin" },
+      { userId: users[3].id, organizationId: organizations[0].id, role: "teacher" },
+      { userId: users[4].id, organizationId: organizations[0].id, role: "teacher" },
+      { userId: users[5].id, organizationId: organizations[0].id, role: "teacher" },
+      { userId: users[7].id, organizationId: organizations[0].id, role: "parent" },
+      { userId: users[8].id, organizationId: organizations[0].id, role: "parent" },
+      { userId: users[10].id, organizationId: organizations[0].id, role: "student" },
+      { userId: users[11].id, organizationId: organizations[0].id, role: "student" },
+      { userId: users[12].id, organizationId: organizations[0].id, role: "student" },
+      { userId: users[2].id, organizationId: organizations[1].id, role: "admin" },
+      { userId: users[6].id, organizationId: organizations[1].id, role: "teacher" },
+      { userId: users[9].id, organizationId: organizations[1].id, role: "parent" },
+      { userId: users[13].id, organizationId: organizations[1].id, role: "student" },
+      { userId: users[14].id, organizationId: organizations[1].id, role: "student" },
     ];
 
     await Promise.all(
@@ -280,23 +237,12 @@ async function seed() {
       )
     );
 
-    console.log("📝 Creating quizzes...");
+    console.log("📝 Creating assessments...");
     const quizzes = await Promise.all([
       prisma.quiz.create({
         data: {
-          title: "JavaScript Fundamentals",
-          description:
-            "Test your knowledge of JavaScript basics including variables, functions, and control structures.",
-          organizationId: organizations[0].id,
-          createdBy: users[2].id,
-          isActive: true,
-        },
-      }),
-      prisma.quiz.create({
-        data: {
-          title: "React Components & Hooks",
-          description:
-            "Advanced React concepts including components, hooks, and state management.",
+          title: "Grade 3 Mathematics - Week 1",
+          description: "Basic arithmetic and number recognition assessment",
           organizationId: organizations[0].id,
           createdBy: users[3].id,
           isActive: true,
@@ -304,42 +250,29 @@ async function seed() {
       }),
       prisma.quiz.create({
         data: {
-          title: "Database Design Principles",
-          description:
-            "Fundamental concepts of relational database design and normalization.",
-          organizationId: organizations[1].id,
-          createdBy: users[7].id,
+          title: "Grade 4 Science - States of Matter",
+          description: "Understanding solids, liquids, and gases",
+          organizationId: organizations[0].id,
+          createdBy: users[4].id,
           isActive: true,
         },
       }),
       prisma.quiz.create({
         data: {
-          title: "Project Management Essentials",
-          description:
-            "Core project management methodologies and best practices.",
-          organizationId: organizations[1].id,
-          createdBy: users[2].id,
-          isActive: false,
-        },
-      }),
-      prisma.quiz.create({
-        data: {
-          title: "Web Security Fundamentals",
-          description:
-            "Essential web security concepts and common vulnerabilities.",
-          organizationId: organizations[2].id,
-          createdBy: users[11].id,
+          title: "Grade 5 English - Reading Comprehension",
+          description: "Understanding main ideas and supporting details",
+          organizationId: organizations[0].id,
+          createdBy: users[5].id,
           isActive: true,
         },
       }),
       prisma.quiz.create({
         data: {
-          title: "API Design Best Practices",
-          description:
-            "RESTful API design principles and implementation strategies.",
-          organizationId: organizations[2].id,
-          createdBy: users[11].id,
-          isActive: false,
+          title: "Grade 6 History - Ancient Civilizations",
+          description: "Early civilizations and their contributions",
+          organizationId: organizations[1].id,
+          createdBy: users[6].id,
+          isActive: true,
         },
       }),
     ]);
@@ -350,45 +283,22 @@ async function seed() {
         quizId: quizzes[0].id,
         questions: [
           {
-            question:
-              "What is the correct way to declare a variable in JavaScript?",
-            options: [
-              "var myVar = 5;",
-              "variable myVar = 5;",
-              "v myVar = 5;",
-              "declare myVar = 5;",
-            ],
-            correctAnswer: "var myVar = 5;",
+            question: "What is 5 + 3?",
+            options: ["6", "7", "8", "9"],
+            correctAnswer: "8",
             order: 1,
           },
           {
-            question:
-              "Which method is used to add an element to the end of an array?",
-            options: ["append()", "push()", "add()", "insert()"],
-            correctAnswer: "push()",
+            question: "Which number comes after 19?",
+            options: ["18", "20", "21", "22"],
+            correctAnswer: "20",
             order: 2,
           },
           {
-            question: "What does '===' operator check in JavaScript?",
-            options: [
-              "Value only",
-              "Type only",
-              "Both value and type",
-              "Neither value nor type",
-            ],
-            correctAnswer: "Both value and type",
+            question: "What is 10 - 4?",
+            options: ["4", "5", "6", "7"],
+            correctAnswer: "6",
             order: 3,
-          },
-          {
-            question: "How do you create a function in JavaScript?",
-            options: [
-              "function myFunction() {}",
-              "create myFunction() {}",
-              "def myFunction() {}",
-              "func myFunction() {}",
-            ],
-            correctAnswer: "function myFunction() {}",
-            order: 4,
           },
         ],
       },
@@ -396,37 +306,26 @@ async function seed() {
         quizId: quizzes[1].id,
         questions: [
           {
-            question: "What is the purpose of useEffect hook in React?",
-            options: [
-              "To manage state",
-              "To handle side effects",
-              "To create components",
-              "To style elements",
-            ],
-            correctAnswer: "To handle side effects",
+            question: "Which of these is a liquid?",
+            options: ["Ice", "Water", "Steam", "Rock"],
+            correctAnswer: "Water",
             order: 1,
           },
           {
-            question:
-              "How do you pass data from parent to child component in React?",
+            question: "What happens when you heat ice?",
             options: [
-              "Through props",
-              "Through state",
-              "Through context",
-              "Through refs",
+              "It stays the same",
+              "It becomes water",
+              "It becomes steam",
+              "It disappears",
             ],
-            correctAnswer: "Through props",
+            correctAnswer: "It becomes water",
             order: 2,
           },
           {
-            question: "What is JSX in React?",
-            options: [
-              "A programming language",
-              "A syntax extension",
-              "A library",
-              "A framework",
-            ],
-            correctAnswer: "A syntax extension",
+            question: "Which is an example of a gas?",
+            options: ["Water", "Wood", "Air", "Metal"],
+            correctAnswer: "Air",
             order: 3,
           },
         ],
@@ -435,37 +334,26 @@ async function seed() {
         quizId: quizzes[2].id,
         questions: [
           {
-            question: "What is a primary key in a database?",
+            question: "What is the main idea of a story usually found in?",
             options: [
-              "A unique identifier for records",
-              "The first column",
-              "A password",
-              "A table name",
+              "The title",
+              "The first paragraph",
+              "The last sentence",
+              "The pictures",
             ],
-            correctAnswer: "A unique identifier for records",
+            correctAnswer: "The first paragraph",
             order: 1,
           },
           {
-            question: "What is database normalization?",
+            question: "What are supporting details?",
             options: [
-              "Making data normal",
-              "Organizing data efficiently",
-              "Backing up data",
-              "Encrypting data",
+              "The title of the story",
+              "Facts that support the main idea",
+              "The author's name",
+              "The number of pages",
             ],
-            correctAnswer: "Organizing data efficiently",
+            correctAnswer: "Facts that support the main idea",
             order: 2,
-          },
-          {
-            question: "What does ACID stand for in database systems?",
-            options: [
-              "Atomicity, Consistency, Isolation, Durability",
-              "Access, Create, Insert, Delete",
-              "All, Column, Index, Data",
-              "Auto, Cache, Identity, Default",
-            ],
-            correctAnswer: "Atomicity, Consistency, Isolation, Durability",
-            order: 3,
           },
         ],
       },
@@ -473,102 +361,21 @@ async function seed() {
         quizId: quizzes[3].id,
         questions: [
           {
-            question: "What is the first phase of project management?",
-            options: ["Execution", "Planning", "Initiation", "Monitoring"],
-            correctAnswer: "Initiation",
+            question: "Which civilization built the pyramids?",
+            options: ["Romans", "Greeks", "Egyptians", "Mayans"],
+            correctAnswer: "Egyptians",
             order: 1,
           },
           {
-            question: "What is a Gantt chart used for?",
-            options: [
-              "Budget tracking",
-              "Task scheduling",
-              "Team communication",
-              "Risk assessment",
-            ],
-            correctAnswer: "Task scheduling",
+            question: "What did ancient Mesopotamians invent?",
+            options: ["The wheel", "The airplane", "The computer", "The phone"],
+            correctAnswer: "The wheel",
             order: 2,
           },
           {
-            question: "What does MVP stand for in project management?",
-            options: [
-              "Most Valuable Player",
-              "Minimum Viable Product",
-              "Maximum Value Proposition",
-              "Master Verification Process",
-            ],
-            correctAnswer: "Minimum Viable Product",
-            order: 3,
-          },
-        ],
-      },
-      {
-        quizId: quizzes[4].id,
-        questions: [
-          {
-            question: "What does XSS stand for?",
-            options: [
-              "Cross-Site Scripting",
-              "Extended Security System",
-              "XML Security Standard",
-              "External Script Source",
-            ],
-            correctAnswer: "Cross-Site Scripting",
-            order: 1,
-          },
-          {
-            question: "What is SQL injection?",
-            options: [
-              "A database feature",
-              "A security vulnerability",
-              "A query optimization",
-              "A backup method",
-            ],
-            correctAnswer: "A security vulnerability",
-            order: 2,
-          },
-          {
-            question: "What is HTTPS?",
-            options: [
-              "HTTP Secure",
-              "Hypertext Transfer Protocol Secure",
-              "High-Performance Transfer Protocol",
-              "Host Transfer Protocol System",
-            ],
-            correctAnswer: "Hypertext Transfer Protocol Secure",
-            order: 3,
-          },
-        ],
-      },
-      {
-        quizId: quizzes[5].id,
-        questions: [
-          {
-            question: "What does REST stand for?",
-            options: [
-              "Representational State Transfer",
-              "Remote Execution Service Technology",
-              "Reliable Secure Transfer",
-              "Resource Exchange Standard Transfer",
-            ],
-            correctAnswer: "Representational State Transfer",
-            order: 1,
-          },
-          {
-            question: "Which HTTP method is used to update a resource?",
-            options: ["GET", "POST", "PUT", "DELETE"],
-            correctAnswer: "PUT",
-            order: 2,
-          },
-          {
-            question: "What is the purpose of API versioning?",
-            options: [
-              "To track changes",
-              "To maintain backward compatibility",
-              "To improve performance",
-              "To reduce costs",
-            ],
-            correctAnswer: "To maintain backward compatibility",
+            question: "Where did ancient Greek civilization develop?",
+            options: ["Egypt", "Greece", "Rome", "China"],
+            correctAnswer: "Greece",
             order: 3,
           },
         ],
@@ -597,7 +404,7 @@ async function seed() {
       }));
     }
 
-    console.log("📊 Creating quiz responses...");
+    console.log("📊 Creating student assessment responses...");
 
     const createAnswersArray = (quizId: string, answersByOrder: Record<string, string>) => {
       const questions = createdQuestions[quizId];
@@ -614,93 +421,57 @@ async function seed() {
     const responses = [
       {
         quizId: quizzes[0].id,
-        userId: users[4].id,
+        userId: users[10].id,
         answers: createAnswersArray(quizzes[0].id, {
-          "1": "var myVar = 5;",
-          "2": "push()",
-          "3": "Both value and type",
-          "4": "function myFunction() {}",
+          "1": "8",
+          "2": "20",
+          "3": "6",
         }),
         score: 1.0,
-        completedAt: new Date("2024-01-15T10:30:00Z"),
+        completedAt: new Date("2025-01-15T10:30:00Z"),
       },
       {
         quizId: quizzes[0].id,
-        userId: users[5].id,
+        userId: users[11].id,
         answers: createAnswersArray(quizzes[0].id, {
-          "1": "var myVar = 5;",
-          "2": "add()",
-          "3": "Both value and type",
-          "4": "function myFunction() {}",
-        }),
-        score: 0.75,
-        completedAt: new Date("2024-01-16T14:20:00Z"),
-      },
-      {
-        quizId: quizzes[1].id,
-        userId: users[4].id,
-        answers: createAnswersArray(quizzes[1].id, {
-          "1": "To handle side effects",
-          "2": "Through props",
-          "3": "A syntax extension",
-        }),
-        score: 1.0,
-        completedAt: new Date("2024-01-20T09:15:00Z"),
-      },
-      {
-        quizId: quizzes[1].id,
-        userId: users[5].id,
-        answers: createAnswersArray(quizzes[1].id, {
-          "1": "To manage state",
-          "2": "Through props",
-          "3": "A syntax extension",
+          "1": "8",
+          "2": "21",
+          "3": "6",
         }),
         score: 0.67,
-        completedAt: new Date("2024-01-21T16:45:00Z"),
+        completedAt: new Date("2025-01-15T10:35:00Z"),
+      },
+      {
+        quizId: quizzes[1].id,
+        userId: users[12].id,
+        answers: createAnswersArray(quizzes[1].id, {
+          "1": "Water",
+          "2": "It becomes water",
+          "3": "Air",
+        }),
+        score: 1.0,
+        completedAt: new Date("2025-01-18T09:15:00Z"),
       },
       {
         quizId: quizzes[2].id,
-        userId: users[8].id,
+        userId: users[11].id,
         answers: createAnswersArray(quizzes[2].id, {
-          "1": "A unique identifier for records",
-          "2": "Organizing data efficiently",
-          "3": "Atomicity, Consistency, Isolation, Durability",
+          "1": "The first paragraph",
+          "2": "Facts that support the main idea",
         }),
         score: 1.0,
-        completedAt: new Date("2024-01-25T11:30:00Z"),
+        completedAt: new Date("2025-01-20T14:20:00Z"),
       },
       {
         quizId: quizzes[3].id,
-        userId: users[9].id,
+        userId: users[13].id,
         answers: createAnswersArray(quizzes[3].id, {
-          "1": "Initiation",
-          "2": "Task scheduling",
-          "3": "Minimum Viable Product",
+          "1": "Egyptians",
+          "2": "The wheel",
+          "3": "Greece",
         }),
         score: 1.0,
-        completedAt: new Date("2024-02-01T08:20:00Z"),
-      },
-      {
-        quizId: quizzes[4].id,
-        userId: users[12].id,
-        answers: createAnswersArray(quizzes[4].id, {
-          "1": "Cross-Site Scripting",
-          "2": "A security vulnerability",
-          "3": "HTTP Secure",
-        }),
-        score: 0.67,
-        completedAt: new Date("2024-02-05T13:10:00Z"),
-      },
-      {
-        quizId: quizzes[5].id,
-        userId: users[4].id,
-        answers: createAnswersArray(quizzes[5].id, {
-          "1": "Representational State Transfer",
-          "2": "PUT",
-          "3": "To maintain backward compatibility",
-        }),
-        score: 1.0,
-        completedAt: new Date("2024-02-10T15:45:00Z"),
+        completedAt: new Date("2025-01-22T11:30:00Z"),
       },
     ];
 
@@ -715,26 +486,34 @@ async function seed() {
     console.log("✅ Database seeded successfully!");
     console.log("\n📈 Summary:");
     console.log(`- ${users.length} users created`);
-    console.log(`- ${organizations.length} organizations created`);
-    console.log(`- ${memberships.length} memberships created`);
-    console.log(`- ${quizzes.length} quizzes created`);
+    console.log(`- ${organizations.length} campuses created`);
+    console.log(`- ${memberships.length} campus memberships created`);
+    console.log(`- ${quizzes.length} assessments created`);
     console.log(
       `- ${questionSets.reduce((acc, set) => acc + set.questions.length, 0)} questions created`
     );
-    console.log(`- ${responses.length} responses created`);
+    console.log(`- ${responses.length} student responses created`);
     console.log(
-      `\n🔑 System Admin: superadmin@${fromEmailDomain} (role: super-admin)`
+      `\n🔑 System Admin: superadmin@${fromEmailDomain} (password: ${devPassword})`
     );
-    console.log(`🔑 TechCorp Owner: org1owner1@${fromEmailDomain}`);
-    console.log(`🔑 EduSoft Owner: org2owner1@${fromEmailDomain}`);
-    console.log(`🔑 DevSkills Owner: org3owner1@${fromEmailDomain}`);
-    console.log(`\n🔗 Cross-org memberships:`);
-    console.log(
-      `- org1admin1@${fromEmailDomain} (admin in TechCorp & EduSoft)`
-    );
-    console.log(
-      `- org1member1@${fromEmailDomain} (member in TechCorp & DevSkills)`
-    );
+    console.log(`\n👨‍💼 Campus Administrators:`);
+    console.log(`- Lagos Campus: lagos.admin@${fromEmailDomain}`);
+    console.log(`- Abuja Campus: abuja.admin@${fromEmailDomain}`);
+    console.log(`\n👨‍🏫 Teachers:`);
+    console.log(`- Mathematics: sarah.mathematics@${fromEmailDomain}`);
+    console.log(`- Science: james.science@${fromEmailDomain}`);
+    console.log(`- English: emily.english@${fromEmailDomain}`);
+    console.log(`- History: michael.history@${fromEmailDomain}`);
+    console.log(`\n👨‍👩‍👧 Parents:`);
+    console.log(`- david.parent@${fromEmailDomain} (parent of Sophia)`);
+    console.log(`- mary.parent@${fromEmailDomain} (parent of Oliver)`);
+    console.log(`- john.parent@${fromEmailDomain} (parent of Emma)`);
+    console.log(`\n👧👦 Students:`);
+    console.log(`- sophia.student@${fromEmailDomain}`);
+    console.log(`- oliver.student@${fromEmailDomain}`);
+    console.log(`- emma.student@${fromEmailDomain}`);
+    console.log(`- liam.student@${fromEmailDomain}`);
+    console.log(`- ava.student@${fromEmailDomain}`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     process.exit(1);
