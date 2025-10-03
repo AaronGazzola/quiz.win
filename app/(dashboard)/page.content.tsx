@@ -273,7 +273,7 @@ export function DashboardPageContent() {
   return (
     <div
       ref={containerRef}
-      className="max-w-7xl mx-auto space-y-8"
+      className="max-w-7xl mx-auto space-y-6"
     >
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div className="space-y-1">
@@ -419,13 +419,13 @@ export function DashboardPageContent() {
               </p>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search assessments..."
                 value={immediateSearch}
                 onChange={(e) => setImmediateSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
               />
             </div>
           </div>
@@ -581,20 +581,20 @@ export function DashboardPageContent() {
                       <div className="flex justify-end items-center space-x-3">
                         <button
                           onClick={() => router.push(`/take-quiz/${quiz.id}`)}
-                          className="px-4 py-2 text-sm border border-primary/30 text-primary bg-transparent rounded-md hover:bg-primary/5 transition-colors flex items-center gap-2"
+                          className="px-4 py-2 text-sm border border-primary/30 text-primary bg-transparent rounded-md hover:bg-primary/10 transition-colors flex items-center gap-2"
                         >
                           Take Assessment →
                         </button>
                         <div className="flex space-x-2">
                           <button
                             onClick={() => openEdit(quiz)}
-                            className="text-indigo-600 hover:text-indigo-900"
+                            className="text-primary hover:text-primary/80 transition-colors"
                             title="Edit Quiz"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            className="text-red-600 hover:text-red-900"
+                            className="text-destructive hover:text-destructive/80 transition-colors"
                             title="Delete Quiz"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -623,13 +623,13 @@ export function DashboardPageContent() {
                 </p>
               </div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search responses..."
                   value={responsesSearch}
                   onChange={(e) => setResponsesSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
                 />
               </div>
             </div>
@@ -763,8 +763,8 @@ export function DashboardPageContent() {
           </div>
 
           {responsesTotalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-gray-500">
+            <div className="mt-4 flex items-center justify-between px-4 pb-4">
+              <div className="text-sm text-muted-foreground">
                 Showing {responsesPage * responsesItemsPerPage + 1} to{" "}
                 {Math.min(
                   (responsesPage + 1) * responsesItemsPerPage,
@@ -779,7 +779,7 @@ export function DashboardPageContent() {
                     setResponsesPage(Math.max(0, responsesPage - 1))
                   }
                   disabled={responsesPage === 0}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Previous
                 </button>
@@ -797,10 +797,10 @@ export function DashboardPageContent() {
                         key={pageNum}
                         onClick={() => setResponsesPage(pageNum)}
                         className={cn(
-                          "px-3 py-1 text-sm border rounded-md",
+                          "px-3 py-1 text-sm border rounded-md transition-colors",
                           pageNum === responsesPage
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "border-gray-300 hover:bg-gray-50"
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-input hover:bg-accent"
                         )}
                       >
                         {pageNum + 1}
@@ -816,7 +816,7 @@ export function DashboardPageContent() {
                     )
                   }
                   disabled={responsesPage >= responsesTotalPages - 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Next
                 </button>
@@ -967,21 +967,21 @@ export function DashboardPageContent() {
                                 key={optionIndex}
                                 className={cn(
                                   "px-6 py-4 text-sm",
-                                  isUserAnswer && isCorrectAnswer && "bg-green-100",
-                                  isUserAnswer && !isCorrectAnswer && "bg-red-100"
+                                  isUserAnswer && isCorrectAnswer && "bg-green-500/10 dark:bg-green-500/20",
+                                  isUserAnswer && !isCorrectAnswer && "bg-destructive/10 dark:bg-destructive/20"
                                 )}
                               >
                                 <div className="flex flex-col items-center space-y-1">
                                   {isCorrectAnswer && !isUserAnswer && (
-                                    <Badge className="border border-gray-400 text-gray-700 bg-transparent hover:bg-gray-50">
+                                    <Badge variant="outline" className="text-foreground">
                                       Solution
                                     </Badge>
                                   )}
                                   {isUserAnswer && (
                                     isCorrectAnswer ? (
-                                      <Check className="w-6 h-6 text-green-600" />
+                                      <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
                                     ) : (
-                                      <X className="w-6 h-6 text-red-600" />
+                                      <X className="w-6 h-6 text-destructive" />
                                     )
                                   )}
                                 </div>
@@ -1120,21 +1120,21 @@ export function DashboardPageContent() {
                                 key={optionIndex}
                                 className={cn(
                                   "px-6 py-4 text-sm",
-                                  isUserAnswer && isCorrectAnswer && "bg-green-100",
-                                  isUserAnswer && !isCorrectAnswer && "bg-red-100"
+                                  isUserAnswer && isCorrectAnswer && "bg-green-500/10 dark:bg-green-500/20",
+                                  isUserAnswer && !isCorrectAnswer && "bg-destructive/10 dark:bg-destructive/20"
                                 )}
                               >
                                 <div className="flex flex-col items-center space-y-1">
                                   {isCorrectAnswer && !isUserAnswer && (
-                                    <Badge className="border border-gray-400 text-gray-700 bg-transparent hover:bg-gray-50">
+                                    <Badge variant="outline" className="text-foreground">
                                       Solution
                                     </Badge>
                                   )}
                                   {isUserAnswer && (
                                     isCorrectAnswer ? (
-                                      <Check className="w-6 h-6 text-green-600" />
+                                      <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
                                     ) : (
-                                      <X className="w-6 h-6 text-red-600" />
+                                      <X className="w-6 h-6 text-destructive" />
                                     )
                                   )}
                                 </div>
@@ -1164,7 +1164,7 @@ export function DashboardPageContent() {
 
       {!selectedQuizId && totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Showing {page * itemsPerPage + 1} to{" "}
             {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems}{" "}
             assessments
@@ -1174,7 +1174,7 @@ export function DashboardPageContent() {
             <button
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
@@ -1187,10 +1187,10 @@ export function DashboardPageContent() {
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
                   className={cn(
-                    "px-3 py-1 text-sm border rounded-md",
+                    "px-3 py-1 text-sm border rounded-md transition-colors",
                     pageNum === page
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "border-gray-300 hover:bg-gray-50"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "border-input hover:bg-accent"
                   )}
                 >
                   {pageNum + 1}
@@ -1201,7 +1201,7 @@ export function DashboardPageContent() {
             <button
               onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>

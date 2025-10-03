@@ -12,6 +12,7 @@ import { useAppStore } from "@/app/layout.stores";
 import { ExtendedUser } from "@/app/layout.types";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { signOut } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -154,7 +155,8 @@ export default function DashboardLayout({
               )}
             </nav>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
             <OrganizationSelector />
             <UserAvatarMenu
               user={user as ExtendedUser | null}
@@ -164,7 +166,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="container mx-auto py-6">{children}</main>
+      <main className="container mx-auto py-8 px-4 md:px-6">{children}</main>
     </div>
   );
 }
