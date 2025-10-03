@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useMessages, useConversation } from "./page.hooks";
-import { useSession } from "@/lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send } from "lucide-react";
 
 export function MessagesClient() {
-  const { data: session } = useSession();
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data } = await authClient.getSession();
+      return data;
+    },
+  });
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
@@ -147,7 +154,18 @@ export function MessagesClient() {
           {conversations && conversations.length === 0 && (
             <p className="text-sm text-muted-foreground">No conversations yet</p>
           )}
-          {conversations?.map((conv: any) => (
+          {conversations?.map((conv: {
+            conversationId: string;
+            lastMessage: {
+              id: string;
+              subject: string;
+              content: string;
+              senderId: string;
+              isRead: boolean;
+              createdAt: Date;
+            };
+            unreadCount: number;
+          }) => (
             <Card
               key={conv.conversationId}
               className={`p-4 cursor-pointer hover:bg-accent ${selectedConversationId === conv.conversationId ? "bg-accent" : ""
@@ -192,7 +210,12 @@ export function MessagesClient() {
               ) : (
                 <>
                   <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-                    {messages?.map((msg: any) => (
+                    {messages?.map((msg: {
+                      id: string;
+                      senderId: string;
+                      content: string;
+                      createdAt: Date;
+                    }) => (
                       <div
                         key={msg.id}
                         className={`p-4 rounded-lg ${msg.senderId === session?.user?.id

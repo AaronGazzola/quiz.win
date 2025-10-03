@@ -44,12 +44,14 @@ export async function createEvent(data: {
   isSchoolClosed?: boolean;
 }): Promise<ActionResponse<CalendarEvent>> {
   try {
-    const { db, userId } = await getAuthenticatedClient();
+    const { db, user } = await getAuthenticatedClient();
+
+    if (!user) throw new Error("Unauthorized");
 
     const event = await db.calendarEvent.create({
       data: {
         ...data,
-        createdById: userId,
+        createdById: user.id,
       },
     });
 

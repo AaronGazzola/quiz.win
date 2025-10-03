@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAnnouncements } from "./page.hooks";
-import { useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,6 @@ import { Megaphone, Pin, Trash2 } from "lucide-react";
 import { TargetAudience } from "@prisma/client";
 
 export function AnnouncementsClient() {
-  const { data: session } = useSession();
   const [newAnnouncementOpen, setNewAnnouncementOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -46,12 +44,10 @@ export function AnnouncementsClient() {
     createLoading,
     deleteAnnouncement,
     pinAnnouncement,
+    hasAdminAccess,
   } = useAnnouncements();
 
-  const canManage =
-    session?.user?.role === "admin" ||
-    session?.user?.role === "super-admin" ||
-    session?.user?.userType === "Teacher";
+  const canManage = hasAdminAccess;
 
   const handleCreate = () => {
     createAnnouncement(
@@ -197,7 +193,7 @@ export function AnnouncementsClient() {
             </p>
           </Card>
         )}
-        {announcements?.map((announcement: any) => (
+        {announcements?.map((announcement) => (
           <Card key={announcement.id} className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex-1">

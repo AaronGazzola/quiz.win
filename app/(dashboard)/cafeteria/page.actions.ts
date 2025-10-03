@@ -2,7 +2,7 @@
 
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { getActionResponse, ActionResponse } from "@/lib/action.utils";
-import type { DayOfWeek, CafeteriaMenu } from "@prisma/client";
+import type { DayOfWeek, CafeteriaMenu, Prisma } from "@prisma/client";
 
 export async function getMenuByWeek(campusId: string, weekStartDate: Date): Promise<ActionResponse<CafeteriaMenu[]>> {
   try {
@@ -35,7 +35,10 @@ export async function createMenu(data: {
     const { db } = await getAuthenticatedClient();
 
     const menu = await db.cafeteriaMenu.create({
-      data,
+      data: {
+        ...data,
+        menuItems: data.menuItems as Prisma.InputJsonValue,
+      },
     });
 
     return getActionResponse({ data: menu });
@@ -56,7 +59,10 @@ export async function updateMenu(
 
     const menu = await db.cafeteriaMenu.update({
       where: { id: menuId },
-      data,
+      data: {
+        ...data,
+        menuItems: data.menuItems ? (data.menuItems as Prisma.InputJsonValue) : undefined,
+      },
     });
 
     return getActionResponse({ data: menu });
@@ -109,6 +115,7 @@ export async function bulkCreateWeekMenu(
             campusId,
             weekStartDate,
             ...day,
+            menuItems: day.menuItems as Prisma.InputJsonValue,
           },
         }),
       ),

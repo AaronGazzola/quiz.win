@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAppStore } from "@/app/layout.stores";
 import { authClient } from "@/lib/auth-client";
 import {
   getMenuByWeek,
   createMenu,
   updateMenu,
   deleteMenu,
-  getCurrentWeekMenu,
 } from "./page.actions";
 import type { DayOfWeek } from "@prisma/client";
 
@@ -24,7 +22,6 @@ function getMonday(date: Date): Date {
 
 export function useCafeteria() {
   const queryClient = useQueryClient();
-  const currentCampusId = useAppStore((state) => state.currentCampusId);
   const [weekOffset, setWeekOffset] = useState(0);
 
   const { data: session } = useQuery({
@@ -34,6 +31,8 @@ export function useCafeteria() {
       return data;
     },
   });
+
+  const currentCampusId = session?.session?.activeOrganizationId;
 
   const hasAdminAccess =
     session?.user?.role === "super-admin" ||

@@ -36,7 +36,6 @@ export function MenuDialog({
   open,
   onOpenChange,
   menu,
-  weekStartDate,
   onSubmit,
 }: MenuDialogProps) {
   const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek>("Monday");

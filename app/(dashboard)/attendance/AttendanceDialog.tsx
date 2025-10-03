@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   getAttendanceSessionAction,
   createAttendanceSessionAction,
@@ -40,7 +39,7 @@ export function AttendanceDialog({
     Record<string, AttendanceStatus>
   >({});
 
-  const { data: session } = useQuery({
+  const { data: attendanceSession } = useQuery({
     queryKey: ["attendance-session", sessionId],
     queryFn: async () => {
       if (!sessionId) return null;
@@ -61,16 +60,17 @@ export function AttendanceDialog({
   });
 
   useEffect(() => {
-    if (session?.records) {
+    const sessionData = attendanceSession as { records?: Array<{ studentId: string; status: AttendanceStatus }> } | null | undefined;
+    if (sessionData?.records) {
       const map: Record<string, AttendanceStatus> = {};
-      session.records.forEach((record: any) => {
+      sessionData.records.forEach((record) => {
         map[record.studentId] = record.status;
       });
       setAttendanceMap(map);
     } else {
       setAttendanceMap({});
     }
-  }, [session]);
+  }, [attendanceSession]);
 
   const createSessionMutation = useMutation({
     mutationFn: async () => {
@@ -134,7 +134,7 @@ export function AttendanceDialog({
 
   const markAllPresent = () => {
     const map: Record<string, AttendanceStatus> = {};
-    roster.forEach((student: any) => {
+    roster.forEach((student: { id: string }) => {
       map[student.id] = "Present";
     });
     setAttendanceMap(map);
@@ -158,7 +158,7 @@ export function AttendanceDialog({
             </Button>
           </div>
           <div className="space-y-2">
-            {roster.map((student: any) => (
+            {roster.map((student: { id: string; user?: { name?: string | null }; grade: string | null }) => (
               <div
                 key={student.id}
                 className="flex items-center justify-between p-3 border rounded"

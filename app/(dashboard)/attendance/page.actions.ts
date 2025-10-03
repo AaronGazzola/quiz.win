@@ -8,7 +8,9 @@ export async function createAttendanceSessionAction(
   classroomId: string,
   date: Date
 ): Promise<ActionResponse<{ id: string }>> {
-  const { db, userId } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) return { success: false, error: "Unauthorized" };
 
   const classroom = await db.classroom.findFirst({
     where: { id: classroomId },
@@ -16,7 +18,7 @@ export async function createAttendanceSessionAction(
   });
 
   if (!classroom) {
-    return { error: "Classroom not found" };
+    return { success: false, error: "Classroom not found" };
   }
 
   const session = await db.attendanceSession.create({
@@ -24,11 +26,11 @@ export async function createAttendanceSessionAction(
       classroomId,
       date,
       campusId: classroom.campusId,
-      markedById: userId,
+      markedById: user.id,
     },
   });
 
-  return { data: { id: session.id } };
+  return { success: true, data: { id: session.id } };
 }
 
 export async function markAttendanceAction(
@@ -58,7 +60,7 @@ export async function markAttendanceAction(
     },
   });
 
-  return { data: { id: record.id } };
+  return { success: true, data: { id: record.id } };
 }
 
 export async function bulkMarkAttendanceAction(
@@ -90,14 +92,14 @@ export async function bulkMarkAttendanceAction(
     )
   );
 
-  return { data: { count: results.length } };
+  return { success: true, data: { count: results.length } };
 }
 
 export async function getAttendanceByClassroomAction(
   classroomId: string,
   startDate?: Date,
   endDate?: Date
-): Promise<ActionResponse<any[]>> {
+): Promise<ActionResponse<unknown[]>> {
   const { db } = await getAuthenticatedClient();
 
   const sessions = await db.attendanceSession.findMany({
@@ -119,14 +121,14 @@ export async function getAttendanceByClassroomAction(
     },
   });
 
-  return { data: sessions };
+  return { success: true, data: sessions };
 }
 
 export async function getStudentAttendanceAction(
   studentId: string,
   startDate?: Date,
   endDate?: Date
-): Promise<ActionResponse<any[]>> {
+): Promise<ActionResponse<unknown[]>> {
   const { db } = await getAuthenticatedClient();
 
   const records = await db.attendanceRecord.findMany({
@@ -150,7 +152,7 @@ export async function getStudentAttendanceAction(
     },
   });
 
-  return { data: records };
+  return { success: true, data: records };
 }
 
 export async function getAttendanceStatsAction(
@@ -177,6 +179,7 @@ export async function getAttendanceStatsAction(
   const percentage = total > 0 ? (present / total) * 100 : 0;
 
   return {
+    success: true,
     data: {
       total,
       present,
@@ -189,7 +192,7 @@ export async function getAttendanceStatsAction(
 
 export async function getAttendanceSessionAction(
   sessionId: string
-): Promise<ActionResponse<any>> {
+): Promise<ActionResponse<unknown>> {
   const { db } = await getAuthenticatedClient();
 
   const session = await db.attendanceSession.findUnique({
@@ -200,8 +203,8 @@ export async function getAttendanceSessionAction(
   });
 
   if (!session) {
-    return { error: "Session not found" };
+    return { success: false, error: "Session not found" };
   }
 
-  return { data: session };
+  return { success: true, data: session };
 }

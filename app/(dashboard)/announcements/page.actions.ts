@@ -1,15 +1,16 @@
 "use server";
 
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { ActionResponse } from "@/lib/action.utils";
 import { validateCampusAccess, canManageContent } from "@/lib/data-access";
 import { TargetAudience } from "@prisma/client";
 
 export async function getAnnouncementsAction(campusId: string, userId: string) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const campusAccess = await validateCampusAccess(
-    currentUser.id,
+    user.id,
     campusId,
     "read"
   );
@@ -18,7 +19,7 @@ export async function getAnnouncementsAction(campusId: string, userId: string) {
     throw new Error("Campus access denied");
   }
 
-  const user = await db.user.findUnique({
+  const userWithProfile = await db.user.findUnique({
     where: { id: userId },
     include: {
       teacherProfile: true,
@@ -45,14 +46,14 @@ export async function getAnnouncementsAction(campusId: string, userId: string) {
     ],
   });
 
-  if (user?.userType === "Parent") {
-    const studentGrades = user.parentProfile?.students.map(
+  if (userWithProfile?.userType === "Parent") {
+    const studentGrades = userWithProfile.parentProfile?.students.map(
       (sp) => sp.student.grade
     ) || [];
     const studentClassrooms = await db.classroomEnrollment.findMany({
       where: {
         studentId: {
-          in: user.parentProfile?.students.map((sp) => sp.studentId) || [],
+          in: userWithProfile.parentProfile?.students.map((sp) => sp.studentId) || [],
         },
       },
       select: {
@@ -67,7 +68,7 @@ export async function getAnnouncementsAction(campusId: string, userId: string) {
         (a.targetAudience === "Grade" && studentGrades.includes(a.grade!)) ||
         (a.targetAudience === "Classroom" && classroomIds.includes(a.classroomId!))
     );
-  } else if (user?.userType === "Teacher") {
+  } else if (userWithProfile?.userType === "Teacher") {
     announcements = announcements.filter(
       (a) =>
         a.targetAudience === "AllTeachers" ||
@@ -86,11 +87,13 @@ export async function createAnnouncementAction(data: {
   grade?: string;
   isPinned?: boolean;
 }) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user, session } = await getAuthenticatedClient();
+
+  if (!user || !session?.session?.activeOrganizationId) throw new Error("Unauthorized");
 
   const campusAccess = await validateCampusAccess(
-    currentUser.id,
-    currentUser.session.activeOrganizationId!,
+    user.id,
+    session.session.activeOrganizationId,
     "write"
   );
 
@@ -99,8 +102,8 @@ export async function createAnnouncementAction(data: {
   }
 
   const canManage = await canManageContent(
-    currentUser.id,
-    currentUser.session.activeOrganizationId!
+    user.id,
+    session.session.activeOrganizationId
   );
 
   if (!canManage) {
@@ -111,8 +114,8 @@ export async function createAnnouncementAction(data: {
     data: {
       title: data.title,
       content: data.content,
-      authorId: currentUser.id,
-      campusId: currentUser.session.activeOrganizationId!,
+      authorId: user.id,
+      campusId: session.session.activeOrganizationId,
       targetAudience: data.targetAudience,
       classroomId: data.classroomId,
       grade: data.grade,
@@ -134,7 +137,9 @@ export async function updateAnnouncementAction(
     isPinned?: boolean;
   }
 ) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const announcement = await db.announcement.findUnique({
     where: { id: announcementId },
@@ -145,7 +150,7 @@ export async function updateAnnouncementAction(
   }
 
   const campusAccess = await validateCampusAccess(
-    currentUser.id,
+    user.id,
     announcement.campusId,
     "write"
   );
@@ -154,9 +159,9 @@ export async function updateAnnouncementAction(
     throw new Error("Campus access denied");
   }
 
-  if (announcement.authorId !== currentUser.id) {
+  if (announcement.authorId !== user.id) {
     const canManage = await canManageContent(
-      currentUser.id,
+      user.id,
       announcement.campusId
     );
     if (!canManage) {
@@ -173,7 +178,9 @@ export async function updateAnnouncementAction(
 }
 
 export async function deleteAnnouncementAction(announcementId: string) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const announcement = await db.announcement.findUnique({
     where: { id: announcementId },
@@ -184,7 +191,7 @@ export async function deleteAnnouncementAction(announcementId: string) {
   }
 
   const campusAccess = await validateCampusAccess(
-    currentUser.id,
+    user.id,
     announcement.campusId,
     "write"
   );
@@ -193,9 +200,9 @@ export async function deleteAnnouncementAction(announcementId: string) {
     throw new Error("Campus access denied");
   }
 
-  if (announcement.authorId !== currentUser.id) {
+  if (announcement.authorId !== user.id) {
     const canManage = await canManageContent(
-      currentUser.id,
+      user.id,
       announcement.campusId
     );
     if (!canManage) {
@@ -211,7 +218,9 @@ export async function deleteAnnouncementAction(announcementId: string) {
 }
 
 export async function pinAnnouncementAction(announcementId: string) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const announcement = await db.announcement.findUnique({
     where: { id: announcementId },
@@ -222,7 +231,7 @@ export async function pinAnnouncementAction(announcementId: string) {
   }
 
   const canManage = await canManageContent(
-    currentUser.id,
+    user.id,
     announcement.campusId
   );
 

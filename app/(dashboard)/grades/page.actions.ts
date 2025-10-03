@@ -11,7 +11,9 @@ export async function assignGradeAction(
   gradingPeriod: string,
   comments?: string
 ): Promise<ActionResponse<{ id: string }>> {
-  const { db, userId } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const classroom = await db.classroom.findFirst({
     where: { id: classroomId },
@@ -19,16 +21,16 @@ export async function assignGradeAction(
   });
 
   if (!classroom) {
-    return { error: "Classroom not found" };
+    return { success: false, error: "Classroom not found" };
   }
 
   const teacher = await db.teacher.findFirst({
-    where: { userId },
+    where: { userId: user.id },
     select: { id: true },
   });
 
   if (!teacher) {
-    return { error: "Teacher profile not found" };
+    return { success: false, error: "Teacher profile not found" };
   }
 
   const gradeRecord = await db.grade.create({
@@ -44,7 +46,7 @@ export async function assignGradeAction(
     },
   });
 
-  return { data: { id: gradeRecord.id } };
+  return { success: true, data: { id: gradeRecord.id } };
 }
 
 export async function updateGradeAction(
@@ -62,13 +64,13 @@ export async function updateGradeAction(
     data,
   });
 
-  return { data: { id: gradeRecord.id } };
+  return { success: true, data: { id: gradeRecord.id } };
 }
 
 export async function getGradesByStudentAction(
   studentId: string,
   gradingPeriod?: string
-): Promise<ActionResponse<any[]>> {
+): Promise<ActionResponse<unknown[]>> {
   const { db } = await getAuthenticatedClient();
 
   const grades = await db.grade.findMany({
@@ -81,13 +83,13 @@ export async function getGradesByStudentAction(
     },
   });
 
-  return { data: grades };
+  return { success: true, data: grades };
 }
 
 export async function getGradesByClassroomAction(
   classroomId: string,
   gradingPeriod?: string
-): Promise<ActionResponse<any[]>> {
+): Promise<ActionResponse<unknown[]>> {
   const { db } = await getAuthenticatedClient();
 
   const grades = await db.grade.findMany({
@@ -100,7 +102,7 @@ export async function getGradesByClassroomAction(
     },
   });
 
-  return { data: grades };
+  return { success: true, data: grades };
 }
 
 export async function getGradeStatsAction(
@@ -145,6 +147,7 @@ export async function getGradeStatsAction(
   });
 
   return {
+    success: true,
     data: {
       totalGrades,
       averageGrade: Math.round(averageGrade * 100) / 100,
@@ -162,5 +165,5 @@ export async function deleteGradeAction(
     where: { id: gradeId },
   });
 
-  return { data: { success: true } };
+  return { success: true, data: { success: true } };
 }

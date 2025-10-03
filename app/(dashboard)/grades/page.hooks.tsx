@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useAppStore } from "@/app/layout.stores";
+import { authClient } from "@/lib/auth-client";
 import {
   getGradesByClassroomAction,
   getGradesByStudentAction,
@@ -11,7 +11,15 @@ import { getStudents } from "../students/page.actions";
 import { useState } from "react";
 
 export function useGradesManagement() {
-  const currentCampusId = useAppStore((state) => state.currentCampusId);
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data } = await authClient.getSession();
+      return data;
+    },
+  });
+
+  const currentCampusId = session?.session?.activeOrganizationId;
   const [selectedClassroom, setSelectedClassroom] = useState<string | null>(
     null
   );

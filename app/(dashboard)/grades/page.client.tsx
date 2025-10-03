@@ -47,14 +47,30 @@ export function GradesManagementClient() {
     students,
   } = useGradesManagement();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedGrade, setSelectedGrade] = useState<any>();
+  const [selectedGrade, setSelectedGrade] = useState<{
+    id: string;
+    studentId: string;
+    classroomId: string;
+    subject: string;
+    grade: string;
+    gradingPeriod: string;
+    comments?: string;
+  }>();
 
   const handleCreate = () => {
     setSelectedGrade(undefined);
     setDialogOpen(true);
   };
 
-  const handleEdit = (grade: any) => {
+  const handleEdit = (grade: {
+    id: string;
+    studentId: string;
+    classroomId: string;
+    subject: string;
+    grade: string;
+    gradingPeriod: string;
+    comments?: string;
+  }) => {
     setSelectedGrade(grade);
     setDialogOpen(true);
   };
@@ -174,7 +190,7 @@ export function GradesManagementClient() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {grades.map((grade) => (
+                {(grades as Array<{ id: string; studentId: string; classroomId: string; subject: string; grade: string; gradingPeriod: string; comments?: string | null }>)?.map((grade) => (
                   <TableRow key={grade.id}>
                     <TableCell>{grade.studentId}</TableCell>
                     <TableCell>{grade.subject}</TableCell>
@@ -189,7 +205,7 @@ export function GradesManagementClient() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(grade)}
+                        onClick={() => handleEdit({ ...grade, comments: grade.comments || undefined })}
                       >
                         Edit
                       </Button>

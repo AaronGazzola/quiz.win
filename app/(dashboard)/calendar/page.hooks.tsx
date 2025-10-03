@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAppStore } from "@/app/layout.stores";
 import { authClient } from "@/lib/auth-client";
 import {
   getEvents,
@@ -14,7 +13,6 @@ import type { EventType } from "@prisma/client";
 
 export function useCalendar() {
   const queryClient = useQueryClient();
-  const currentCampusId = useAppStore((state) => state.currentCampusId);
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -23,6 +21,8 @@ export function useCalendar() {
       return data;
     },
   });
+
+  const currentCampusId = session?.session?.activeOrganizationId;
 
   const hasAdminAccess =
     session?.user?.role === "super-admin" ||

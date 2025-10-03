@@ -8,12 +8,24 @@ import {
   deleteAnnouncementAction,
   pinAnnouncementAction,
 } from "./page.actions";
-import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 import { TargetAudience } from "@prisma/client";
 
 export function useAnnouncements() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
+
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data } = await authClient.getSession();
+      return data;
+    },
+  });
+
+  const hasAdminAccess =
+    session?.user?.role === "admin" ||
+    session?.user?.role === "super-admin" ||
+    session?.user?.role === "teacher";
 
   const campusId = session?.session?.activeOrganizationId;
   const userId = session?.user?.id;
@@ -88,5 +100,6 @@ export function useAnnouncements() {
     deleteLoading: deleteMutation.isPending,
     pinAnnouncement: pinMutation.mutate,
     pinLoading: pinMutation.isPending,
+    hasAdminAccess,
   };
 }

@@ -14,13 +14,21 @@ import { Label } from "@/components/ui/label";
 import { assignGradeAction, updateGradeAction } from "./page.actions";
 import { getClassrooms } from "../classrooms/page.actions";
 import { getStudents } from "../students/page.actions";
-import { useAppStore } from "@/app/layout.stores";
+import { authClient } from "@/lib/auth-client";
 
 interface GradeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
-  grade?: any;
+  grade?: {
+    id: string;
+    studentId: string;
+    classroomId: string;
+    subject: string;
+    grade: string;
+    gradingPeriod: string;
+    comments?: string;
+  };
 }
 
 const GRADING_PERIODS = [
@@ -55,7 +63,16 @@ export function GradeDialog({
   grade,
 }: GradeDialogProps) {
   const queryClient = useQueryClient();
-  const currentCampusId = useAppStore((state) => state.currentCampusId);
+
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data } = await authClient.getSession();
+      return data;
+    },
+  });
+
+  const currentCampusId = session?.session?.activeOrganizationId;
   const [formData, setFormData] = useState({
     studentId: "",
     classroomId: "",

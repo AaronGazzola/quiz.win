@@ -1,19 +1,20 @@
 "use server";
 
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { ActionResponse } from "@/lib/action.utils";
 import { validateCampusAccess } from "@/lib/data-access";
 
 export async function getConversationsAction(userId: string) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user, session } = await getAuthenticatedClient();
 
-  if (currentUser.id !== userId) {
+  if (!user || !session?.session?.activeOrganizationId) throw new Error("Unauthorized");
+
+  if (user.id !== userId) {
     throw new Error("Unauthorized");
   }
 
   const campusAccess = await validateCampusAccess(
-    currentUser.id,
-    currentUser.session.activeOrganizationId!,
+    user.id,
+    session.session.activeOrganizationId,
     "read"
   );
 
@@ -24,7 +25,7 @@ export async function getConversationsAction(userId: string) {
   const messages = await db.message.findMany({
     where: {
       OR: [{ senderId: userId }, { recipientId: userId }],
-      campusId: currentUser.session.activeOrganizationId!,
+      campusId: session.session.activeOrganizationId,
     },
     orderBy: {
       createdAt: "desc",
@@ -45,24 +46,26 @@ export async function getConversationsAction(userId: string) {
     }
 
     if (!msg.isRead && msg.recipientId === userId) {
-      acc[convId].unreadCount++;
+      (acc[convId] as { unreadCount: number }).unreadCount++;
     }
 
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, { conversationId: string; participantId: string; lastMessage: typeof messages[0]; unreadCount: number }>);
 
   return Object.values(conversations);
 }
 
 export async function getMessagesAction(conversationId: string) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const messages = await db.message.findMany({
     where: {
       conversationId,
       OR: [
-        { senderId: currentUser.id },
-        { recipientId: currentUser.id },
+        { senderId: user.id },
+        { recipientId: user.id },
       ],
     },
     orderBy: {
@@ -82,11 +85,13 @@ export async function sendMessageAction(
   subject: string,
   content: string
 ) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user, session } = await getAuthenticatedClient();
+
+  if (!user || !session?.session?.activeOrganizationId) throw new Error("Unauthorized");
 
   const campusAccess = await validateCampusAccess(
-    currentUser.id,
-    currentUser.session.activeOrganizationId!,
+    user.id,
+    session.session.activeOrganizationId,
     "write"
   );
 
@@ -94,16 +99,16 @@ export async function sendMessageAction(
     throw new Error("Campus access denied");
   }
 
-  const conversationId = [currentUser.id, recipientId].sort().join("-");
+  const conversationId = [user.id, recipientId].sort().join("-");
 
   const message = await db.message.create({
     data: {
-      senderId: currentUser.id,
+      senderId: user.id,
       recipientId,
       subject,
       content,
       conversationId,
-      campusId: currentUser.session.activeOrganizationId!,
+      campusId: session.session.activeOrganizationId,
     },
   });
 
@@ -114,7 +119,9 @@ export async function replyToMessageAction(
   messageId: string,
   content: string
 ) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const originalMessage = await db.message.findUnique({
     where: { id: messageId },
@@ -125,20 +132,20 @@ export async function replyToMessageAction(
   }
 
   if (
-    originalMessage.senderId !== currentUser.id &&
-    originalMessage.recipientId !== currentUser.id
+    originalMessage.senderId !== user.id &&
+    originalMessage.recipientId !== user.id
   ) {
     throw new Error("Unauthorized");
   }
 
   const recipientId =
-    originalMessage.senderId === currentUser.id
+    originalMessage.senderId === user.id
       ? originalMessage.recipientId
       : originalMessage.senderId;
 
   const reply = await db.message.create({
     data: {
-      senderId: currentUser.id,
+      senderId: user.id,
       recipientId,
       subject: `Re: ${originalMessage.subject}`,
       content,
@@ -151,7 +158,9 @@ export async function replyToMessageAction(
 }
 
 export async function markAsReadAction(messageId: string) {
-  const { db, currentUser } = await getAuthenticatedClient();
+  const { db, user } = await getAuthenticatedClient();
+
+  if (!user) throw new Error("Unauthorized");
 
   const message = await db.message.findUnique({
     where: { id: messageId },
@@ -161,7 +170,7 @@ export async function markAsReadAction(messageId: string) {
     throw new Error("Message not found");
   }
 
-  if (message.recipientId !== currentUser.id) {
+  if (message.recipientId !== user.id) {
     throw new Error("Unauthorized");
   }
 

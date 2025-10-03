@@ -138,7 +138,7 @@ export function AttendanceManagementClient() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sessions.map((session) => {
+                {(sessions as Array<{ id: string; date: Date; classroomId: string; records: Array<{ status: string }> }>)?.map((session) => {
                   const present = session.records.filter(
                     (r) => r.status === "Present"
                   ).length;

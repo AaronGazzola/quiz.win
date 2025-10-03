@@ -8,11 +8,17 @@ import {
   replyToMessageAction,
   markAsReadAction,
 } from "./page.actions";
-import { useSession } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
 
 export function useMessages() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: async () => {
+      const { data } = await authClient.getSession();
+      return data;
+    },
+  });
 
   const {
     data: conversations,
@@ -20,7 +26,11 @@ export function useMessages() {
     error: conversationsError,
   } = useQuery({
     queryKey: ["conversations", session?.user?.id],
-    queryFn: () => getConversationsAction(session?.user?.id!),
+    queryFn: () => {
+      const userId = session?.user?.id;
+      if (!userId) throw new Error("User ID is required");
+      return getConversationsAction(userId);
+    },
     enabled: !!session?.user?.id,
   });
 
