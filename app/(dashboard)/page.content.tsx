@@ -17,7 +17,6 @@ import {
   ChevronUp,
   Edit,
   Search,
-  Settings,
   Trash2,
   TrendingUp,
   Users,
@@ -56,8 +55,8 @@ export function DashboardPageContent() {
     () =>
       userWithMembers?.members?.map((member) => ({
         id: member.organizationId,
-        name: member.organization.name,
-        slug: member.organization.slug || "",
+        name: member.campus.name,
+        slug: member.campus.slug || "",
         role: member.role,
       })) || [],
     [userWithMembers?.members]
@@ -297,7 +296,7 @@ export function DashboardPageContent() {
               <BookOpen className="h-6 w-6 text-primary" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Total Quizzes</p>
+              <p className="text-sm text-muted-foreground">Total Assessments</p>
               <div className="text-2xl font-bold relative">
                 <div
                   className={cn(
@@ -305,7 +304,7 @@ export function DashboardPageContent() {
                     metricsFetching && metrics ? "opacity-50" : "opacity-100"
                   )}
                 >
-                  {metrics?.totalQuizzes ?? 0}
+                  {metrics?.totalAssessments ?? 0}
                 </div>
                 {metricsLoading && (
                   <Skeleton className="absolute inset-0 h-8 w-12" />
@@ -353,7 +352,7 @@ export function DashboardPageContent() {
                   <Users className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Team Members</p>
+                  <p className="text-sm text-muted-foreground">Total Students</p>
                   <div className="text-2xl font-bold relative">
                     <div
                       className={cn(
@@ -363,7 +362,7 @@ export function DashboardPageContent() {
                           : "opacity-100"
                       )}
                     >
-                      {metrics?.teamMembers ?? 0}
+                      {metrics?.totalStudents ?? 0}
                     </div>
                     {metricsLoading && (
                       <Skeleton className="absolute inset-0 h-8 w-12" />
@@ -379,11 +378,11 @@ export function DashboardPageContent() {
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-orange-500/10 rounded-lg">
-                  <Settings className="h-6 w-6 text-orange-600" />
+                  <Users className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    Active Invites
+                    Total Teachers
                   </p>
                   <div className="text-2xl font-bold relative">
                     <div
@@ -394,7 +393,7 @@ export function DashboardPageContent() {
                           : "opacity-100"
                       )}
                     >
-                      {metrics?.activeInvites ?? 0}
+                      {metrics?.totalTeachers ?? 0}
                     </div>
                     {metricsLoading && (
                       <Skeleton className="absolute inset-0 h-8 w-12" />
@@ -414,16 +413,16 @@ export function DashboardPageContent() {
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-medium text-foreground">Quizzes</h2>
+              <h2 className="text-lg font-medium text-foreground">Assessments</h2>
               <p className="text-sm text-muted-foreground">
-                Select a quiz to view its responses
+                Select an assessment to view its responses
               </p>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search quizzes..."
+                placeholder="Search assessments..."
                 value={immediateSearch}
                 onChange={(e) => setImmediateSearch(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -522,8 +521,8 @@ export function DashboardPageContent() {
                     className="px-6 py-12 text-center text-muted-foreground"
                   >
                     {search
-                      ? `No quizzes found matching "${search}"`
-                      : "No quizzes created yet"}
+                      ? `No assessments found matching "${search}"`
+                      : "No assessments created yet"}
                   </td>
                 </tr>
               ) : (
@@ -584,7 +583,7 @@ export function DashboardPageContent() {
                           onClick={() => router.push(`/take-quiz/${quiz.id}`)}
                           className="px-4 py-2 text-sm border border-primary/30 text-primary bg-transparent rounded-md hover:bg-primary/5 transition-colors flex items-center gap-2"
                         >
-                          Take Quiz →
+                          Take Assessment →
                         </button>
                         <div className="flex space-x-2">
                           <button
@@ -1168,7 +1167,7 @@ export function DashboardPageContent() {
           <div className="text-sm text-gray-500">
             Showing {page * itemsPerPage + 1} to{" "}
             {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems}{" "}
-            quizzes
+            assessments
           </div>
 
           <div className="flex space-x-2">

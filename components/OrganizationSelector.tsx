@@ -42,7 +42,7 @@ export function OrganizationSelector() {
       }))
     : userWithMembers?.members?.map((member) => ({
         id: member.organizationId,
-        name: member.organization.name,
+        name: member.campus.name,
         role: member.role,
       })) || [];
 

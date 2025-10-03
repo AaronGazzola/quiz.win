@@ -78,6 +78,9 @@ export const getUsersAction = async (
             email: true,
             name: true,
             role: true,
+            userType: true,
+            phone: true,
+            emergencyContact: true,
             banned: true,
             banReason: true,
             banExpires: true,
@@ -87,7 +90,7 @@ export const getUsersAction = async (
             image: true,
           },
         },
-        organization: {
+        campus: {
           select: {
             id: true,
             name: true,
@@ -96,6 +99,11 @@ export const getUsersAction = async (
             metadata: true,
             createdAt: true,
             updatedAt: true,
+            phone: true,
+            address: true,
+            principalName: true,
+            capacity: true,
+            location: true,
           },
         },
       },
@@ -108,7 +116,7 @@ export const getUsersAction = async (
       filteredMembers = filteredMembers.filter(member =>
         member.user.name?.toLowerCase().includes(search.toLowerCase()) ||
         member.user.email?.toLowerCase().includes(search.toLowerCase()) ||
-        member.organization.name?.toLowerCase().includes(search.toLowerCase())
+        member.campus.name?.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -131,8 +139,8 @@ export const getUsersAction = async (
             bValue = b.role || '';
             break;
           case 'organization':
-            aValue = a.organization.name || '';
-            bValue = b.organization.name || '';
+            aValue = a.campus.name || '';
+            bValue = b.campus.name || '';
             break;
           case 'createdAt':
             aValue = a.user.createdAt || new Date(0);

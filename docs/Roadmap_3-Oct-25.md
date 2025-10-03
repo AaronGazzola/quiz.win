@@ -348,20 +348,17 @@ Replace existing magic link authentication UX with streamlined password-based au
 - Production environments should use proper authentication
 - Password shared across all demo users for ease of demonstration
 
-### ✅ 4.1 Update Dashboard (`app/(dashboard)/page.tsx`)
+### ✅ 4.1 Update Dashboard (`app/(dashboard)/page.tsx`) - COMPLETED
 
-Modify dashboard metrics for school context:
+Dashboard updated with school-specific metrics:
 
-- Replace "Quizzes" with "Assessments"
-- Replace "Team Members" with "Staff & Students"
-- Add "Total Students" metric
-- Add "Total Teachers" metric
-- Add campus filter (if super-admin)
-
-**Key Changes:**
-- Update metric queries to use new models
-- Maintain existing dashboard layout and patterns
-- Add school-relevant visualizations
+- ✅ Replaced "Quizzes" with "Assessments"
+- ✅ Replaced "Team Members" with "Total Students"
+- ✅ Replaced "Active Invites" with "Total Teachers"
+- ✅ Updated metrics queries to count from Student and Teacher models
+- ✅ Updated all "Quiz" labels to "Assessment" throughout the page
+- ✅ Maintained existing dashboard layout and patterns
+- ✅ Fixed all Organization → Campus references across the codebase
 
 ### ✅ 4.2 Create Campus Management Page (`app/(dashboard)/campus/page.tsx`)
 
@@ -710,8 +707,9 @@ Polish dashboard for presentation:
 
 **HIGH PRIORITY (Core Infrastructure):**
 6. ✅ Phase 3: API actions for core entities (including Classroom) - COMPLETED
-7. Phase 4: UI updates (Dashboard, Student, Teacher, Parent, Classroom Management) - NEXT
-8. Phase 5: Navigation and layout updates
+7. ✅ Phase 4.1: Dashboard UI updates - COMPLETED
+8. Phase 4.2-4.8: UI updates (Campus, Student, Teacher, Parent, User, Classroom, Assessment Management) - NEXT
+9. Phase 5: Navigation and layout updates
 
 **MEDIUM PRIORITY (Job Posting Features - MVP):**
 9. Phase 10: Communication features (Messages, Announcements)

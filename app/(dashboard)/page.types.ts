@@ -1,10 +1,10 @@
 import { Assessment, Question, Response } from "@prisma/client";
 
 export interface DashboardMetrics {
-  totalQuizzes: number;
+  totalAssessments: number;
   completedToday: number;
-  teamMembers: number;
-  activeInvites: number;
+  totalStudents: number;
+  totalTeachers: number;
 }
 
 export interface ProcessInvitationData {

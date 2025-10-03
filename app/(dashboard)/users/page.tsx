@@ -140,7 +140,7 @@ export default function UsersPage() {
         if (selectedOrganizationIds.includes(member.organizationId)) {
           sharedOrganizations.push({
             organizationId: member.organizationId,
-            organizationName: member.organization.name,
+            organizationName: member.campus.name,
             currentRole: member.role,
             newRole: member.role
           });
@@ -151,10 +151,10 @@ export default function UsersPage() {
     openRoleManagementDialog(userData, sharedOrganizations);
   };
 
-  const getOrganizationsDisplay = (userMembers: { organization: { name: string } }[]) => {
-    if (userMembers.length === 0) return "No organizations";
-    if (userMembers.length === 1) return userMembers[0].organization.name;
-    return `${userMembers[0].organization.name} (+${userMembers.length - 1} more)`;
+  const getOrganizationsDisplay = (userMembers: { campus: { name: string } }[]) => {
+    if (userMembers.length === 0) return "No campuses";
+    if (userMembers.length === 1) return userMembers[0].campus.name;
+    return `${userMembers[0].campus.name} (+${userMembers.length - 1} more)`;
   };
 
   return (

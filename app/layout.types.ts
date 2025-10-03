@@ -1,17 +1,17 @@
-import { User, Profile, Member, Organization } from "@prisma/client";
+import { User, Profile, Member, Campus } from "@prisma/client";
 
 export interface ExtendedUser extends User {
   profile?: Profile | null;
-  members?: (Member & { organization: Organization })[];
+  members?: (Member & { campus: Campus })[];
 }
 
-export interface UserWithOrganizations extends User {
+export interface UserWithCampuses extends User {
   profile?: Profile | null;
-  members?: (Member & { organization: Organization })[];
-  organizations?: Organization[];
+  members?: (Member & { campus: Campus })[];
+  campuses?: Campus[];
 }
 
-export interface OrganizationWithMember extends Organization {
+export interface CampusWithMember extends Campus {
   member: Member;
 }
 

@@ -78,10 +78,10 @@ export const getDashboardMetricsAction = async (
     if (!isSuperAdmin && userOrgIds.length === 0) {
       return getActionResponse({
         data: {
-          totalQuizzes: 0,
+          totalAssessments: 0,
           completedToday: 0,
-          teamMembers: 0,
-          activeInvites: 0,
+          totalStudents: 0,
+          totalTeachers: 0,
         }
       });
     }
@@ -105,15 +105,13 @@ export const getDashboardMetricsAction = async (
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [totalQuizzes, completedToday, teamMembers, activeInvites] = await Promise.all([
-      // Total quizzes in selected organizations
+    const [totalAssessments, completedToday, totalStudents, totalTeachers] = await Promise.all([
       db.assessment.count({
         where: {
           organizationId: { in: targetOrgIds },
         },
       }),
 
-      // Assessment responses completed today
       db.response.count({
         where: {
           assessment: {
@@ -126,21 +124,18 @@ export const getDashboardMetricsAction = async (
         },
       }),
 
-      // Team members (only for admin users)
       hasAdminAccess
-        ? db.member.count({
+        ? db.student.count({
             where: {
-              organizationId: { in: targetOrgIds },
+              campusId: { in: targetOrgIds },
             },
           })
         : 0,
 
-      // Active invites (only for admin users)
       hasAdminAccess
-        ? db.invitation.count({
+        ? db.teacher.count({
             where: {
-              organizationId: { in: targetOrgIds },
-              status: "pending",
+              campusId: { in: targetOrgIds },
             },
           })
         : 0,
@@ -148,10 +143,10 @@ export const getDashboardMetricsAction = async (
 
     return getActionResponse({
       data: {
-        totalQuizzes,
+        totalAssessments,
         completedToday,
-        teamMembers,
-        activeInvites,
+        totalStudents,
+        totalTeachers,
       }
     });
   } catch (error) {

@@ -56,7 +56,7 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
       include: {
         members: {
           include: {
-            organization: true,
+            campus: true,
           },
         },
       },
@@ -83,7 +83,7 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
         role: "admin",
         createdAt: new Date(),
         updatedAt: new Date(),
-        organization: {
+        campus: {
           id: org.id,
           name: org.name,
           slug: org.slug,
@@ -91,6 +91,11 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
           metadata: org.metadata || null,
           createdAt: org.createdAt,
           updatedAt: new Date(),
+          phone: null,
+          address: null,
+          principalName: null,
+          capacity: null,
+          location: null,
         },
       }));
 
@@ -155,11 +160,11 @@ export const getAllOrganizationsAction = async (): Promise<ActionResponse<Array<
 
     const { db } = await getAuthenticatedClient();
 
-    const organizations = await db.organization.findMany({
+    const campuses = await db.campus.findMany({
       orderBy: { name: 'asc' }
     });
 
-    return getActionResponse({ data: organizations });
+    return getActionResponse({ data: campuses });
   } catch (error) {
     return getActionResponse({ error });
   }

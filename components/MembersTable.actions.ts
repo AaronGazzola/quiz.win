@@ -83,7 +83,7 @@ export const updateMemberRoleAction = async (
 
     const member = await db.member.findUnique({
       where: { id: memberId },
-      include: { organization: true },
+      include: { campus: true },
     });
 
     if (!member) {
