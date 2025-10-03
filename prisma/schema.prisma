@@ -388,3 +388,54 @@ model Announcement {
 
   @@schema("public")
 }
+
+enum AttendanceStatus {
+  Present
+  Absent
+  Late
+
+  @@schema("public")
+}
+
+model AttendanceSession {
+  id          String   @id @default(cuid())
+  classroomId String
+  date        DateTime
+  campusId    String
+  markedById  String
+  createdAt   DateTime @default(now())
+
+  records AttendanceRecord[]
+
+  @@schema("public")
+}
+
+model AttendanceRecord {
+  id        String           @id @default(cuid())
+  sessionId String
+  studentId String
+  status    AttendanceStatus
+  notes     String?
+  createdAt DateTime         @default(now())
+
+  session AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentId])
+  @@schema("public")
+}
+
+model Grade {
+  id            String   @id @default(cuid())
+  studentId     String
+  classroomId   String
+  subject       String
+  grade         String
+  gradingPeriod String
+  teacherId     String
+  comments      String?
+  campusId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@schema("public")
+}

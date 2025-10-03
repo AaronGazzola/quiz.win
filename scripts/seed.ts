@@ -25,6 +25,9 @@ async function seed() {
 
   try {
     console.log("🧹 Cleaning existing data...");
+    await prisma.grade.deleteMany();
+    await prisma.attendanceRecord.deleteMany();
+    await prisma.attendanceSession.deleteMany();
     await prisma.announcement.deleteMany();
     await prisma.message.deleteMany();
     await prisma.response.deleteMany();
@@ -501,6 +504,348 @@ async function seed() {
       )
     );
 
+    console.log("👩‍🏫 Creating teacher profiles...");
+    const teachers = await Promise.all([
+      prisma.teacher.create({
+        data: {
+          userId: users[3].id,
+          campusId: organizations[0].id,
+          subjects: ["Mathematics", "Algebra"],
+          certifications: ["State Teaching Certificate", "Mathematics Specialist"],
+          employeeId: "TCH001",
+        },
+      }),
+      prisma.teacher.create({
+        data: {
+          userId: users[4].id,
+          campusId: organizations[0].id,
+          subjects: ["Science", "Physics"],
+          certifications: ["State Teaching Certificate", "Science Education"],
+          employeeId: "TCH002",
+        },
+      }),
+      prisma.teacher.create({
+        data: {
+          userId: users[5].id,
+          campusId: organizations[0].id,
+          subjects: ["English", "Literature"],
+          certifications: ["State Teaching Certificate", "English Language Arts"],
+          employeeId: "TCH003",
+        },
+      }),
+      prisma.teacher.create({
+        data: {
+          userId: users[6].id,
+          campusId: organizations[1].id,
+          subjects: ["History", "Social Studies"],
+          certifications: ["State Teaching Certificate", "History Education"],
+          employeeId: "TCH004",
+        },
+      }),
+    ]);
+
+    console.log("👨‍👩‍👧 Creating parent profiles...");
+    const parents = await Promise.all([
+      prisma.parent.create({
+        data: {
+          userId: users[7].id,
+          relationship: "Father",
+          primaryContact: true,
+          occupation: "Engineer",
+        },
+      }),
+      prisma.parent.create({
+        data: {
+          userId: users[8].id,
+          relationship: "Mother",
+          primaryContact: true,
+          occupation: "Doctor",
+        },
+      }),
+      prisma.parent.create({
+        data: {
+          userId: users[9].id,
+          relationship: "Father",
+          primaryContact: true,
+          occupation: "Lawyer",
+        },
+      }),
+    ]);
+
+    console.log("👧👦 Creating student profiles...");
+    const students = await Promise.all([
+      prisma.student.create({
+        data: {
+          userId: users[10].id,
+          grade: "Grade 3",
+          campusId: organizations[0].id,
+          medicalInfo: {
+            allergies: [],
+            conditions: [],
+            medications: [],
+          },
+        },
+      }),
+      prisma.student.create({
+        data: {
+          userId: users[11].id,
+          grade: "Grade 4",
+          campusId: organizations[0].id,
+          medicalInfo: {
+            allergies: ["Peanuts"],
+            conditions: [],
+            medications: [],
+          },
+        },
+      }),
+      prisma.student.create({
+        data: {
+          userId: users[12].id,
+          grade: "Grade 5",
+          campusId: organizations[0].id,
+          medicalInfo: {
+            allergies: [],
+            conditions: [],
+            medications: [],
+          },
+        },
+      }),
+      prisma.student.create({
+        data: {
+          userId: users[13].id,
+          grade: "Grade 6",
+          campusId: organizations[1].id,
+          medicalInfo: {
+            allergies: [],
+            conditions: [],
+            medications: [],
+          },
+        },
+      }),
+      prisma.student.create({
+        data: {
+          userId: users[14].id,
+          grade: "Grade 6",
+          campusId: organizations[1].id,
+          medicalInfo: {
+            allergies: [],
+            conditions: ["Asthma"],
+            medications: ["Inhaler as needed"],
+          },
+        },
+      }),
+    ]);
+
+    console.log("👨‍👩‍👦 Creating student-parent relationships...");
+    await Promise.all([
+      prisma.studentParent.create({
+        data: {
+          studentId: students[0].id,
+          parentId: parents[0].id,
+        },
+      }),
+      prisma.studentParent.create({
+        data: {
+          studentId: students[1].id,
+          parentId: parents[1].id,
+        },
+      }),
+      prisma.studentParent.create({
+        data: {
+          studentId: students[2].id,
+          parentId: parents[2].id,
+        },
+      }),
+    ]);
+
+    console.log("🏫 Creating classrooms...");
+    const classrooms = await Promise.all([
+      prisma.classroom.create({
+        data: {
+          name: "Grade 3 Mathematics A",
+          grade: "Grade 3",
+          subject: "Mathematics",
+          campusId: organizations[0].id,
+          teacherId: teachers[0].id,
+          capacity: 25,
+          room: "Room 101",
+        },
+      }),
+      prisma.classroom.create({
+        data: {
+          name: "Grade 4 Science B",
+          grade: "Grade 4",
+          subject: "Science",
+          campusId: organizations[0].id,
+          teacherId: teachers[1].id,
+          capacity: 25,
+          room: "Room 205",
+        },
+      }),
+      prisma.classroom.create({
+        data: {
+          name: "Grade 5 English A",
+          grade: "Grade 5",
+          subject: "English",
+          campusId: organizations[0].id,
+          teacherId: teachers[2].id,
+          capacity: 25,
+          room: "Room 303",
+        },
+      }),
+      prisma.classroom.create({
+        data: {
+          name: "Grade 6 History A",
+          grade: "Grade 6",
+          subject: "History",
+          campusId: organizations[1].id,
+          teacherId: teachers[3].id,
+          capacity: 30,
+          room: "Room 202",
+        },
+      }),
+    ]);
+
+    console.log("📚 Creating classroom enrollments...");
+    await Promise.all([
+      prisma.classroomEnrollment.create({
+        data: {
+          classroomId: classrooms[0].id,
+          studentId: students[0].id,
+        },
+      }),
+      prisma.classroomEnrollment.create({
+        data: {
+          classroomId: classrooms[1].id,
+          studentId: students[1].id,
+        },
+      }),
+      prisma.classroomEnrollment.create({
+        data: {
+          classroomId: classrooms[2].id,
+          studentId: students[2].id,
+        },
+      }),
+      prisma.classroomEnrollment.create({
+        data: {
+          classroomId: classrooms[3].id,
+          studentId: students[3].id,
+        },
+      }),
+      prisma.classroomEnrollment.create({
+        data: {
+          classroomId: classrooms[3].id,
+          studentId: students[4].id,
+        },
+      }),
+    ]);
+
+    console.log("📅 Creating attendance sessions...");
+    const attendanceSessions = await Promise.all([
+      prisma.attendanceSession.create({
+        data: {
+          classroomId: classrooms[0].id,
+          date: new Date("2025-03-01T08:00:00Z"),
+          campusId: organizations[0].id,
+          markedById: teachers[0].userId,
+        },
+      }),
+      prisma.attendanceSession.create({
+        data: {
+          classroomId: classrooms[1].id,
+          date: new Date("2025-03-01T08:00:00Z"),
+          campusId: organizations[0].id,
+          markedById: teachers[1].userId,
+        },
+      }),
+      prisma.attendanceSession.create({
+        data: {
+          classroomId: classrooms[2].id,
+          date: new Date("2025-03-01T08:00:00Z"),
+          campusId: organizations[0].id,
+          markedById: teachers[2].userId,
+        },
+      }),
+    ]);
+
+    console.log("✅ Creating attendance records...");
+    await Promise.all([
+      prisma.attendanceRecord.create({
+        data: {
+          sessionId: attendanceSessions[0].id,
+          studentId: students[0].id,
+          status: "Present",
+        },
+      }),
+      prisma.attendanceRecord.create({
+        data: {
+          sessionId: attendanceSessions[1].id,
+          studentId: students[1].id,
+          status: "Present",
+        },
+      }),
+      prisma.attendanceRecord.create({
+        data: {
+          sessionId: attendanceSessions[2].id,
+          studentId: students[2].id,
+          status: "Late",
+          notes: "Arrived 10 minutes late",
+        },
+      }),
+    ]);
+
+    console.log("📝 Creating grades...");
+    const grades = await Promise.all([
+      prisma.grade.create({
+        data: {
+          studentId: students[0].id,
+          classroomId: classrooms[0].id,
+          subject: "Mathematics",
+          grade: "A",
+          gradingPeriod: "Quarter 1",
+          teacherId: teachers[0].id,
+          campusId: organizations[0].id,
+          comments: "Excellent work on all assignments",
+        },
+      }),
+      prisma.grade.create({
+        data: {
+          studentId: students[1].id,
+          classroomId: classrooms[1].id,
+          subject: "Science",
+          grade: "B+",
+          gradingPeriod: "Quarter 1",
+          teacherId: teachers[1].id,
+          campusId: organizations[0].id,
+          comments: "Good understanding of concepts",
+        },
+      }),
+      prisma.grade.create({
+        data: {
+          studentId: students[2].id,
+          classroomId: classrooms[2].id,
+          subject: "English",
+          grade: "A-",
+          gradingPeriod: "Quarter 1",
+          teacherId: teachers[2].id,
+          campusId: organizations[0].id,
+          comments: "Strong reading comprehension skills",
+        },
+      }),
+      prisma.grade.create({
+        data: {
+          studentId: students[3].id,
+          classroomId: classrooms[3].id,
+          subject: "History",
+          grade: "B",
+          gradingPeriod: "Quarter 1",
+          teacherId: teachers[3].id,
+          campusId: organizations[1].id,
+          comments: "Shows good interest in historical topics",
+        },
+      }),
+    ]);
+
     console.log("📨 Creating sample messages...");
 
     const messages = [
@@ -596,11 +941,17 @@ async function seed() {
     console.log(`- ${users.length} users created`);
     console.log(`- ${organizations.length} campuses created`);
     console.log(`- ${memberships.length} campus memberships created`);
+    console.log(`- ${teachers.length} teacher profiles created`);
+    console.log(`- ${students.length} student profiles created`);
+    console.log(`- ${parents.length} parent profiles created`);
+    console.log(`- ${classrooms.length} classrooms created`);
     console.log(`- ${quizzes.length} assessments created`);
     console.log(
       `- ${questionSets.reduce((acc, set) => acc + set.questions.length, 0)} questions created`
     );
     console.log(`- ${responses.length} student responses created`);
+    console.log(`- ${attendanceSessions.length} attendance sessions created`);
+    console.log(`- ${grades.length} grades created`);
     console.log(`- ${messages.length} messages created`);
     console.log(`- ${announcements.length} announcements created`);
     console.log(

@@ -1,6 +1,7 @@
 "use server";
 
-import { getAuthenticatedClient } from "@/lib/action.util";
+import { getAuthenticatedClient } from "@/lib/auth.utils";
+import { ActionResponse } from "@/lib/action.utils";
 import { validateCampusAccess } from "@/lib/data-access";
 
 export async function getConversationsAction(userId: string) {

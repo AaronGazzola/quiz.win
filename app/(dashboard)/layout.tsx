@@ -95,6 +95,18 @@ export default function DashboardLayout({
                 Assessments
               </Link>
               <Link
+                href="/attendance"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Attendance
+              </Link>
+              <Link
+                href="/grades"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Grades
+              </Link>
+              <Link
                 href="/messages"
                 className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
               >
