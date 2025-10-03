@@ -27,10 +27,16 @@ async function seed() {
     console.log("🧹 Cleaning existing data...");
     await prisma.response.deleteMany();
     await prisma.question.deleteMany();
-    await prisma.quiz.deleteMany();
+    await prisma.assessment.deleteMany();
+    await prisma.classroomEnrollment.deleteMany();
+    await prisma.classroom.deleteMany();
+    await prisma.studentParent.deleteMany();
+    await prisma.teacher.deleteMany();
+    await prisma.student.deleteMany();
+    await prisma.parent.deleteMany();
     await prisma.invitation.deleteMany();
     await prisma.member.deleteMany();
-    await prisma.organization.deleteMany();
+    await prisma.campus.deleteMany();
     await prisma.profile.deleteMany();
     await prisma.magicLink.deleteMany();
     await prisma.session.deleteMany();
@@ -167,29 +173,31 @@ async function seed() {
 
     console.log("🏢 Creating campuses...");
     const organizations = await Promise.all([
-      prisma.organization.create({
+      prisma.campus.create({
         data: {
           name: "Abraham Lincoln Academy - Lagos Campus",
           slug: "alaa-lagos",
+          address: "123 Victoria Island Road, Lagos, Nigeria",
+          phone: "+234-1-234-5678",
+          principalName: "Dr. Adebayo Okonkwo",
+          capacity: 500,
+          location: "Victoria Island, Lagos",
           metadata: {
             description: "Premier American-curriculum school in Lagos, Nigeria",
-            location: "Victoria Island, Lagos",
-            principal: "Dr. Adebayo Okonkwo",
-            capacity: 500,
-            phone: "+234-1-234-5678",
           },
         },
       }),
-      prisma.organization.create({
+      prisma.campus.create({
         data: {
           name: "Abraham Lincoln Academy - Abuja Campus",
           slug: "alaa-abuja",
+          address: "456 Maitama District, Abuja, Nigeria",
+          phone: "+234-9-876-5432",
+          principalName: "Mrs. Chimamanda Nwosu",
+          capacity: 400,
+          location: "Maitama District, Abuja",
           metadata: {
             description: "Premier American-curriculum school in Abuja, Nigeria",
-            location: "Maitama District, Abuja",
-            principal: "Mrs. Chimamanda Nwosu",
-            capacity: 400,
-            phone: "+234-9-876-5432",
           },
         },
       }),
@@ -239,37 +247,45 @@ async function seed() {
 
     console.log("📝 Creating assessments...");
     const quizzes = await Promise.all([
-      prisma.quiz.create({
+      prisma.assessment.create({
         data: {
           title: "Grade 3 Mathematics - Week 1",
           description: "Basic arithmetic and number recognition assessment",
+          subject: "Mathematics",
+          gradeLevel: "Grade 3",
           organizationId: organizations[0].id,
           createdBy: users[3].id,
           isActive: true,
         },
       }),
-      prisma.quiz.create({
+      prisma.assessment.create({
         data: {
           title: "Grade 4 Science - States of Matter",
           description: "Understanding solids, liquids, and gases",
+          subject: "Science",
+          gradeLevel: "Grade 4",
           organizationId: organizations[0].id,
           createdBy: users[4].id,
           isActive: true,
         },
       }),
-      prisma.quiz.create({
+      prisma.assessment.create({
         data: {
           title: "Grade 5 English - Reading Comprehension",
           description: "Understanding main ideas and supporting details",
+          subject: "English",
+          gradeLevel: "Grade 5",
           organizationId: organizations[0].id,
           createdBy: users[5].id,
           isActive: true,
         },
       }),
-      prisma.quiz.create({
+      prisma.assessment.create({
         data: {
           title: "Grade 6 History - Ancient Civilizations",
           description: "Early civilizations and their contributions",
+          subject: "History",
+          gradeLevel: "Grade 6",
           organizationId: organizations[1].id,
           createdBy: users[6].id,
           isActive: true,
