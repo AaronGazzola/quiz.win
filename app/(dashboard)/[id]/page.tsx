@@ -78,7 +78,7 @@ export default function QuizResultPage() {
   }
 
   const response = result;
-  const { quiz } = result;
+  const { assessment } = result;
   const scorePercentage = Math.round((response.score || 0) * 100);
   const answers = Array.isArray(response.answers)
     ? (response.answers as {
@@ -123,7 +123,7 @@ export default function QuizResultPage() {
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Quiz Complete!
           </h1>
-          <h2 className="text-xl text-muted-foreground mb-6">{quiz.title}</h2>
+          <h2 className="text-xl text-muted-foreground mb-6">{assessment.title}</h2>
 
           <div
             className={cn(
@@ -179,7 +179,7 @@ export default function QuizResultPage() {
                 },
                 index: number
               ) => {
-                const question = quiz.questions.find(
+                const question = assessment.questions.find(
                   (q: { id: string }) => q.id === answer.questionId
                 );
                 if (!question) return null;

@@ -1,4 +1,4 @@
-import { Quiz, Question, Response } from "@prisma/client";
+import { Assessment, Question, Response } from "@prisma/client";
 
 export interface DashboardMetrics {
   totalQuizzes: number;
@@ -12,10 +12,10 @@ export interface ProcessInvitationData {
   role: string;
 }
 
-export interface QuizWithDetails extends Quiz {
+export interface QuizWithDetails extends Assessment {
   questions: Question[];
   responses: Response[];
-  organization: {
+  campus: {
     id: string;
     name: string;
   };
@@ -34,7 +34,7 @@ export interface ResponseWithUser extends Response {
 }
 
 export interface ResponseWithDetails extends ResponseWithUser {
-  quiz: {
+  assessment: {
     id: string;
     title: string;
     questions: Question[];

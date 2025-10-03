@@ -928,7 +928,7 @@ export function DashboardPageContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
-                    {responseDetail.quiz.questions.map((question, index) => {
+                    {responseDetail.assessment.questions.map((question, index) => {
                       const userAnswers = Array.isArray(responseDetail.answers)
                         ? responseDetail.answers as Array<{
                             questionId: string;
@@ -1081,7 +1081,7 @@ export function DashboardPageContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
-                    {userResponse.quiz.questions.map((question, index) => {
+                    {userResponse.assessment.questions.map((question, index) => {
                       const userAnswers = Array.isArray(userResponse.answers)
                         ? userResponse.answers as Array<{
                             questionId: string;

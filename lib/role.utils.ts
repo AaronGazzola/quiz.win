@@ -1,4 +1,5 @@
 import { auth } from "./auth";
+import { getAuthenticatedClient } from "./auth.utils";
 import { headers } from "next/headers";
 
 interface OrganizationWithRole {
@@ -308,7 +309,20 @@ export const isParentOfStudent = async (userId: string, studentId: string): Prom
       return true;
     }
 
-    return false;
+    const { db } = await getAuthenticatedClient();
+
+    const parentProfile = await db.parent.findUnique({
+      where: { userId },
+      include: {
+        students: {
+          where: {
+            studentId,
+          },
+        },
+      },
+    });
+
+    return parentProfile ? parentProfile.students.length > 0 : false;
   } catch (error) {
     console.error("Error checking parent-student relationship:", error);
     return false;

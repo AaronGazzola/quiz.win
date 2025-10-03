@@ -3,7 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { Quiz } from "@prisma/client";
+import { Assessment } from "@prisma/client";
 import { headers } from "next/headers";
 import { DashboardMetrics, QuizWithDetails, ResponseWithUser, ResponseWithDetails } from "./page.types";
 
@@ -107,16 +107,16 @@ export const getDashboardMetricsAction = async (
 
     const [totalQuizzes, completedToday, teamMembers, activeInvites] = await Promise.all([
       // Total quizzes in selected organizations
-      db.quiz.count({
+      db.assessment.count({
         where: {
           organizationId: { in: targetOrgIds },
         },
       }),
 
-      // Quiz responses completed today
+      // Assessment responses completed today
       db.response.count({
         where: {
-          quiz: {
+          assessment: {
             organizationId: { in: targetOrgIds },
           },
           completedAt: {
@@ -222,7 +222,7 @@ export const getQuizzesAction = async (
       : { createdAt: "desc" as const };
 
     const [quizzes, totalCount] = await Promise.all([
-      db.quiz.findMany({
+      db.assessment.findMany({
         where,
         orderBy,
         skip: page * itemsPerPage,
@@ -230,7 +230,7 @@ export const getQuizzesAction = async (
         include: {
           questions: true,
           responses: true,
-          organization: {
+          campus: {
             select: {
               id: true,
               name: true,
@@ -244,7 +244,7 @@ export const getQuizzesAction = async (
           },
         },
       }),
-      db.quiz.count({ where }),
+      db.assessment.count({ where }),
     ]);
 
     const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -262,8 +262,8 @@ export const getQuizzesAction = async (
 };
 
 export const createQuizAction = async (
-  data: Pick<Quiz, "title" | "description" | "organizationId">
-): Promise<ActionResponse<Quiz>> => {
+  data: Pick<Assessment, "title" | "description" | "organizationId">
+): Promise<ActionResponse<Assessment>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -275,7 +275,7 @@ export const createQuizAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.quiz.create({
+    const quiz = await db.assessment.create({
       data: {
         title: data.title,
         description: data.description,
@@ -292,8 +292,8 @@ export const createQuizAction = async (
 
 export const updateQuizAction = async (
   id: string,
-  data: Partial<Pick<Quiz, "title" | "description">>
-): Promise<ActionResponse<Quiz>> => {
+  data: Partial<Pick<Assessment, "title" | "description">>
+): Promise<ActionResponse<Assessment>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -305,7 +305,7 @@ export const updateQuizAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.quiz.update({
+    const quiz = await db.assessment.update({
       where: { id },
       data: {
         ...(data.title && { title: data.title }),
@@ -321,7 +321,7 @@ export const updateQuizAction = async (
 
 export const deleteQuizAction = async (
   id: string
-): Promise<ActionResponse<Quiz>> => {
+): Promise<ActionResponse<Assessment>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -341,7 +341,7 @@ export const deleteQuizAction = async (
       where: { quizId: id },
     });
 
-    const quiz = await db.quiz.delete({
+    const quiz = await db.assessment.delete({
       where: { id },
     });
 
@@ -373,7 +373,7 @@ export const bulkDeleteQuizzesAction = async (
       where: { quizId: { in: ids } },
     });
 
-    const result = await db.quiz.deleteMany({
+    const result = await db.assessment.deleteMany({
       where: { id: { in: ids } },
     });
 
@@ -414,13 +414,13 @@ export const getQuizResponsesAction = async (
     } = params;
 
     // First, verify the quiz exists and get its organization
-    const quiz = await db.quiz.findUnique({
+    const quiz = await db.assessment.findUnique({
       where: { id: quizId },
       select: { organizationId: true },
     });
 
     if (!quiz) {
-      return getActionResponse({ error: "Quiz not found" });
+      return getActionResponse({ error: "Assessment not found" });
     }
 
     // If organizationIds are provided, verify the quiz belongs to one of them
@@ -544,7 +544,7 @@ export const getResponseDetailAction = async (
             email: true,
           },
         },
-        quiz: {
+        assessment: {
           select: {
             id: true,
             title: true,
@@ -564,7 +564,7 @@ export const getResponseDetailAction = async (
     const userMembership = await db.member.findFirst({
       where: {
         userId: session.user.id,
-        organizationId: response.quiz.organizationId,
+        organizationId: response.assessment.organizationId,
         role: { in: ["admin", "owner"] },
       },
     });
@@ -600,13 +600,13 @@ export const getUserResponseAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.quiz.findUnique({
+    const quiz = await db.assessment.findUnique({
       where: { id: quizId },
       select: { organizationId: true },
     });
 
     if (!quiz) {
-      return getActionResponse({ error: "Quiz not found" });
+      return getActionResponse({ error: "Assessment not found" });
     }
 
     const userMembership = await db.member.findFirst({
@@ -637,7 +637,7 @@ export const getUserResponseAction = async (
             email: true,
           },
         },
-        quiz: {
+        assessment: {
           select: {
             id: true,
             title: true,
