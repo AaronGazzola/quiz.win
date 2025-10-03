@@ -209,3 +209,14 @@ model Response {
 
   @@schema("public")
 }
+
+model Password {
+  id        String   @id @default(cuid())
+  hash      String
+  length    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("auth")
+  @@map("password")
+}

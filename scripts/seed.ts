@@ -1,16 +1,23 @@
 import { PrismaClient } from "@prisma/client";
 import { auth } from "../lib/auth";
 import "better-auth/node";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function seed() {
   const fromEmailDomain = process.env.NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN;
+  const devPassword = process.env.DEV_PASSWORD;
 
   if (!fromEmailDomain) {
     console.error(
       "NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN environment variable is required"
     );
+    process.exit(1);
+  }
+
+  if (!devPassword) {
+    console.error("DEV_PASSWORD environment variable is required");
     process.exit(1);
   }
 
@@ -29,6 +36,16 @@ async function seed() {
     await prisma.session.deleteMany();
     await prisma.account.deleteMany();
     await prisma.user.deleteMany();
+    await prisma.password.deleteMany();
+
+    console.log("🔐 Hashing password and storing in database...");
+    const passwordHash = await bcrypt.hash(devPassword, 10);
+    await prisma.password.create({
+      data: {
+        hash: passwordHash,
+        length: devPassword.length,
+      },
+    });
 
     console.log("👥 Creating users...");
 
@@ -99,7 +116,7 @@ async function seed() {
         },
         body: JSON.stringify({
           email: userData.email,
-          password: "Password123!",
+          password: devPassword,
           name: userData.name,
         }),
       });
