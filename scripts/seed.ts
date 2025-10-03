@@ -25,6 +25,8 @@ async function seed() {
 
   try {
     console.log("🧹 Cleaning existing data...");
+    await prisma.cafeteriaMenu.deleteMany();
+    await prisma.calendarEvent.deleteMany();
     await prisma.grade.deleteMany();
     await prisma.attendanceRecord.deleteMany();
     await prisma.attendanceSession.deleteMany();
@@ -932,6 +934,154 @@ async function seed() {
       announcements.map((announcement) =>
         prisma.announcement.create({
           data: announcement,
+        })
+      )
+    );
+
+    console.log("📅 Creating calendar events...");
+    const calendarEvents = [
+      {
+        title: "Spring Break",
+        description: "School closed for spring break",
+        eventType: "Holiday" as const,
+        startDate: new Date("2025-03-20T00:00:00Z"),
+        endDate: new Date("2025-03-27T00:00:00Z"),
+        campusId: organizations[0].id,
+        isSchoolClosed: true,
+        createdById: users[1].id,
+      },
+      {
+        title: "Parent-Teacher Conferences",
+        description: "Evening parent-teacher conferences for all grades",
+        eventType: "ParentTeacherConference" as const,
+        startDate: new Date("2025-03-15T17:00:00Z"),
+        endDate: new Date("2025-03-15T20:00:00Z"),
+        campusId: organizations[0].id,
+        isSchoolClosed: false,
+        createdById: users[1].id,
+      },
+      {
+        title: "Science Fair Assembly",
+        description: "Annual science fair presentations and awards",
+        eventType: "Assembly" as const,
+        startDate: new Date("2025-04-10T09:00:00Z"),
+        campusId: organizations[0].id,
+        isSchoolClosed: false,
+        createdById: users[1].id,
+      },
+      {
+        title: "Grade 5 Museum Field Trip",
+        description: "Field trip to Natural History Museum",
+        eventType: "FieldTrip" as const,
+        startDate: new Date("2025-04-18T08:00:00Z"),
+        endDate: new Date("2025-04-18T15:00:00Z"),
+        campusId: organizations[0].id,
+        isSchoolClosed: false,
+        createdById: users[5].id,
+      },
+      {
+        title: "Mid-Term Exams",
+        description: "Mid-term examination period",
+        eventType: "ExamPeriod" as const,
+        startDate: new Date("2025-05-01T00:00:00Z"),
+        endDate: new Date("2025-05-05T00:00:00Z"),
+        campusId: organizations[0].id,
+        isSchoolClosed: false,
+        createdById: users[1].id,
+      },
+      {
+        title: "Independence Day",
+        description: "National holiday - school closed",
+        eventType: "Holiday" as const,
+        startDate: new Date("2025-07-04T00:00:00Z"),
+        campusId: organizations[0].id,
+        isSchoolClosed: true,
+        createdById: users[1].id,
+      },
+    ];
+
+    await Promise.all(
+      calendarEvents.map((event) =>
+        prisma.calendarEvent.create({
+          data: event,
+        })
+      )
+    );
+
+    console.log("🍽️ Creating cafeteria menus...");
+    const monday = new Date("2025-03-03T00:00:00Z");
+
+    const menuData = [
+      {
+        dayOfWeek: "Monday" as const,
+        menuItems: {
+          items: [
+            "Main: Chicken Rice with Vegetables",
+            "Side: Garden Salad",
+            "Drink: Fresh Orange Juice",
+            "Dessert: Fresh Fruit",
+          ],
+        },
+        specialNotes: "Vegetarian option available",
+      },
+      {
+        dayOfWeek: "Tuesday" as const,
+        menuItems: {
+          items: [
+            "Main: Spaghetti Bolognese",
+            "Side: Garlic Bread",
+            "Drink: Apple Juice",
+            "Dessert: Chocolate Pudding",
+          ],
+        },
+        specialNotes: "Contains gluten",
+      },
+      {
+        dayOfWeek: "Wednesday" as const,
+        menuItems: {
+          items: [
+            "Main: Grilled Fish with Rice",
+            "Side: Steamed Broccoli",
+            "Drink: Milk",
+            "Dessert: Yogurt",
+          ],
+        },
+        specialNotes: "Contains dairy",
+      },
+      {
+        dayOfWeek: "Thursday" as const,
+        menuItems: {
+          items: [
+            "Main: Beef Stir-Fry with Noodles",
+            "Side: Spring Rolls",
+            "Drink: Lemonade",
+            "Dessert: Ice Cream",
+          ],
+        },
+        specialNotes: "Contains nuts (spring rolls)",
+      },
+      {
+        dayOfWeek: "Friday" as const,
+        menuItems: {
+          items: [
+            "Main: Pizza (Cheese or Pepperoni)",
+            "Side: Caesar Salad",
+            "Drink: Fruit Punch",
+            "Dessert: Cookies",
+          ],
+        },
+        specialNotes: "Contains dairy and gluten",
+      },
+    ];
+
+    await Promise.all(
+      menuData.map((menu) =>
+        prisma.cafeteriaMenu.create({
+          data: {
+            weekStartDate: monday,
+            campusId: organizations[0].id,
+            ...menu,
+          },
         })
       )
     );

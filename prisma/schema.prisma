@@ -439,3 +439,54 @@ model Grade {
 
   @@schema("public")
 }
+
+enum EventType {
+  Holiday
+  ParentTeacherConference
+  Assembly
+  FieldTrip
+  ExamPeriod
+  Other
+
+  @@schema("public")
+}
+
+model CalendarEvent {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  eventType     EventType
+  startDate     DateTime
+  endDate       DateTime?
+  campusId      String
+  isSchoolClosed Boolean   @default(false)
+  createdById   String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@schema("public")
+}
+
+enum DayOfWeek {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+
+  @@schema("public")
+}
+
+model CafeteriaMenu {
+  id            String    @id @default(cuid())
+  weekStartDate DateTime
+  dayOfWeek     DayOfWeek
+  menuItems     Json
+  specialNotes  String?
+  campusId      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([campusId, weekStartDate, dayOfWeek])
+  @@schema("public")
+}

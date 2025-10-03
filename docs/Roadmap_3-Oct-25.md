@@ -993,11 +993,11 @@ Grade entry and report card viewing:
 
 ---
 
-## Phase 12: Calendar & Cafeteria
+## ✅ Phase 12: Calendar & Cafeteria - COMPLETED
 
 Informational features from job posting.
 
-### ⏳ 12.1 Create Calendar Model (`prisma/schema.prisma`)
+### ✅ 12.1 Create Calendar Model (`prisma/schema.prisma`) - COMPLETED
 
 Academic calendar with events:
 
@@ -1016,7 +1016,7 @@ Academic calendar with events:
 - CalendarEvent → Campus
 - CalendarEvent → Creator (User)
 
-### ⏳ 12.2 Create Cafeteria Menu Model (`prisma/schema.prisma`)
+### ✅ 12.2 Create Cafeteria Menu Model (`prisma/schema.prisma`) - COMPLETED
 
 Weekly menu management:
 
@@ -1031,7 +1031,7 @@ Weekly menu management:
 **Key Relations:**
 - CafeteriaMenu → Campus
 
-### ⏳ 12.3 Calendar Actions (`app/(dashboard)/calendar/page.actions.ts`)
+### ✅ 12.3 Calendar Actions (`app/(dashboard)/calendar/page.actions.ts`) - COMPLETED
 
 Calendar event management:
 
@@ -1045,7 +1045,7 @@ Calendar event management:
 - Only admins can create/edit events
 - All users can view events for their campus
 
-### ⏳ 12.4 Cafeteria Actions (`app/(dashboard)/cafeteria/page.actions.ts`)
+### ✅ 12.4 Cafeteria Actions (`app/(dashboard)/cafeteria/page.actions.ts`) - COMPLETED
 
 Menu management:
 
@@ -1058,7 +1058,7 @@ Menu management:
 - Only admins can create/edit menus
 - All users can view menus
 
-### ⏳ 12.5 Calendar Page (`app/(dashboard)/calendar/page.tsx`)
+### ✅ 12.5 Calendar Page (`app/(dashboard)/calendar/page.tsx`) - COMPLETED
 
 Academic calendar display:
 
@@ -1074,7 +1074,7 @@ Academic calendar display:
 - `CreateEventDialog` - event creation form
 - `UpcomingEventsWidget` - next events preview
 
-### ⏳ 12.6 Cafeteria Page (`app/(dashboard)/cafeteria/page.tsx`)
+### ✅ 12.6 Cafeteria Page (`app/(dashboard)/cafeteria/page.tsx`) - COMPLETED
 
 Menu display and management:
 
@@ -1108,7 +1108,7 @@ Menu display and management:
 **MEDIUM PRIORITY (Job Posting Features - MVP):**
 9. ✅ Phase 10: Communication features (Messages, Announcements) - COMPLETED
 10. ✅ Phase 11: Attendance & Grading - COMPLETED
-11. Phase 12: Calendar & Cafeteria - NEXT
+11. ✅ Phase 12: Calendar & Cafeteria - COMPLETED
 
 **LOW PRIORITY (Polish & Documentation):**
 12. Phase 6.1: Data migration script

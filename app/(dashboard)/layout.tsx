@@ -118,6 +118,18 @@ export default function DashboardLayout({
               >
                 Announcements
               </Link>
+              <Link
+                href="/calendar"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Calendar
+              </Link>
+              <Link
+                href="/cafeteria"
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Cafeteria
+              </Link>
               {hasAdminAccess && (
                 <>
                   <Link
