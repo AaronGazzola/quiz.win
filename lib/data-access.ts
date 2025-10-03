@@ -169,3 +169,70 @@ export const handleOrgAccessError = (error: unknown): never => {
 
   throw new Error("Unknown organization access error");
 };
+
+export const validateCampusAccess = async (
+  userId: string,
+  campusId: string,
+  action: "read" | "write" | "admin"
+): Promise<boolean> => {
+  return await validateOrgAccess(userId, campusId, action);
+};
+
+export const getAccessibleCampuses = async (
+  userId: string,
+  adminOnly: boolean = false
+): Promise<string[]> => {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (session?.user?.role === "super-admin") {
+      const allOrgs = await auth.api.listOrganizations({
+        headers: await headers(),
+      });
+      return allOrgs.map(org => org.id);
+    }
+
+    if (adminOnly) {
+      const adminOrgs = await getUserAdminOrganizations(userId);
+      return adminOrgs.map(org => org.id);
+    }
+
+    const memberOrgs = await getUserOrganizations(userId);
+    return memberOrgs.map(org => org.id);
+  } catch (error) {
+    console.error("Error fetching accessible campuses:", error);
+    return [];
+  }
+};
+
+export const withCampusPermission = async <T>(
+  userId: string,
+  campusId: string,
+  resource: "teacher" | "student" | "parent" | "classroom" | "assessment",
+  action: "read" | "create" | "update" | "delete",
+  operation: () => Promise<T>
+): Promise<T> => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (session?.user?.role === "super-admin") {
+    return await operation();
+  }
+
+  const hasPermission = await validateCampusAccess(userId, campusId,
+    action === "read" ? "read" : "write"
+  );
+
+  if (!hasPermission) {
+    throw new OrgAccessError(
+      `Permission denied for ${action} on ${resource}`,
+      campusId,
+      userId
+    );
+  }
+
+  return await operation();
+};
