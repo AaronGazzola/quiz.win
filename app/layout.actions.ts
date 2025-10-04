@@ -91,6 +91,11 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
           metadata: org.metadata || null,
           createdAt: org.createdAt,
           updatedAt: new Date(),
+          phone: null,
+          address: null,
+          capacity: null,
+          location: null,
+          principalName: null,
         },
       }));
 

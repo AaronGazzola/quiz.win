@@ -402,7 +402,7 @@ model Teacher {
 }
 
 model quiz {
-  id             String       @id
+  id             String       @id @default(cuid())
   title          String
   description    String?
   organizationId String
@@ -413,7 +413,7 @@ model quiz {
   assignedTo     String[]
   isActive       Boolean      @default(true)
   createdAt      DateTime     @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime     @updatedAt
   questions      Question[]
   responses      Response[]
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
