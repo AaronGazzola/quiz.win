@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "@/lib/auth-client";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -18,15 +19,23 @@ export const useGetPasswordLength = () => {
   });
 };
 
-export const useVerifyPassword = () => {
+export const useVerifyPassword = (onSuccess: (isValid: boolean) => void, onError: () => void) => {
   return useMutation({
     mutationFn: async (password: string) => {
+      conditionalLog({action:"verifyPasswordMutation",passwordLength:password.length},{label:LOG_LABELS.AUTH});
       const { data, error } = await verifyPasswordAction(password);
+      conditionalLog({verifyResult:{data,error}},{label:LOG_LABELS.AUTH});
       if (error) throw error;
       return data;
     },
+    onSuccess: (isValid) => {
+      conditionalLog({action:"verifyPasswordSuccess",isValid},{label:LOG_LABELS.AUTH});
+      onSuccess(isValid);
+    },
     onError: () => {
+      conditionalLog({action:"verifyPasswordMutationError"},{label:LOG_LABELS.AUTH});
       toast.error("Incorrect password");
+      onError();
     },
   });
 };

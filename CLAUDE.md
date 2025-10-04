@@ -8,8 +8,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **TailwindCSS v4** for styling
 - **Shadcn** component library
 - **PrismaORM** PostgresDatabase
-- **Better Auth** for authentication system
-- **Resend** email sending
 - **Jest & Playwrite** for testing
 
 # General rules:
@@ -62,6 +60,7 @@ All tests should be performed with Jest or Playwright and documented in the `Tes
 ## Test.md
 
 The test document should list all tests in the repo, with each test case listed in a single line with an indented line below with the pass condition.
+Add `test` and `test:all` scripts to the `package.json`.
 Test document should begin with an index and number each test as demonstrated below:
 
 # Test.md file example:
@@ -71,8 +70,10 @@ Test document should begin with an index and number each test as demonstrated be
 
 ## Run All Tests
 
+**Command:** `npm run test:all`
+✓ Runs the complete test suite across all test files including time or credit consuming tests
 **Command:** `npm run test`
-✓ Runs the complete test suite across all test files
+✓ Runs all tests that can be run repeatedly
 
 ## Test Index
 
@@ -91,3 +92,8 @@ Test document should begin with an index and number each test as demonstrated be
 - should do something else
   ✓ Validates expected results
 ```
+
+# Console.logging
+
+All logging should be performed using the `conditionalLog` function exported from `lib/log.util.ts`
+The `NEXT_PUBLIC_LOG_LABELS` variable in `.env.local` stores a comma separated string of log labels. Logs are returned if `NEXT_PUBLIC_LOG_LABELS="all"`, or if `NEXT_PUBLIC_LOG_LABELS` includes the label arg in `conditionalLog`.

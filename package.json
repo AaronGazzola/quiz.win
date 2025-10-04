@@ -22,6 +22,9 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx scripts/seed.ts"
   },
+  "prisma": {
+    "seed": "tsx scripts/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.16.2",
     "@radix-ui/react-avatar": "^1.1.10",

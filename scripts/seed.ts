@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { auth } from "../lib/auth";
+import bcrypt from "bcryptjs";
 import "better-auth/node";
 
 const prisma = new PrismaClient();
@@ -38,42 +39,14 @@ async function seed() {
     await prisma.user.deleteMany();
 
     console.log("🔐 Creating password hash...");
-    const signupRequest = new Request(`${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: `temp@${fromEmailDomain}`,
-        password: devPassword,
-        name: "Temp User",
-      }),
-    });
-
-    const tempResponse = await auth.handler(signupRequest);
-    const tempResult = await tempResponse.json();
-
-    if (!tempResult.user) {
-      throw new Error("Failed to create temp user for password hash");
-    }
-
-    const tempAccount = await prisma.account.findFirst({
-      where: { userId: tempResult.user.id },
-    });
-
-    if (!tempAccount?.password) {
-      throw new Error("Password hash not found");
-    }
+    const passwordHash = await bcrypt.hash(devPassword, 10);
 
     await prisma.password.create({
       data: {
         length: devPassword.length,
-        hash: tempAccount.password,
+        hash: passwordHash,
       },
     });
-
-    await prisma.account.deleteMany({ where: { userId: tempResult.user.id } });
-    await prisma.user.delete({ where: { id: tempResult.user.id } });
 
     console.log("👥 Creating users...");
 
