@@ -5,10 +5,10 @@ import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { isSuperAdmin } from "@/lib/role.utils";
 import { headers } from "next/headers";
-import { User, Profile } from "@prisma/client";
+import { user, Profile } from "@prisma/client";
 import { ExtendedUser } from "./layout.types";
 
-export const getUserAction = async (): Promise<ActionResponse<User | null>> => {
+export const getUserAction = async (): Promise<ActionResponse<user | null>> => {
   try {
 
     const session = await auth.api.getSession({
@@ -54,7 +54,7 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
     const prismaUser = await db.user.findUnique({
       where: { id: session.user.id },
       include: {
-        members: {
+        member: {
           include: {
             organization: true,
           },
@@ -99,21 +99,21 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
         },
       }));
 
-      const userWithProfileAndMembers = {
+      const userWithProfileAndmember = {
         ...prismaUser,
-        members: syntheticMembers,
+        member: syntheticMembers,
         profile,
       };
 
-      return getActionResponse({ data: userWithProfileAndMembers });
+      return getActionResponse({ data: userWithProfileAndmember });
     }
 
-    const userWithProfileAndMembers = {
+    const userWithProfileAndmember = {
       ...prismaUser,
       profile,
     };
 
-    return getActionResponse({ data: userWithProfileAndMembers });
+    return getActionResponse({ data: userWithProfileAndmember });
   } catch (error) {
     return getActionResponse({ error });
   }

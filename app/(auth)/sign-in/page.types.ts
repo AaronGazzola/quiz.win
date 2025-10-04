@@ -1,7 +1,13 @@
-import { User } from "@prisma/client";
+import { user } from "@prisma/client";
 
-export interface UserWithOrganization extends User {
+export interface OrganizationMembership {
+  organizationName: string;
+  role: "owner" | "admin" | "member";
+}
+
+export interface UserWithOrganization extends user {
   organizationName?: string;
+  organizations: OrganizationMembership[];
 }
 
 export type PasswordVerificationState = "idle" | "verifying" | "success" | "failure";

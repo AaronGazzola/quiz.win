@@ -228,8 +228,8 @@ export const getQuizzesAction = async (
         skip: page * itemsPerPage,
         take: itemsPerPage,
         include: {
-          questions: true,
-          responses: true,
+          Question: true,
+          Response: true,
           organization: {
             select: {
               id: true,
@@ -238,8 +238,8 @@ export const getQuizzesAction = async (
           },
           _count: {
             select: {
-              questions: true,
-              responses: true,
+              Question: true,
+              Response: true,
             },
           },
         },
@@ -552,7 +552,7 @@ export const getResponseDetailAction = async (
             id: true,
             title: true,
             organizationId: true,
-            questions: {
+            Question: {
               orderBy: { order: "asc" },
             },
           },
@@ -644,7 +644,7 @@ export const getUserResponseAction = async (
           select: {
             id: true,
             title: true,
-            questions: {
+            Question: {
               orderBy: { order: "asc" },
             },
           },

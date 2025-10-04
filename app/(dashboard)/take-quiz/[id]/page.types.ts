@@ -1,7 +1,7 @@
 import { quiz, Question, Response } from "@prisma/client";
 
 export interface QuizForTaking extends quiz {
-  questions: Question[];
+  Question: Question[];
 }
 
 export interface QuizPlayerState {

@@ -27,7 +27,7 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
   const [title, setTitle] = useState(quiz?.title || "");
   const [description, setDescription] = useState(quiz?.description || "");
   const [questions, setQuestions] = useState<QuestionData[]>(
-    quiz?.questions.map((q, index) => ({
+    quiz?.Question.map((q, index) => ({
       id: q.id,
       question: q.question,
       options: q.options,

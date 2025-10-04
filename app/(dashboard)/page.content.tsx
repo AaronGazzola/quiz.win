@@ -54,13 +54,13 @@ export function DashboardPageContent() {
 
   const organizations = useMemo(
     () =>
-      userWithMembers?.members?.map((member) => ({
-        id: member.organizationId,
-        name: member.organization.name,
-        slug: member.organization.slug || "",
-        role: member.role,
+      userWithMembers?.member?.map((memberItem) => ({
+        id: memberItem.organizationId,
+        name: memberItem.organization.name,
+        slug: memberItem.organization.slug || "",
+        role: memberItem.role,
       })) || [],
-    [userWithMembers?.members]
+    [userWithMembers?.member]
   );
 
   const processInvitationMutation = useProcessInvitation();
@@ -569,12 +569,12 @@ export function DashboardPageContent() {
                     </td>
 
                     <td className="px-6 py-4 text-sm text-foreground">
-                      {quiz._count.questions}
+                      {quiz._count.Question}
                     </td>
 
                     {hasAdminAccess && (
                       <td className="px-6 py-4 text-sm text-foreground">
-                        {quiz._count.responses}
+                        {quiz._count.Response}
                       </td>
                     )}
 
@@ -928,7 +928,7 @@ export function DashboardPageContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
-                    {responseDetail.quiz.questions.map((question, index) => {
+                    {responseDetail.quiz.Question.map((question, index) => {
                       const userAnswers = Array.isArray(responseDetail.answers)
                         ? responseDetail.answers as Array<{
                             questionId: string;
@@ -1081,7 +1081,7 @@ export function DashboardPageContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
-                    {userResponse.quiz.questions.map((question, index) => {
+                    {userResponse.quiz.Question.map((question, index) => {
                       const userAnswers = Array.isArray(userResponse.answers)
                         ? userResponse.answers as Array<{
                             questionId: string;

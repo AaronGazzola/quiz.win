@@ -28,7 +28,7 @@ export const getQuizForTakingAction = async (
         isActive: true,
       },
       include: {
-        questions: {
+        Question: {
           orderBy: { order: "asc" },
         },
       },

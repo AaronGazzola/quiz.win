@@ -1,9 +1,9 @@
 "use client";
 
-import { configuration, privatePaths } from "@/configuration";
+import { configuration } from "@/configuration";
 import { signIn } from "@/lib/auth-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthLayoutStore } from "./(auth)/layout.stores";
 import {
@@ -21,17 +21,12 @@ export const useGetUser = () => {
   const { setUser, reset } = useAppStore();
   const { reset: resetAuthLayout } = useAuthLayoutStore();
   const { setUserData } = useRedirectStore();
-  const pathname = usePathname();
-  const router = useRouter();
 
   return useQuery({
     queryKey: ["user"],
     queryFn: async () => {
       const { data, error } = await getUserAction();
       if (error) {
-        if (privatePaths.includes(pathname)) {
-          router.push(configuration.paths.signIn);
-        }
         reset();
         resetAuthLayout();
         throw error;

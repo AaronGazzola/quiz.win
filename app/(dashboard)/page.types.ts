@@ -13,15 +13,15 @@ export interface ProcessInvitationData {
 }
 
 export interface QuizWithDetails extends quiz {
-  questions: Question[];
-  responses: Response[];
+  Question: Question[];
+  Response: Response[];
   organization: {
     id: string;
     name: string;
   };
   _count: {
-    questions: number;
-    responses: number;
+    Question: number;
+    Response: number;
   };
 }
 
@@ -37,7 +37,7 @@ export interface ResponseWithDetails extends ResponseWithUser {
   quiz: {
     id: string;
     title: string;
-    questions: Question[];
+    Question: Question[];
   };
 }
 

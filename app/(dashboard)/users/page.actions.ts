@@ -85,6 +85,9 @@ export const getUsersAction = async (
             createdAt: true,
             updatedAt: true,
             image: true,
+            emergencyContact: true,
+            phone: true,
+            userType: true,
           },
         },
         organization: {
@@ -162,16 +165,13 @@ export const getUsersAction = async (
       const userId = member.user.id;
       if (userMap.has(userId)) {
         const existingUser = userMap.get(userId)!;
-        existingUser.members.push(member);
-        existingUser._count.members += 1;
+        existingUser.member.push(member);
+        existingUser._count.member += 1;
       } else {
         userMap.set(userId, {
           ...member.user,
-          phone: null,
-          emergencyContact: null,
-          userType: null,
-          members: [member],
-          _count: { members: 1 },
+          member: [member],
+          _count: { member: 1 },
         });
       }
     });

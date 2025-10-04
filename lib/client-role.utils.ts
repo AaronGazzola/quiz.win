@@ -1,12 +1,12 @@
-import { User } from "@prisma/client";
+import { user } from "@prisma/client";
 
-interface ExtendedUser extends User {
-  members?: Array<{ role: string; organizationId: string }>;
+interface ExtendedUser extends user {
+  member?: Array<{ role: string; organizationId: string }>;
 }
 
 export const isAdmin = (user: ExtendedUser | null): boolean => {
   if (!user) return false;
-  return user.members?.some(member => member.role === 'admin') || false;
+  return user.member?.some(memberItem => memberItem.role === 'admin') || false;
 };
 
 export const isSuperAdmin = (user: ExtendedUser | null): boolean => {
@@ -16,9 +16,9 @@ export const isSuperAdmin = (user: ExtendedUser | null): boolean => {
 
 export const isOrgAdminClient = (user: ExtendedUser | null, organizationId: string): boolean => {
   if (!user) return false;
-  return user.members?.some(member =>
-    member.organizationId === organizationId &&
-    (member.role === 'admin' || member.role === 'owner')
+  return user.member?.some(memberItem =>
+    memberItem.organizationId === organizationId &&
+    (memberItem.role === 'admin' || memberItem.role === 'owner')
   ) || false;
 };
 
@@ -32,9 +32,9 @@ export const isAdminOfAllSelectedOrgs = (user: ExtendedUser | null, selectedOrga
   if (selectedOrganizationIds.length === 0) return false;
 
   return selectedOrganizationIds.every(orgId =>
-    user.members?.some(member =>
-      member.organizationId === orgId &&
-      (member.role === 'admin' || member.role === 'owner')
+    user.member?.some(memberItem =>
+      memberItem.organizationId === orgId &&
+      (memberItem.role === 'admin' || memberItem.role === 'owner')
     )
   );
 };
@@ -48,11 +48,11 @@ export const canAccessAdminUI = (user: ExtendedUser | null, selectedOrganization
 };
 
 export const getAdminStatusByOrganization = (user: ExtendedUser | null): Record<string, boolean> => {
-  if (!user || !user.members) return {};
+  if (!user || !user.member) return {};
 
   const adminStatus: Record<string, boolean> = {};
-  user.members.forEach(member => {
-    adminStatus[member.organizationId] = member.role === 'admin' || member.role === 'owner';
+  user.member.forEach(memberItem => {
+    adminStatus[memberItem.organizationId] = memberItem.role === 'admin' || memberItem.role === 'owner';
   });
 
   return adminStatus;
@@ -63,9 +63,9 @@ export const hasPartialAdminAccess = (user: ExtendedUser | null, selectedOrganiz
   if (isSuperAdmin(user)) return false;
 
   const adminOrgs = selectedOrganizationIds.filter(orgId =>
-    user.members?.some(member =>
-      member.organizationId === orgId &&
-      (member.role === 'admin' || member.role === 'owner')
+    user.member?.some(memberItem =>
+      memberItem.organizationId === orgId &&
+      (memberItem.role === 'admin' || memberItem.role === 'owner')
     )
   );
 

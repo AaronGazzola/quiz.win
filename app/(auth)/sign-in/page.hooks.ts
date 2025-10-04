@@ -26,7 +26,7 @@ export const useVerifyPassword = (onSuccess: (isValid: boolean) => void, onError
       const { data, error } = await verifyPasswordAction(password);
       conditionalLog({verifyResult:{data,error}},{label:LOG_LABELS.AUTH});
       if (error) throw error;
-      return data;
+      return data ?? false;
     },
     onSuccess: (isValid) => {
       conditionalLog({action:"verifyPasswordSuccess",isValid},{label:LOG_LABELS.AUTH});

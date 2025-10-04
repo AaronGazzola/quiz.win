@@ -3,7 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
-import { User } from "@prisma/client";
+import { user } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 export const getPasswordLengthAction = async (): Promise<ActionResponse<number>> => {
@@ -45,8 +45,9 @@ export const verifyPasswordAction = async (password: string): Promise<ActionResp
   }
 };
 
-interface UserWithOrganization extends User {
+interface UserWithOrganization extends user {
   organizationName?: string;
+  organizations: Array<{ organizationName: string; role: "owner" | "admin" | "member" }>;
 }
 
 export const getUsersWithOrganizationsAction = async (): Promise<ActionResponse<UserWithOrganization[]>> => {
@@ -55,7 +56,7 @@ export const getUsersWithOrganizationsAction = async (): Promise<ActionResponse<
 
     const users = await db.user.findMany({
       include: {
-        members: {
+        member: {
           include: {
             organization: true,
           },
@@ -65,7 +66,11 @@ export const getUsersWithOrganizationsAction = async (): Promise<ActionResponse<
 
     const usersWithOrgs = users.map(user => ({
       ...user,
-      organizationName: user.members?.[0]?.organization?.name,
+      organizationName: user.member?.[0]?.organization?.name,
+      organizations: user.member.map(m => ({
+        organizationName: m.organization.name,
+        role: m.role as "owner" | "admin" | "member",
+      })),
     }));
 
     return getActionResponse({ data: usersWithOrgs });

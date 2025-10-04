@@ -1,11 +1,11 @@
-import { User, Member, Organization } from "@prisma/client";
+import { user, member, organization } from "@prisma/client";
 
-export interface UserWithDetails extends User {
-  members: (Member & {
-    organization: Organization;
+export interface UserWithDetails extends user {
+  member: (member & {
+    organization: organization;
   })[];
   _count: {
-    members: number;
+    member: number;
   };
   organizationName?: string;
 }

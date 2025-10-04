@@ -105,6 +105,30 @@ async function seed() {
         role: "member",
         image: "https://api.dicebear.com/7.x/avataaars/svg?seed=jennifer",
       },
+      {
+        email: `alex.johnson@${fromEmailDomain}`,
+        name: "Alex Johnson",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
+      },
+      {
+        email: `maria.garcia@${fromEmailDomain}`,
+        name: "Maria Garcia",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=maria",
+      },
+      {
+        email: `robert.lee@${fromEmailDomain}`,
+        name: "Robert Lee",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=robert",
+      },
+      {
+        email: `patricia.wong@${fromEmailDomain}`,
+        name: "Patricia Wong",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=patricia",
+      },
     ];
 
     const users = [];
@@ -200,6 +224,14 @@ async function seed() {
       { userId: users[6].id, organizationId: organizations[1].id, role: "admin" },
       { userId: users[7].id, organizationId: organizations[1].id, role: "member" },
       { userId: users[8].id, organizationId: organizations[1].id, role: "member" },
+      { userId: users[9].id, organizationId: organizations[0].id, role: "admin" },
+      { userId: users[9].id, organizationId: organizations[1].id, role: "member" },
+      { userId: users[10].id, organizationId: organizations[0].id, role: "member" },
+      { userId: users[10].id, organizationId: organizations[1].id, role: "admin" },
+      { userId: users[11].id, organizationId: organizations[0].id, role: "member" },
+      { userId: users[11].id, organizationId: organizations[1].id, role: "member" },
+      { userId: users[12].id, organizationId: organizations[0].id, role: "admin" },
+      { userId: users[12].id, organizationId: organizations[1].id, role: "admin" },
     ];
 
     await Promise.all(
@@ -668,6 +700,11 @@ async function seed() {
     console.log(`- lisa.anderson@${fromEmailDomain} (Admin)`);
     console.log(`- david.martinez@${fromEmailDomain} (Member)`);
     console.log(`- jennifer.taylor@${fromEmailDomain} (Member)`);
+    console.log(`\n🔀 Multi-Organization Users:`);
+    console.log(`- alex.johnson@${fromEmailDomain} (HC: Admin, TC: Member)`);
+    console.log(`- maria.garcia@${fromEmailDomain} (HC: Member, TC: Admin)`);
+    console.log(`- robert.lee@${fromEmailDomain} (HC: Member, TC: Member)`);
+    console.log(`- patricia.wong@${fromEmailDomain} (HC: Admin, TC: Admin)`);
     console.log(`\n🔐 All users use DEV_PASSWORD: ${devPassword}`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);

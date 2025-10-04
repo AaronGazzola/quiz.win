@@ -35,7 +35,7 @@ export const getQuizResultAction = async (
       include: {
         quiz: {
           include: {
-            questions: {
+            Question: {
               orderBy: { order: "asc" },
             },
           },

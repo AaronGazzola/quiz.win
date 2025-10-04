@@ -40,10 +40,10 @@ export function OrganizationSelector() {
         name: org.name,
         role: "admin" as const,
       }))
-    : userWithMembers?.members?.map((member) => ({
-        id: member.organizationId,
-        name: member.organization.name,
-        role: member.role,
+    : userWithMembers?.member?.map((memberItem) => ({
+        id: memberItem.organizationId,
+        name: memberItem.organization.name,
+        role: memberItem.role,
       })) || [];
 
   console.log(JSON.stringify({t:'OrgSelector:orgs',count:organizations.length,orgIds:organizations.map(o=>o.id),isSuperAdmin:isSuperAdminUser}));
