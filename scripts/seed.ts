@@ -6,11 +6,17 @@ const prisma = new PrismaClient();
 
 async function seed() {
   const fromEmailDomain = process.env.NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN;
+  const devPassword = process.env.DEV_PASSWORD;
 
   if (!fromEmailDomain) {
     console.error(
       "NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN environment variable is required"
     );
+    process.exit(1);
+  }
+
+  if (!devPassword) {
+    console.error("DEV_PASSWORD environment variable is required");
     process.exit(1);
   }
 
@@ -25,66 +31,106 @@ async function seed() {
     await prisma.member.deleteMany();
     await prisma.organization.deleteMany();
     await prisma.profile.deleteMany();
+    await prisma.password.deleteMany();
     await prisma.magicLink.deleteMany();
     await prisma.session.deleteMany();
     await prisma.account.deleteMany();
     await prisma.user.deleteMany();
+
+    console.log("🔐 Creating password hash...");
+    const signupRequest = new Request(`${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: `temp@${fromEmailDomain}`,
+        password: devPassword,
+        name: "Temp User",
+      }),
+    });
+
+    const tempResponse = await auth.handler(signupRequest);
+    const tempResult = await tempResponse.json();
+
+    if (!tempResult.user) {
+      throw new Error("Failed to create temp user for password hash");
+    }
+
+    const tempAccount = await prisma.account.findFirst({
+      where: { userId: tempResult.user.id },
+    });
+
+    if (!tempAccount?.password) {
+      throw new Error("Password hash not found");
+    }
+
+    await prisma.password.create({
+      data: {
+        length: devPassword.length,
+        hash: tempAccount.password,
+      },
+    });
+
+    await prisma.account.deleteMany({ where: { userId: tempResult.user.id } });
+    await prisma.user.delete({ where: { id: tempResult.user.id } });
 
     console.log("👥 Creating users...");
 
     const usersData = [
       {
         email: `superadmin@${fromEmailDomain}`,
-        name: "System Super Admin",
+        name: "System Administrator",
         role: "super-admin",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=admin",
       },
       {
-        email: `org1owner1@${fromEmailDomain}`,
-        name: "TechCorp Owner",
+        email: `dr.sarah.chen@${fromEmailDomain}`,
+        name: "Dr. Sarah Chen",
+        role: "owner",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
       },
       {
-        email: `org1admin1@${fromEmailDomain}`,
-        name: "TechCorp Admin One",
+        email: `dr.james.wilson@${fromEmailDomain}`,
+        name: "Dr. James Wilson",
+        role: "admin",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=james",
       },
       {
-        email: `org1admin2@${fromEmailDomain}`,
-        name: "TechCorp Admin Two",
+        email: `nurse.emily.davis@${fromEmailDomain}`,
+        name: "Emily Davis, RN",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=emily",
       },
       {
-        email: `org1member1@${fromEmailDomain}`,
-        name: "TechCorp Member One",
+        email: `admin.michael.brown@${fromEmailDomain}`,
+        name: "Michael Brown",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael",
       },
       {
-        email: `org1member2@${fromEmailDomain}`,
-        name: "TechCorp Member Two",
+        email: `john.smith@${fromEmailDomain}`,
+        name: "John Smith",
+        role: "owner",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
       },
       {
-        email: `org2owner1@${fromEmailDomain}`,
-        name: "EduSoft Owner",
+        email: `lisa.anderson@${fromEmailDomain}`,
+        name: "Lisa Anderson",
+        role: "admin",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=lisa",
       },
       {
-        email: `org2admin1@${fromEmailDomain}`,
-        name: "EduSoft Admin",
+        email: `david.martinez@${fromEmailDomain}`,
+        name: "David Martinez",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=david",
       },
       {
-        email: `org2member1@${fromEmailDomain}`,
-        name: "EduSoft Member One",
-      },
-      {
-        email: `org2member2@${fromEmailDomain}`,
-        name: "EduSoft Member Two",
-      },
-      {
-        email: `org3owner1@${fromEmailDomain}`,
-        name: "DevSkills Owner",
-      },
-      {
-        email: `org3admin1@${fromEmailDomain}`,
-        name: "DevSkills Admin",
-      },
-      {
-        email: `org3member1@${fromEmailDomain}`,
-        name: "DevSkills Member",
+        email: `jennifer.taylor@${fromEmailDomain}`,
+        name: "Jennifer Taylor",
+        role: "member",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=jennifer",
       },
     ];
 
@@ -99,7 +145,7 @@ async function seed() {
         },
         body: JSON.stringify({
           email: userData.email,
-          password: "Password123!",
+          password: devPassword,
           name: userData.name,
         }),
       });
@@ -113,7 +159,7 @@ async function seed() {
 
       users.push(result.user);
 
-      if (userData.role) {
+      if (userData.role && userData.role !== "member") {
         await prisma.user.update({
           where: { id: result.user.id },
           data: { role: userData.role },
@@ -122,7 +168,10 @@ async function seed() {
 
       await prisma.user.update({
         where: { id: result.user.id },
-        data: { emailVerified: true },
+        data: {
+          emailVerified: true,
+          image: userData.image,
+        },
       });
     }
 
@@ -130,31 +179,23 @@ async function seed() {
     const organizations = await Promise.all([
       prisma.organization.create({
         data: {
-          name: "TechCorp Learning",
-          slug: "techcorp-learning",
+          name: "HealthCare Partners",
+          slug: "healthcare-partners",
           metadata: {
-            description: "Enterprise technology training solutions",
+            description: "Comprehensive medical training and patient care excellence",
+            industry: "Healthcare",
+            focus: "Medical Training",
+          },
+        },
+      }),
+      prisma.organization.create({
+        data: {
+          name: "TechCorp Solutions",
+          slug: "techcorp-solutions",
+          metadata: {
+            description: "Enterprise technology training and software development",
             industry: "Technology",
-          },
-        },
-      }),
-      prisma.organization.create({
-        data: {
-          name: "EduSoft Academy",
-          slug: "edusoft-academy",
-          metadata: {
-            description: "Educational software development training",
-            industry: "Software",
-          },
-        },
-      }),
-      prisma.organization.create({
-        data: {
-          name: "DevSkills Institute",
-          slug: "devskills-institute",
-          metadata: {
-            description: "Advanced developer skills and security training",
-            industry: "Education",
+            focus: "Corporate Training",
           },
         },
       }),
@@ -178,81 +219,14 @@ async function seed() {
 
     console.log("🤝 Creating organization memberships...");
     const memberships = [
-      {
-        userId: users[0].id,
-        organizationId: organizations[0].id,
-        role: "owner",
-      },
-      {
-        userId: users[1].id,
-        organizationId: organizations[0].id,
-        role: "owner",
-      },
-      {
-        userId: users[2].id,
-        organizationId: organizations[0].id,
-        role: "admin",
-      },
-      {
-        userId: users[3].id,
-        organizationId: organizations[0].id,
-        role: "admin",
-      },
-      {
-        userId: users[4].id,
-        organizationId: organizations[0].id,
-        role: "member",
-      },
-      {
-        userId: users[5].id,
-        organizationId: organizations[0].id,
-        role: "member",
-      },
-      {
-        userId: users[6].id,
-        organizationId: organizations[1].id,
-        role: "owner",
-      },
-      {
-        userId: users[7].id,
-        organizationId: organizations[1].id,
-        role: "admin",
-      },
-      {
-        userId: users[8].id,
-        organizationId: organizations[1].id,
-        role: "member",
-      },
-      {
-        userId: users[9].id,
-        organizationId: organizations[1].id,
-        role: "member",
-      },
-      {
-        userId: users[2].id,
-        organizationId: organizations[1].id,
-        role: "admin",
-      },
-      {
-        userId: users[10].id,
-        organizationId: organizations[2].id,
-        role: "owner",
-      },
-      {
-        userId: users[11].id,
-        organizationId: organizations[2].id,
-        role: "admin",
-      },
-      {
-        userId: users[12].id,
-        organizationId: organizations[2].id,
-        role: "member",
-      },
-      {
-        userId: users[4].id,
-        organizationId: organizations[2].id,
-        role: "member",
-      },
+      { userId: users[1].id, organizationId: organizations[0].id, role: "owner" },
+      { userId: users[2].id, organizationId: organizations[0].id, role: "admin" },
+      { userId: users[3].id, organizationId: organizations[0].id, role: "member" },
+      { userId: users[4].id, organizationId: organizations[0].id, role: "member" },
+      { userId: users[5].id, organizationId: organizations[1].id, role: "owner" },
+      { userId: users[6].id, organizationId: organizations[1].id, role: "admin" },
+      { userId: users[7].id, organizationId: organizations[1].id, role: "member" },
+      { userId: users[8].id, organizationId: organizations[1].id, role: "member" },
     ];
 
     await Promise.all(
@@ -267,9 +241,19 @@ async function seed() {
     const quizzes = await Promise.all([
       prisma.quiz.create({
         data: {
-          title: "JavaScript Fundamentals",
+          title: "Patient Safety Protocols",
           description:
-            "Test your knowledge of JavaScript basics including variables, functions, and control structures.",
+            "Essential patient safety procedures and best practices for healthcare professionals.",
+          organizationId: organizations[0].id,
+          createdBy: users[1].id,
+          isActive: true,
+        },
+      }),
+      prisma.quiz.create({
+        data: {
+          title: "HIPAA Compliance Fundamentals",
+          description:
+            "Understanding HIPAA regulations and protecting patient privacy.",
           organizationId: organizations[0].id,
           createdBy: users[2].id,
           isActive: true,
@@ -277,51 +261,41 @@ async function seed() {
       }),
       prisma.quiz.create({
         data: {
-          title: "React Components & Hooks",
+          title: "Medical Terminology Basics",
           description:
-            "Advanced React concepts including components, hooks, and state management.",
+            "Foundation of medical terminology for healthcare staff.",
           organizationId: organizations[0].id,
-          createdBy: users[3].id,
-          isActive: true,
-        },
-      }),
-      prisma.quiz.create({
-        data: {
-          title: "Database Design Principles",
-          description:
-            "Fundamental concepts of relational database design and normalization.",
-          organizationId: organizations[1].id,
-          createdBy: users[7].id,
-          isActive: true,
-        },
-      }),
-      prisma.quiz.create({
-        data: {
-          title: "Project Management Essentials",
-          description:
-            "Core project management methodologies and best practices.",
-          organizationId: organizations[1].id,
           createdBy: users[2].id,
           isActive: false,
         },
       }),
       prisma.quiz.create({
         data: {
-          title: "Web Security Fundamentals",
+          title: "Cybersecurity Best Practices",
           description:
-            "Essential web security concepts and common vulnerabilities.",
-          organizationId: organizations[2].id,
-          createdBy: users[11].id,
+            "Essential cybersecurity principles for protecting corporate data and systems.",
+          organizationId: organizations[1].id,
+          createdBy: users[5].id,
           isActive: true,
         },
       }),
       prisma.quiz.create({
         data: {
-          title: "API Design Best Practices",
+          title: "Agile Project Management",
           description:
-            "RESTful API design principles and implementation strategies.",
-          organizationId: organizations[2].id,
-          createdBy: users[11].id,
+            "Agile methodologies and best practices for modern project management.",
+          organizationId: organizations[1].id,
+          createdBy: users[6].id,
+          isActive: true,
+        },
+      }),
+      prisma.quiz.create({
+        data: {
+          title: "Software Development Lifecycle",
+          description:
+            "Understanding SDLC phases and best practices for software development.",
+          organizationId: organizations[1].id,
+          createdBy: users[6].id,
           isActive: false,
         },
       }),
@@ -333,44 +307,47 @@ async function seed() {
         quizId: quizzes[0].id,
         questions: [
           {
-            question:
-              "What is the correct way to declare a variable in JavaScript?",
+            question: "What is the first step in patient identification?",
             options: [
-              "var myVar = 5;",
-              "variable myVar = 5;",
-              "v myVar = 5;",
-              "declare myVar = 5;",
+              "Check the patient wristband with two identifiers",
+              "Ask the patient their name",
+              "Look at the room number",
+              "Check the medical chart",
             ],
-            correctAnswer: "var myVar = 5;",
+            correctAnswer: "Check the patient wristband with two identifiers",
             order: 1,
           },
           {
-            question:
-              "Which method is used to add an element to the end of an array?",
-            options: ["append()", "push()", "add()", "insert()"],
-            correctAnswer: "push()",
+            question: "How often should hand hygiene be performed?",
+            options: [
+              "Once per shift",
+              "Before and after patient contact",
+              "Only when hands are visibly dirty",
+              "Once per hour",
+            ],
+            correctAnswer: "Before and after patient contact",
             order: 2,
           },
           {
-            question: "What does '===' operator check in JavaScript?",
+            question: "What should you do if you witness a medication error?",
             options: [
-              "Value only",
-              "Type only",
-              "Both value and type",
-              "Neither value nor type",
+              "Ignore it if the patient seems fine",
+              "Report it immediately to the supervising physician",
+              "Document it at the end of shift",
+              "Tell a colleague",
             ],
-            correctAnswer: "Both value and type",
+            correctAnswer: "Report it immediately to the supervising physician",
             order: 3,
           },
           {
-            question: "How do you create a function in JavaScript?",
+            question: "When should fall risk assessments be conducted?",
             options: [
-              "function myFunction() {}",
-              "create myFunction() {}",
-              "def myFunction() {}",
-              "func myFunction() {}",
+              "Only on admission",
+              "On admission and with any change in condition",
+              "Once per week",
+              "Only for elderly patients",
             ],
-            correctAnswer: "function myFunction() {}",
+            correctAnswer: "On admission and with any change in condition",
             order: 4,
           },
         ],
@@ -379,37 +356,36 @@ async function seed() {
         quizId: quizzes[1].id,
         questions: [
           {
-            question: "What is the purpose of useEffect hook in React?",
+            question: "What does HIPAA stand for?",
             options: [
-              "To manage state",
-              "To handle side effects",
-              "To create components",
-              "To style elements",
+              "Health Insurance Portability and Accountability Act",
+              "Healthcare Information Privacy and Access Act",
+              "Hospital Insurance Protection and Access Act",
+              "Health Information Processing and Accountability Act",
             ],
-            correctAnswer: "To handle side effects",
+            correctAnswer: "Health Insurance Portability and Accountability Act",
             order: 1,
           },
           {
-            question:
-              "How do you pass data from parent to child component in React?",
+            question: "What is Protected Health Information (PHI)?",
             options: [
-              "Through props",
-              "Through state",
-              "Through context",
-              "Through refs",
+              "Only social security numbers",
+              "Any health information that can identify an individual",
+              "Only medical diagnoses",
+              "Only insurance information",
             ],
-            correctAnswer: "Through props",
+            correctAnswer: "Any health information that can identify an individual",
             order: 2,
           },
           {
-            question: "What is JSX in React?",
+            question: "When can PHI be disclosed without patient authorization?",
             options: [
-              "A programming language",
-              "A syntax extension",
-              "A library",
-              "A framework",
+              "For treatment, payment, and healthcare operations",
+              "To any healthcare worker who asks",
+              "To family members at any time",
+              "Never without authorization",
             ],
-            correctAnswer: "A syntax extension",
+            correctAnswer: "For treatment, payment, and healthcare operations",
             order: 3,
           },
         ],
@@ -418,36 +394,36 @@ async function seed() {
         quizId: quizzes[2].id,
         questions: [
           {
-            question: "What is a primary key in a database?",
+            question: "What does the suffix '-itis' mean?",
             options: [
-              "A unique identifier for records",
-              "The first column",
-              "A password",
-              "A table name",
+              "Inflammation",
+              "Removal",
+              "Study of",
+              "Disease",
             ],
-            correctAnswer: "A unique identifier for records",
+            correctAnswer: "Inflammation",
             order: 1,
           },
           {
-            question: "What is database normalization?",
+            question: "What does 'brady-' mean as a prefix?",
             options: [
-              "Making data normal",
-              "Organizing data efficiently",
-              "Backing up data",
-              "Encrypting data",
+              "Fast",
+              "Slow",
+              "Above",
+              "Below",
             ],
-            correctAnswer: "Organizing data efficiently",
+            correctAnswer: "Slow",
             order: 2,
           },
           {
-            question: "What does ACID stand for in database systems?",
+            question: "What does 'cardio' refer to?",
             options: [
-              "Atomicity, Consistency, Isolation, Durability",
-              "Access, Create, Insert, Delete",
-              "All, Column, Index, Data",
-              "Auto, Cache, Identity, Default",
+              "Heart",
+              "Lungs",
+              "Liver",
+              "Brain",
             ],
-            correctAnswer: "Atomicity, Consistency, Isolation, Durability",
+            correctAnswer: "Heart",
             order: 3,
           },
         ],
@@ -456,32 +432,48 @@ async function seed() {
         quizId: quizzes[3].id,
         questions: [
           {
-            question: "What is the first phase of project management?",
-            options: ["Execution", "Planning", "Initiation", "Monitoring"],
-            correctAnswer: "Initiation",
+            question: "What is the purpose of multi-factor authentication (MFA)?",
+            options: [
+              "To slow down the login process",
+              "To add an extra layer of security beyond passwords",
+              "To track user activity",
+              "To replace passwords entirely",
+            ],
+            correctAnswer: "To add an extra layer of security beyond passwords",
             order: 1,
           },
           {
-            question: "What is a Gantt chart used for?",
+            question: "What is a phishing attack?",
             options: [
-              "Budget tracking",
-              "Task scheduling",
-              "Team communication",
-              "Risk assessment",
+              "A type of virus",
+              "An attempt to obtain sensitive information through deceptive emails",
+              "A network scanning technique",
+              "A password cracking method",
             ],
-            correctAnswer: "Task scheduling",
+            correctAnswer: "An attempt to obtain sensitive information through deceptive emails",
             order: 2,
           },
           {
-            question: "What does MVP stand for in project management?",
+            question: "How often should you update your passwords?",
             options: [
-              "Most Valuable Player",
-              "Minimum Viable Product",
-              "Maximum Value Proposition",
-              "Master Verification Process",
+              "Never",
+              "Every 90 days or when compromised",
+              "Every day",
+              "Only when you forget them",
             ],
-            correctAnswer: "Minimum Viable Product",
+            correctAnswer: "Every 90 days or when compromised",
             order: 3,
+          },
+          {
+            question: "What is the principle of least privilege?",
+            options: [
+              "Everyone should have admin access",
+              "Users should only have access to resources needed for their job",
+              "Managers should have all privileges",
+              "No one should have any privileges",
+            ],
+            correctAnswer: "Users should only have access to resources needed for their job",
+            order: 4,
           },
         ],
       },
@@ -489,36 +481,36 @@ async function seed() {
         quizId: quizzes[4].id,
         questions: [
           {
-            question: "What does XSS stand for?",
+            question: "What is a sprint in Agile methodology?",
             options: [
-              "Cross-Site Scripting",
-              "Extended Security System",
-              "XML Security Standard",
-              "External Script Source",
+              "A time-boxed iteration for completing work",
+              "A type of meeting",
+              "A project phase",
+              "A development tool",
             ],
-            correctAnswer: "Cross-Site Scripting",
+            correctAnswer: "A time-boxed iteration for completing work",
             order: 1,
           },
           {
-            question: "What is SQL injection?",
+            question: "What is the purpose of a daily standup?",
             options: [
-              "A database feature",
-              "A security vulnerability",
-              "A query optimization",
-              "A backup method",
+              "To assign new tasks",
+              "To sync the team on progress and blockers",
+              "To review code",
+              "To plan the sprint",
             ],
-            correctAnswer: "A security vulnerability",
+            correctAnswer: "To sync the team on progress and blockers",
             order: 2,
           },
           {
-            question: "What is HTTPS?",
+            question: "What does a Product Owner do in Agile?",
             options: [
-              "HTTP Secure",
-              "Hypertext Transfer Protocol Secure",
-              "High-Performance Transfer Protocol",
-              "Host Transfer Protocol System",
+              "Writes all the code",
+              "Manages the product backlog and prioritizes work",
+              "Leads daily standups",
+              "Tests the software",
             ],
-            correctAnswer: "Hypertext Transfer Protocol Secure",
+            correctAnswer: "Manages the product backlog and prioritizes work",
             order: 3,
           },
         ],
@@ -527,31 +519,36 @@ async function seed() {
         quizId: quizzes[5].id,
         questions: [
           {
-            question: "What does REST stand for?",
+            question: "What is the first phase of the SDLC?",
             options: [
-              "Representational State Transfer",
-              "Remote Execution Service Technology",
-              "Reliable Secure Transfer",
-              "Resource Exchange Standard Transfer",
+              "Implementation",
+              "Planning",
+              "Testing",
+              "Maintenance",
             ],
-            correctAnswer: "Representational State Transfer",
+            correctAnswer: "Planning",
             order: 1,
           },
           {
-            question: "Which HTTP method is used to update a resource?",
-            options: ["GET", "POST", "PUT", "DELETE"],
-            correctAnswer: "PUT",
+            question: "What happens during the testing phase?",
+            options: [
+              "Code is written",
+              "Defects are identified and fixed",
+              "Requirements are gathered",
+              "Software is deployed",
+            ],
+            correctAnswer: "Defects are identified and fixed",
             order: 2,
           },
           {
-            question: "What is the purpose of API versioning?",
+            question: "What is continuous integration?",
             options: [
-              "To track changes",
-              "To maintain backward compatibility",
-              "To improve performance",
-              "To reduce costs",
+              "Writing code continuously",
+              "Regularly merging code changes into a shared repository",
+              "Testing only at the end",
+              "Deploying every day",
             ],
-            correctAnswer: "To maintain backward compatibility",
+            correctAnswer: "Regularly merging code changes into a shared repository",
             order: 3,
           },
         ],
@@ -597,93 +594,73 @@ async function seed() {
     const responses = [
       {
         quizId: quizzes[0].id,
-        userId: users[4].id,
+        userId: users[3].id,
         answers: createAnswersArray(quizzes[0].id, {
-          "1": "var myVar = 5;",
-          "2": "push()",
-          "3": "Both value and type",
-          "4": "function myFunction() {}",
+          "1": "Check the patient wristband with two identifiers",
+          "2": "Before and after patient contact",
+          "3": "Report it immediately to the supervising physician",
+          "4": "On admission and with any change in condition",
         }),
         score: 1.0,
         completedAt: new Date("2024-01-15T10:30:00Z"),
       },
       {
         quizId: quizzes[0].id,
-        userId: users[5].id,
+        userId: users[4].id,
         answers: createAnswersArray(quizzes[0].id, {
-          "1": "var myVar = 5;",
-          "2": "add()",
-          "3": "Both value and type",
-          "4": "function myFunction() {}",
+          "1": "Check the patient wristband with two identifiers",
+          "2": "Once per hour",
+          "3": "Report it immediately to the supervising physician",
+          "4": "On admission and with any change in condition",
         }),
         score: 0.75,
         completedAt: new Date("2024-01-16T14:20:00Z"),
       },
       {
         quizId: quizzes[1].id,
-        userId: users[4].id,
+        userId: users[3].id,
         answers: createAnswersArray(quizzes[1].id, {
-          "1": "To handle side effects",
-          "2": "Through props",
-          "3": "A syntax extension",
+          "1": "Health Insurance Portability and Accountability Act",
+          "2": "Any health information that can identify an individual",
+          "3": "For treatment, payment, and healthcare operations",
         }),
         score: 1.0,
         completedAt: new Date("2024-01-20T09:15:00Z"),
       },
       {
-        quizId: quizzes[1].id,
-        userId: users[5].id,
-        answers: createAnswersArray(quizzes[1].id, {
-          "1": "To manage state",
-          "2": "Through props",
-          "3": "A syntax extension",
-        }),
-        score: 0.67,
-        completedAt: new Date("2024-01-21T16:45:00Z"),
-      },
-      {
-        quizId: quizzes[2].id,
-        userId: users[8].id,
-        answers: createAnswersArray(quizzes[2].id, {
-          "1": "A unique identifier for records",
-          "2": "Organizing data efficiently",
-          "3": "Atomicity, Consistency, Isolation, Durability",
+        quizId: quizzes[3].id,
+        userId: users[7].id,
+        answers: createAnswersArray(quizzes[3].id, {
+          "1": "To add an extra layer of security beyond passwords",
+          "2": "An attempt to obtain sensitive information through deceptive emails",
+          "3": "Every 90 days or when compromised",
+          "4": "Users should only have access to resources needed for their job",
         }),
         score: 1.0,
         completedAt: new Date("2024-01-25T11:30:00Z"),
       },
       {
         quizId: quizzes[3].id,
-        userId: users[9].id,
+        userId: users[8].id,
         answers: createAnswersArray(quizzes[3].id, {
-          "1": "Initiation",
-          "2": "Task scheduling",
-          "3": "Minimum Viable Product",
+          "1": "To add an extra layer of security beyond passwords",
+          "2": "A type of virus",
+          "3": "Every 90 days or when compromised",
+          "4": "Users should only have access to resources needed for their job",
         }),
-        score: 1.0,
-        completedAt: new Date("2024-02-01T08:20:00Z"),
+        score: 0.75,
+        completedAt: new Date("2024-01-26T15:45:00Z"),
       },
       {
         quizId: quizzes[4].id,
-        userId: users[12].id,
+        userId: users[7].id,
         answers: createAnswersArray(quizzes[4].id, {
-          "1": "Cross-Site Scripting",
-          "2": "A security vulnerability",
-          "3": "HTTP Secure",
-        }),
-        score: 0.67,
-        completedAt: new Date("2024-02-05T13:10:00Z"),
-      },
-      {
-        quizId: quizzes[5].id,
-        userId: users[4].id,
-        answers: createAnswersArray(quizzes[5].id, {
-          "1": "Representational State Transfer",
-          "2": "PUT",
-          "3": "To maintain backward compatibility",
+          "1": "A time-boxed iteration for completing work",
+          "2": "To sync the team on progress and blockers",
+          "3": "Manages the product backlog and prioritizes work",
         }),
         score: 1.0,
-        completedAt: new Date("2024-02-10T15:45:00Z"),
+        completedAt: new Date("2024-02-01T08:20:00Z"),
       },
     ];
 
@@ -708,16 +685,17 @@ async function seed() {
     console.log(
       `\n🔑 System Admin: superadmin@${fromEmailDomain} (role: super-admin)`
     );
-    console.log(`🔑 TechCorp Owner: org1owner1@${fromEmailDomain}`);
-    console.log(`🔑 EduSoft Owner: org2owner1@${fromEmailDomain}`);
-    console.log(`🔑 DevSkills Owner: org3owner1@${fromEmailDomain}`);
-    console.log(`\n🔗 Cross-org memberships:`);
-    console.log(
-      `- org1admin1@${fromEmailDomain} (admin in TechCorp & EduSoft)`
-    );
-    console.log(
-      `- org1member1@${fromEmailDomain} (member in TechCorp & DevSkills)`
-    );
+    console.log(`\n🏥 HealthCare Partners Users:`);
+    console.log(`- dr.sarah.chen@${fromEmailDomain} (Owner)`);
+    console.log(`- dr.james.wilson@${fromEmailDomain} (Admin)`);
+    console.log(`- nurse.emily.davis@${fromEmailDomain} (Member)`);
+    console.log(`- admin.michael.brown@${fromEmailDomain} (Member)`);
+    console.log(`\n💼 TechCorp Solutions Users:`);
+    console.log(`- john.smith@${fromEmailDomain} (Owner)`);
+    console.log(`- lisa.anderson@${fromEmailDomain} (Admin)`);
+    console.log(`- david.martinez@${fromEmailDomain} (Member)`);
+    console.log(`- jennifer.taylor@${fromEmailDomain} (Member)`);
+    console.log(`\n🔐 All users use DEV_PASSWORD: ${devPassword}`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     process.exit(1);

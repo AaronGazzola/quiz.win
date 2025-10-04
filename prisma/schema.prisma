@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,47 +9,49 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  role          String    @default("user")
-  banned        Boolean   @default(false)
-  banReason     String?
-  banExpires    DateTime?
-  emailVerified Boolean?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String       @id @default(cuid())
+  email            String       @unique
+  name             String?
+  role             String       @default("user")
+  banned           Boolean      @default(false)
+  banReason        String?
+  banExpires       DateTime?
+  emailVerified    Boolean?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  image            String?
+  emergencyContact Json?
+  phone            String?
+  userType         UserType?
+  magicLinks       MagicLink[]
+  accounts         Account[]
+  invitations      Invitation[]
+  members          Member[]
+  sessions         Session[]
+  Parent           Parent?
+  responses        Response[]
+  Student          Student?
+  Teacher          Teacher?
 
-  sessions   Session[]
-  accounts   Account[]
-  magicLinks MagicLink[]
-  members    Member[]
-  responses  Response[]
-
-  image       String?
-  invitations Invitation[]
-
-  @@schema("auth")
   @@map("user")
+  @@schema("auth")
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id                   String   @id @default(cuid())
+  userId               String
+  expiresAt            DateTime
+  token                String   @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  ipAddress            String?
+  userAgent            String?
   impersonatedBy       String?
   activeOrganizationId String?
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@schema("auth")
   @@map("session")
+  @@schema("auth")
 }
 
 model Account {
@@ -67,12 +68,11 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
-  @@schema("auth")
   @@map("account")
+  @@schema("auth")
 }
 
 model Verification {
@@ -84,8 +84,8 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@unique([identifier, value])
-  @@schema("auth")
   @@map("verification")
+  @@schema("auth")
 }
 
 model MagicLink {
@@ -95,63 +95,67 @@ model MagicLink {
   email     String
   expiresAt DateTime
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@schema("auth")
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  logo      String?
-  metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String       @id @default(cuid())
+  name          String
+  slug          String       @unique
+  logo          String?
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  address       String?
+  capacity      Int?
+  location      String?
+  phone         String?
+  principalName String?
+  invitations   Invitation[]
+  members       Member[]
+  Classroom     Classroom[]
+  Student       Student[]
+  Teacher       Teacher[]
+  quiz          quiz[]
 
-  members     Member[]
-  invitations Invitation[]
-  quizzes     Quiz[]
-
-  @@schema("auth")
   @@map("organization")
+  @@schema("auth")
 }
 
 model Member {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   userId         String
   organizationId String
-  role           String   @default("member")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
-  @@schema("auth")
   @@map("member")
+  @@schema("auth")
 }
 
 model Invitation {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   email          String
-  role           String   @default("member")
+  role           String       @default("member")
   inviterId      String
-  token          String   @unique
-  status         String   @default("pending")
+  token          String       @unique
+  status         String       @default("pending")
   expiresAt      DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  inviter      User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  inviter        User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([email, organizationId])
-  @@schema("auth")
   @@map("invitation")
+  @@schema("auth")
 }
 
 model Profile {
@@ -160,23 +164,6 @@ model Profile {
   preferences Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@schema("public")
-}
-
-model Quiz {
-  id             String   @id @default(cuid())
-  title          String
-  description    String?
-  organizationId String
-  createdBy      String
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  questions    Question[]
-  responses    Response[]
 
   @@schema("public")
 }
@@ -190,8 +177,7 @@ model Question {
   order         Int
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz          quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
   @@schema("public")
 }
@@ -203,9 +189,281 @@ model Response {
   answers     Json
   score       Float?
   completedAt DateTime @default(now())
+  quiz        quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@schema("public")
+}
+
+model Password {
+  id        String   @id @default(cuid())
+  length    Int
+  hash      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("public")
+}
+
+model Announcement {
+  id             String         @id
+  title          String
+  content        String
+  authorId       String
+  campusId       String
+  targetAudience TargetAudience
+  classroomId    String?
+  grade          String?
+  isPinned       Boolean        @default(false)
+  publishedAt    DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+
+  @@schema("public")
+}
+
+model AttendanceRecord {
+  id                String            @id
+  sessionId         String
+  studentId         String
+  status            AttendanceStatus
+  notes             String?
+  createdAt         DateTime          @default(now())
+  AttendanceSession AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentId])
+  @@schema("public")
+}
+
+model AttendanceSession {
+  id               String             @id
+  classroomId      String
+  date             DateTime
+  campusId         String
+  markedById       String
+  createdAt        DateTime           @default(now())
+  AttendanceRecord AttendanceRecord[]
+
+  @@schema("public")
+}
+
+model CafeteriaMenu {
+  id            String    @id
+  weekStartDate DateTime
+  dayOfWeek     DayOfWeek
+  menuItems     Json
+  specialNotes  String?
+  campusId      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime
+
+  @@unique([campusId, weekStartDate, dayOfWeek])
+  @@schema("public")
+}
+
+model CalendarEvent {
+  id             String    @id
+  title          String
+  description    String?
+  eventType      EventType
+  startDate      DateTime
+  endDate        DateTime?
+  campusId       String
+  isSchoolClosed Boolean   @default(false)
+  createdById    String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+
+  @@schema("public")
+}
+
+model Classroom {
+  id                  String                @id
+  name                String
+  grade               String
+  subject             String
+  campusId            String
+  teacherId           String
+  capacity            Int?
+  room                String?
+  schedule            Json?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  organization        Organization          @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  Teacher             Teacher               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  ClassroomEnrollment ClassroomEnrollment[]
+
+  @@schema("public")
+}
+
+model ClassroomEnrollment {
+  id          String    @id
+  classroomId String
+  studentId   String
+  enrolledAt  DateTime  @default(now())
+  Classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  Student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classroomId, studentId])
+  @@schema("public")
+}
+
+model Grade {
+  id            String   @id
+  studentId     String
+  classroomId   String
+  subject       String
+  grade         String
+  gradingPeriod String
+  teacherId     String
+  comments      String?
+  campusId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+
+  @@schema("public")
+}
+
+model Message {
+  id             String   @id
+  senderId       String
+  recipientId    String
+  subject        String
+  content        String
+  conversationId String
+  isRead         Boolean  @default(false)
+  campusId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+
+  @@schema("public")
+}
+
+model Parent {
+  id             String          @id
+  userId         String          @unique
+  primaryContact Boolean         @default(false)
+  relationship   String
+  occupation     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  StudentParent  StudentParent[]
+
+  @@schema("public")
+}
+
+model Student {
+  id                  String                @id
+  userId              String                @unique
+  grade               String
+  enrollmentDate      DateTime              @default(now())
+  campusId            String
+  authorizedPickups   Json?
+  medicalInfo         Json?
+  photoUrl            String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  ClassroomEnrollment ClassroomEnrollment[]
+  organization        Organization          @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  StudentParent       StudentParent[]
+
+  @@schema("public")
+}
+
+model StudentParent {
+  id        String   @id
+  studentId String
+  parentId  String
+  createdAt DateTime @default(now())
+  Parent    Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  Student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, parentId])
+  @@schema("public")
+}
+
+model Teacher {
+  id             String       @id
+  userId         String       @unique
+  certifications String[]
+  subjects       String[]
+  employeeId     String?      @unique
+  cvUrl          String?
+  campusId       String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  Classroom      Classroom[]
+  organization   Organization @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+model quiz {
+  id             String       @id
+  title          String
+  description    String?
+  organizationId String
+  createdBy      String
+  subject        String?
+  gradeLevel     String?
+  classroomId    String?
+  assignedTo     String[]
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  questions      Question[]
+  responses      Response[]
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+}
+
+enum UserType {
+  Teacher
+  Parent
+  Student
+  Admin
+
+  @@schema("auth")
+}
+
+enum AttendanceStatus {
+  Present
+  Absent
+  Late
+
+  @@schema("public")
+}
+
+enum DayOfWeek {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+
+  @@schema("public")
+}
+
+enum EventType {
+  Holiday
+  ParentTeacherConference
+  Assembly
+  FieldTrip
+  ExamPeriod
+  Other
+
+  @@schema("public")
+}
+
+enum TargetAudience {
+  AllParents
+  AllTeachers
+  Classroom
+  Grade
 
   @@schema("public")
 }
