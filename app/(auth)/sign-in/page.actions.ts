@@ -49,7 +49,7 @@ export const getUsersWithOrganizationsAction = async (): Promise<ActionResponse<
 
     const users = await db.user.findMany({
       include: {
-        member: {
+        members: {
           include: {
             organization: true,
           },
@@ -59,7 +59,7 @@ export const getUsersWithOrganizationsAction = async (): Promise<ActionResponse<
 
     const usersWithOrgs = users.map(user => ({
       ...user,
-      organizationName: user.member?.[0]?.organization?.name,
+      organizationName: user.members?.[0]?.organization?.name,
     }));
 
     return getActionResponse({ data: usersWithOrgs });
