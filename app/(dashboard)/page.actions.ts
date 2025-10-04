@@ -3,7 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { Quiz } from "@prisma/client";
+import { quiz } from "@prisma/client";
 import { headers } from "next/headers";
 import { DashboardMetrics, QuizWithDetails, ResponseWithUser, ResponseWithDetails } from "./page.types";
 
@@ -113,7 +113,7 @@ export const getDashboardMetricsAction = async (
         },
       }),
 
-      // Quiz responses completed today
+      // quiz responses completed today
       db.response.count({
         where: {
           quiz: {
@@ -262,8 +262,8 @@ export const getQuizzesAction = async (
 };
 
 export const createQuizAction = async (
-  data: Pick<Quiz, "title" | "description" | "organizationId">
-): Promise<ActionResponse<Quiz>> => {
+  data: Pick<quiz, "title" | "description" | "organizationId">
+): Promise<ActionResponse<quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -275,12 +275,15 @@ export const createQuizAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const { nanoid } = await import("nanoid");
     const quiz = await db.quiz.create({
       data: {
+        id: nanoid(),
         title: data.title,
         description: data.description,
         organizationId: data.organizationId,
         createdBy: session.user.id,
+        updatedAt: new Date(),
       },
     });
 
@@ -292,8 +295,8 @@ export const createQuizAction = async (
 
 export const updateQuizAction = async (
   id: string,
-  data: Partial<Pick<Quiz, "title" | "description">>
-): Promise<ActionResponse<Quiz>> => {
+  data: Partial<Pick<quiz, "title" | "description">>
+): Promise<ActionResponse<quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -321,7 +324,7 @@ export const updateQuizAction = async (
 
 export const deleteQuizAction = async (
   id: string
-): Promise<ActionResponse<Quiz>> => {
+): Promise<ActionResponse<quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -420,7 +423,7 @@ export const getQuizResponsesAction = async (
     });
 
     if (!quiz) {
-      return getActionResponse({ error: "Quiz not found" });
+      return getActionResponse({ error: "quiz not found" });
     }
 
     // If organizationIds are provided, verify the quiz belongs to one of them
@@ -606,7 +609,7 @@ export const getUserResponseAction = async (
     });
 
     if (!quiz) {
-      return getActionResponse({ error: "Quiz not found" });
+      return getActionResponse({ error: "quiz not found" });
     }
 
     const userMembership = await db.member.findFirst({

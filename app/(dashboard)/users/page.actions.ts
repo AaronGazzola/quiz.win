@@ -96,6 +96,11 @@ export const getUsersAction = async (
             metadata: true,
             createdAt: true,
             updatedAt: true,
+            phone: true,
+            address: true,
+            capacity: true,
+            location: true,
+            principalName: true,
           },
         },
       },
@@ -162,6 +167,9 @@ export const getUsersAction = async (
       } else {
         userMap.set(userId, {
           ...member.user,
+          phone: null,
+          emergencyContact: null,
+          userType: null,
           members: [member],
           _count: { members: 1 },
         });
