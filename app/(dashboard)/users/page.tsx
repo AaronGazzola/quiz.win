@@ -2,10 +2,9 @@
 
 import { useGetUser, useAdminAccess } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronUp, ChevronDown, Ban, CheckCircle, XCircle } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Ban } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/shadcn.utils";
 import { useGetUsers, useViewportResize, useBulkToggleUserBan } from "./page.hooks";
 import { useUserTableStore, useBulkOperationStore, useViewportPagination, useUserRoleManagementDialogStore, useConfirmationDialogStore } from "./page.stores";
@@ -76,8 +75,8 @@ export default function UsersPage() {
     return (
       <div className="flex flex-col h-full items-center justify-center p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-foreground mb-2">Access Denied</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-2">Access Denied</h1>
+          <p className="text-gray-500 dark:text-gray-400">
             You need admin permissions to access user management.
           </p>
         </div>
@@ -141,7 +140,7 @@ export default function UsersPage() {
         if (selectedOrganizationIds.includes(member.organizationId)) {
           sharedOrganizations.push({
             organizationId: member.organizationId,
-            organizationName: member.campus.name,
+            organizationName: member.organization.name,
             currentRole: member.role,
             newRole: member.role
           });
@@ -152,42 +151,23 @@ export default function UsersPage() {
     openRoleManagementDialog(userData, sharedOrganizations);
   };
 
-  const getOrganizationsDisplay = (userMembers: { campus: { name: string } }[]) => {
-    if (userMembers.length === 0) return "No campuses";
-    if (userMembers.length === 1) return userMembers[0].campus.name;
-    return `${userMembers[0].campus.name} (+${userMembers.length - 1} more)`;
-  };
-
-  const getProfileStatus = (userData: UserWithDetails) => {
-    if (userData.userType === "Teacher" && userData.teacherProfile) {
-      return { complete: true, type: "Teacher" };
-    }
-    if (userData.userType === "Student" && userData.studentProfile) {
-      return { complete: true, type: "Student" };
-    }
-    if (userData.userType === "Parent" && userData.parentProfile) {
-      return { complete: true, type: "Parent" };
-    }
-    if (userData.userType === "Admin") {
-      return { complete: true, type: "Admin" };
-    }
-    if (userData.userType) {
-      return { complete: false, type: userData.userType };
-    }
-    return { complete: null, type: null };
+  const getOrganizationsDisplay = (userMembers: { organization: { name: string } }[]) => {
+    if (userMembers.length === 0) return "No organizations";
+    if (userMembers.length === 1) return userMembers[0].organization.name;
+    return `${userMembers[0].organization.name} (+${userMembers.length - 1} more)`;
   };
 
   return (
     <div ref={containerRef} className="flex flex-col h-full p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-foreground">User Management</h1>
-          <p className="text-sm text-muted-foreground dark:text-gray-50 mt-1">Manage users and their access</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">User Management</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-50 mt-1">Manage users and their access</p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search users..."
@@ -261,14 +241,6 @@ export default function UsersPage() {
 
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  User Type
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Profile Status
-                </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Organizations
                 </th>
 
@@ -292,15 +264,13 @@ export default function UsersPage() {
                     <td className="px-6 py-4"><div className="w-4 h-4 bg-muted rounded" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-48" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-32" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-24" /></td>
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
                     {search ? `No users found matching "${search}"` : "No users found"}
                   </td>
                 </tr>
@@ -328,36 +298,6 @@ export default function UsersPage() {
                       {userData.email}
                     </td>
 
-                    <td className="px-6 py-4">
-                      {userData.userType ? (
-                        <Badge variant="secondary">{userData.userType}</Badge>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">—</span>
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      {(() => {
-                        const status = getProfileStatus(userData);
-                        if (status.complete === null) {
-                          return <span className="text-sm text-muted-foreground">—</span>;
-                        }
-                        if (status.complete) {
-                          return (
-                            <div className="flex items-center gap-1 text-green-600">
-                              <CheckCircle className="w-4 h-4" />
-                              <span className="text-sm">Complete</span>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div className="flex items-center gap-1 text-orange-600">
-                            <XCircle className="w-4 h-4" />
-                            <span className="text-sm">Incomplete</span>
-                          </div>
-                        );
-                      })()}
-                    </td>
 
                     <td className="px-6 py-4 text-sm text-muted-foreground">
                       {getOrganizationsDisplay(userData.members)}
@@ -377,7 +317,7 @@ export default function UsersPage() {
 
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-gray-500">
             Showing {page * itemsPerPage + 1} to {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems} results
           </div>
 
@@ -385,7 +325,7 @@ export default function UsersPage() {
             <button
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
-              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -400,7 +340,7 @@ export default function UsersPage() {
                     "px-3 py-1 text-sm border rounded-md",
                     pageNum === page
                       ? "bg-blue-600 text-white border-blue-600"
-                      : "border-input hover:bg-accent transition-colors"
+                      : "border-gray-300 hover:bg-gray-50"
                   )}
                 >
                   {pageNum + 1}
@@ -411,7 +351,7 @@ export default function UsersPage() {
             <button
               onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

@@ -17,6 +17,7 @@ import {
   ChevronUp,
   Edit,
   Search,
+  Settings,
   Trash2,
   TrendingUp,
   Users,
@@ -55,8 +56,8 @@ export function DashboardPageContent() {
     () =>
       userWithMembers?.members?.map((member) => ({
         id: member.organizationId,
-        name: member.campus.name,
-        slug: member.campus.slug || "",
+        name: member.organization.name,
+        slug: member.organization.slug || "",
         role: member.role,
       })) || [],
     [userWithMembers?.members]
@@ -273,7 +274,7 @@ export function DashboardPageContent() {
   return (
     <div
       ref={containerRef}
-      className="max-w-7xl mx-auto space-y-6"
+      className="max-w-7xl mx-auto space-y-8"
     >
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div className="space-y-1">
@@ -296,7 +297,7 @@ export function DashboardPageContent() {
               <BookOpen className="h-6 w-6 text-primary" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Total Assessments</p>
+              <p className="text-sm text-muted-foreground">Total Quizzes</p>
               <div className="text-2xl font-bold relative">
                 <div
                   className={cn(
@@ -304,7 +305,7 @@ export function DashboardPageContent() {
                     metricsFetching && metrics ? "opacity-50" : "opacity-100"
                   )}
                 >
-                  {metrics?.totalAssessments ?? 0}
+                  {metrics?.totalQuizzes ?? 0}
                 </div>
                 {metricsLoading && (
                   <Skeleton className="absolute inset-0 h-8 w-12" />
@@ -352,7 +353,7 @@ export function DashboardPageContent() {
                   <Users className="h-6 w-6 text-purple-600" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Total Students</p>
+                  <p className="text-sm text-muted-foreground">Team Members</p>
                   <div className="text-2xl font-bold relative">
                     <div
                       className={cn(
@@ -362,7 +363,7 @@ export function DashboardPageContent() {
                           : "opacity-100"
                       )}
                     >
-                      {metrics?.totalStudents ?? 0}
+                      {metrics?.teamMembers ?? 0}
                     </div>
                     {metricsLoading && (
                       <Skeleton className="absolute inset-0 h-8 w-12" />
@@ -378,11 +379,11 @@ export function DashboardPageContent() {
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
               <div className="flex items-center space-x-4">
                 <div className="p-2 bg-orange-500/10 rounded-lg">
-                  <Users className="h-6 w-6 text-orange-600" />
+                  <Settings className="h-6 w-6 text-orange-600" />
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    Total Teachers
+                    Active Invites
                   </p>
                   <div className="text-2xl font-bold relative">
                     <div
@@ -393,7 +394,7 @@ export function DashboardPageContent() {
                           : "opacity-100"
                       )}
                     >
-                      {metrics?.totalTeachers ?? 0}
+                      {metrics?.activeInvites ?? 0}
                     </div>
                     {metricsLoading && (
                       <Skeleton className="absolute inset-0 h-8 w-12" />
@@ -413,19 +414,19 @@ export function DashboardPageContent() {
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-medium text-foreground">Assessments</h2>
+              <h2 className="text-lg font-medium text-foreground">Quizzes</h2>
               <p className="text-sm text-muted-foreground">
-                Select an assessment to view its responses
+                Select a quiz to view its responses
               </p>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search assessments..."
+                placeholder="Search quizzes..."
                 value={immediateSearch}
                 onChange={(e) => setImmediateSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                className="pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
           </div>
@@ -521,8 +522,8 @@ export function DashboardPageContent() {
                     className="px-6 py-12 text-center text-muted-foreground"
                   >
                     {search
-                      ? `No assessments found matching "${search}"`
-                      : "No assessments created yet"}
+                      ? `No quizzes found matching "${search}"`
+                      : "No quizzes created yet"}
                   </td>
                 </tr>
               ) : (
@@ -581,20 +582,20 @@ export function DashboardPageContent() {
                       <div className="flex justify-end items-center space-x-3">
                         <button
                           onClick={() => router.push(`/take-quiz/${quiz.id}`)}
-                          className="px-4 py-2 text-sm border border-primary/30 text-primary bg-transparent rounded-md hover:bg-primary/10 transition-colors flex items-center gap-2"
+                          className="px-4 py-2 text-sm border border-primary/30 text-primary bg-transparent rounded-md hover:bg-primary/5 transition-colors flex items-center gap-2"
                         >
-                          Take Assessment →
+                          Take Quiz →
                         </button>
                         <div className="flex space-x-2">
                           <button
                             onClick={() => openEdit(quiz)}
-                            className="text-primary hover:text-primary/80 transition-colors"
+                            className="text-indigo-600 hover:text-indigo-900"
                             title="Edit Quiz"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            className="text-destructive hover:text-destructive/80 transition-colors"
+                            className="text-red-600 hover:text-red-900"
                             title="Delete Quiz"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -623,13 +624,13 @@ export function DashboardPageContent() {
                 </p>
               </div>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder="Search responses..."
                   value={responsesSearch}
                   onChange={(e) => setResponsesSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                  className="pl-10 pr-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
             </div>
@@ -763,8 +764,8 @@ export function DashboardPageContent() {
           </div>
 
           {responsesTotalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between px-4 pb-4">
-              <div className="text-sm text-muted-foreground">
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-gray-500">
                 Showing {responsesPage * responsesItemsPerPage + 1} to{" "}
                 {Math.min(
                   (responsesPage + 1) * responsesItemsPerPage,
@@ -779,7 +780,7 @@ export function DashboardPageContent() {
                     setResponsesPage(Math.max(0, responsesPage - 1))
                   }
                   disabled={responsesPage === 0}
-                  className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -797,10 +798,10 @@ export function DashboardPageContent() {
                         key={pageNum}
                         onClick={() => setResponsesPage(pageNum)}
                         className={cn(
-                          "px-3 py-1 text-sm border rounded-md transition-colors",
+                          "px-3 py-1 text-sm border rounded-md",
                           pageNum === responsesPage
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-input hover:bg-accent"
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "border-gray-300 hover:bg-gray-50"
                         )}
                       >
                         {pageNum + 1}
@@ -816,7 +817,7 @@ export function DashboardPageContent() {
                     )
                   }
                   disabled={responsesPage >= responsesTotalPages - 1}
-                  className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -927,7 +928,7 @@ export function DashboardPageContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
-                    {responseDetail.assessment.questions.map((question, index) => {
+                    {responseDetail.quiz.questions.map((question, index) => {
                       const userAnswers = Array.isArray(responseDetail.answers)
                         ? responseDetail.answers as Array<{
                             questionId: string;
@@ -967,21 +968,21 @@ export function DashboardPageContent() {
                                 key={optionIndex}
                                 className={cn(
                                   "px-6 py-4 text-sm",
-                                  isUserAnswer && isCorrectAnswer && "bg-green-500/10 dark:bg-green-500/20",
-                                  isUserAnswer && !isCorrectAnswer && "bg-destructive/10 dark:bg-destructive/20"
+                                  isUserAnswer && isCorrectAnswer && "bg-green-100",
+                                  isUserAnswer && !isCorrectAnswer && "bg-red-100"
                                 )}
                               >
                                 <div className="flex flex-col items-center space-y-1">
                                   {isCorrectAnswer && !isUserAnswer && (
-                                    <Badge variant="outline" className="text-foreground">
+                                    <Badge className="border border-gray-400 text-gray-700 bg-transparent hover:bg-gray-50">
                                       Solution
                                     </Badge>
                                   )}
                                   {isUserAnswer && (
                                     isCorrectAnswer ? (
-                                      <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
+                                      <Check className="w-6 h-6 text-green-600" />
                                     ) : (
-                                      <X className="w-6 h-6 text-destructive" />
+                                      <X className="w-6 h-6 text-red-600" />
                                     )
                                   )}
                                 </div>
@@ -1080,7 +1081,7 @@ export function DashboardPageContent() {
                     </tr>
                   </thead>
                   <tbody className="bg-card divide-y divide-border">
-                    {userResponse.assessment.questions.map((question, index) => {
+                    {userResponse.quiz.questions.map((question, index) => {
                       const userAnswers = Array.isArray(userResponse.answers)
                         ? userResponse.answers as Array<{
                             questionId: string;
@@ -1120,21 +1121,21 @@ export function DashboardPageContent() {
                                 key={optionIndex}
                                 className={cn(
                                   "px-6 py-4 text-sm",
-                                  isUserAnswer && isCorrectAnswer && "bg-green-500/10 dark:bg-green-500/20",
-                                  isUserAnswer && !isCorrectAnswer && "bg-destructive/10 dark:bg-destructive/20"
+                                  isUserAnswer && isCorrectAnswer && "bg-green-100",
+                                  isUserAnswer && !isCorrectAnswer && "bg-red-100"
                                 )}
                               >
                                 <div className="flex flex-col items-center space-y-1">
                                   {isCorrectAnswer && !isUserAnswer && (
-                                    <Badge variant="outline" className="text-foreground">
+                                    <Badge className="border border-gray-400 text-gray-700 bg-transparent hover:bg-gray-50">
                                       Solution
                                     </Badge>
                                   )}
                                   {isUserAnswer && (
                                     isCorrectAnswer ? (
-                                      <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
+                                      <Check className="w-6 h-6 text-green-600" />
                                     ) : (
-                                      <X className="w-6 h-6 text-destructive" />
+                                      <X className="w-6 h-6 text-red-600" />
                                     )
                                   )}
                                 </div>
@@ -1164,17 +1165,17 @@ export function DashboardPageContent() {
 
       {!selectedQuizId && totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-gray-500">
             Showing {page * itemsPerPage + 1} to{" "}
             {Math.min((page + 1) * itemsPerPage, totalItems)} of {totalItems}{" "}
-            assessments
+            quizzes
           </div>
 
           <div className="flex space-x-2">
             <button
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
-              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -1187,10 +1188,10 @@ export function DashboardPageContent() {
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
                   className={cn(
-                    "px-3 py-1 text-sm border rounded-md transition-colors",
+                    "px-3 py-1 text-sm border rounded-md",
                     pageNum === page
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-input hover:bg-accent"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "border-gray-300 hover:bg-gray-50"
                   )}
                 >
                   {pageNum + 1}
@@ -1201,7 +1202,7 @@ export function DashboardPageContent() {
             <button
               onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border border-input rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>

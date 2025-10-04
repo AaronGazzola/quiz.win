@@ -1,6 +1,6 @@
-import { Assessment, Question, Response } from "@prisma/client";
+import { Quiz, Question, Response } from "@prisma/client";
 
-export interface QuizForTaking extends Assessment {
+export interface QuizForTaking extends Quiz {
   questions: Question[];
 }
 
@@ -30,5 +30,5 @@ export interface SubmitResponseData {
 }
 
 export interface ResponseWithDetails extends Response {
-  assessment?: Assessment;
+  quiz?: Quiz;
 }

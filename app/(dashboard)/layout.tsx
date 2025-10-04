@@ -12,7 +12,6 @@ import { useAppStore } from "@/app/layout.stores";
 import { ExtendedUser } from "@/app/layout.types";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { signOut } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -56,107 +55,28 @@ export default function DashboardLayout({
               href="/"
               className="flex items-center text-xl font-bold text-foreground hover:text-foreground/80 transition-colors"
             >
-              Abraham Lincoln Academy
+              LMS Dashboard
             </Link>
             <nav className="hidden md:flex space-x-6">
-              <Link
-                href="/"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/classrooms"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Classrooms
-              </Link>
-              <Link
-                href="/students"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Students
-              </Link>
-              <Link
-                href="/teachers"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Teachers
-              </Link>
-              <Link
-                href="/parents"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Parents
-              </Link>
-              <Link
-                href="/assessments"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Assessments
-              </Link>
-              <Link
-                href="/attendance"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Attendance
-              </Link>
-              <Link
-                href="/grades"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Grades
-              </Link>
-              <Link
-                href="/messages"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Messages
-              </Link>
-              <Link
-                href="/announcements"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Announcements
-              </Link>
-              <Link
-                href="/calendar"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Calendar
-              </Link>
-              <Link
-                href="/cafeteria"
-                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Cafeteria
-              </Link>
               {hasAdminAccess && (
-                <>
-                  <Link
-                    href="/campus"
-                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Campus
-                  </Link>
-                  <Link
-                    href="/users"
-                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Users
-                  </Link>
-                  <Link
-                    href="/invite"
-                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Invitations
-                  </Link>
-                </>
+                <Link
+                  href="/invite"
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Invite Users
+                </Link>
+              )}
+              {hasAdminAccess && (
+                <Link
+                  href="/users"
+                  className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  User Management
+                </Link>
               )}
             </nav>
           </div>
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
+          <div className="flex items-center space-x-4">
             <OrganizationSelector />
             <UserAvatarMenu
               user={user as ExtendedUser | null}
@@ -166,7 +86,7 @@ export default function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="container mx-auto py-8 px-4 md:px-6">{children}</main>
+      <main className="container mx-auto py-6">{children}</main>
     </div>
   );
 }

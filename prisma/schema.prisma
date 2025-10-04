@@ -9,41 +9,26 @@ datasource db {
   schemas  = ["auth", "public"]
 }
 
-enum UserType {
-  Teacher
-  Parent
-  Student
-  Admin
-
-  @@schema("auth")
-}
-
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  name             String?
-  role             String    @default("user")
-  userType         UserType?
-  phone            String?
-  emergencyContact Json?
-  banned           Boolean   @default(false)
-  banReason        String?
-  banExpires       DateTime?
-  emailVerified    Boolean?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          String    @default("user")
+  banned        Boolean   @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  emailVerified Boolean?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  sessions        Session[]
-  accounts        Account[]
-  magicLinks      MagicLink[]
-  members         Member[]
-  responses       Response[]
-  invitations     Invitation[]
-  teacherProfile  Teacher?
-  studentProfile  Student?
-  parentProfile   Parent?
+  sessions   Session[]
+  accounts   Account[]
+  magicLinks MagicLink[]
+  members    Member[]
+  responses  Response[]
 
-  image String?
+  image       String?
+  invitations Invitation[]
 
   @@schema("auth")
   @@map("user")
@@ -116,26 +101,18 @@ model MagicLink {
   @@schema("auth")
 }
 
-model Campus {
-  id            String   @id @default(cuid())
-  name          String
-  slug          String   @unique
-  logo          String?
-  metadata      Json?
-  address       String?
-  phone         String?
-  principalName String?
-  capacity      Int?
-  location      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   members     Member[]
   invitations Invitation[]
-  assessments Assessment[]
-  teachers    Teacher[]
-  students    Student[]
-  classrooms  Classroom[]
+  quizzes     Quiz[]
 
   @@schema("auth")
   @@map("organization")
@@ -149,8 +126,8 @@ model Member {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campus Campus @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([userId, organizationId])
   @@schema("auth")
@@ -169,8 +146,8 @@ model Invitation {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  campus  Campus @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  inviter User   @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter      User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
 
   @@unique([email, organizationId])
   @@schema("auth")
@@ -187,26 +164,21 @@ model Profile {
   @@schema("public")
 }
 
-model Assessment {
+model Quiz {
   id             String   @id @default(cuid())
   title          String
   description    String?
   organizationId String
   createdBy      String
-  subject        String?
-  gradeLevel     String?
-  classroomId    String?
-  assignedTo     String[]
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  campus    Campus     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  questions Question[]
-  responses Response[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  questions    Question[]
+  responses    Response[]
 
   @@schema("public")
-  @@map("quiz")
 }
 
 model Question {
@@ -219,7 +191,7 @@ model Question {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  assessment Assessment @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
   @@schema("public")
 }
@@ -232,261 +204,8 @@ model Response {
   score       Float?
   completedAt DateTime @default(now())
 
-  assessment Assessment @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@schema("public")
-}
-
-model Password {
-  id        String   @id @default(cuid())
-  hash      String
-  length    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@schema("auth")
-  @@map("password")
-}
-
-model Teacher {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  certifications String[]
-  subjects       String[]
-  employeeId     String?  @unique
-  cvUrl          String?
-  campusId       String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campus     Campus      @relation(fields: [campusId], references: [id], onDelete: Cascade)
-  classrooms Classroom[]
-
-  @@schema("public")
-}
-
-model Student {
-  id                String                @id @default(cuid())
-  userId            String                @unique
-  grade             String
-  enrollmentDate    DateTime              @default(now())
-  campusId          String
-  authorizedPickups Json?
-  medicalInfo       Json?
-  photoUrl          String?
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-
-  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campus     Campus                @relation(fields: [campusId], references: [id], onDelete: Cascade)
-  parents    StudentParent[]
-  classrooms ClassroomEnrollment[]
-
-  @@schema("public")
-}
-
-model Parent {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  primaryContact Boolean  @default(false)
-  relationship   String
-  occupation     String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  students StudentParent[]
-
-  @@schema("public")
-}
-
-model StudentParent {
-  id        String   @id @default(cuid())
-  studentId String
-  parentId  String
-  createdAt DateTime @default(now())
-
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  parent  Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, parentId])
-  @@schema("public")
-}
-
-model Classroom {
-  id         String   @id @default(cuid())
-  name       String
-  grade      String
-  subject    String
-  campusId   String
-  teacherId  String
-  capacity   Int?
-  room       String?
-  schedule   Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  campus    Campus               @relation(fields: [campusId], references: [id], onDelete: Cascade)
-  teacher   Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  students  ClassroomEnrollment[]
-
-  @@schema("public")
-}
-
-model ClassroomEnrollment {
-  id          String   @id @default(cuid())
-  classroomId String
-  studentId   String
-  enrolledAt  DateTime @default(now())
-
-  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
-  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([classroomId, studentId])
-  @@schema("public")
-}
-
-enum TargetAudience {
-  AllParents
-  AllTeachers
-  Classroom
-  Grade
-
-  @@schema("public")
-}
-
-model Message {
-  id             String   @id @default(cuid())
-  senderId       String
-  recipientId    String
-  subject        String
-  content        String
-  conversationId String
-  isRead         Boolean  @default(false)
-  campusId       String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@schema("public")
-}
-
-model Announcement {
-  id             String          @id @default(cuid())
-  title          String
-  content        String
-  authorId       String
-  campusId       String
-  targetAudience TargetAudience
-  classroomId    String?
-  grade          String?
-  isPinned       Boolean         @default(false)
-  publishedAt    DateTime        @default(now())
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  @@schema("public")
-}
-
-enum AttendanceStatus {
-  Present
-  Absent
-  Late
-
-  @@schema("public")
-}
-
-model AttendanceSession {
-  id          String   @id @default(cuid())
-  classroomId String
-  date        DateTime
-  campusId    String
-  markedById  String
-  createdAt   DateTime @default(now())
-
-  records AttendanceRecord[]
-
-  @@schema("public")
-}
-
-model AttendanceRecord {
-  id        String           @id @default(cuid())
-  sessionId String
-  studentId String
-  status    AttendanceStatus
-  notes     String?
-  createdAt DateTime         @default(now())
-
-  session AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  @@unique([sessionId, studentId])
-  @@schema("public")
-}
-
-model Grade {
-  id            String   @id @default(cuid())
-  studentId     String
-  classroomId   String
-  subject       String
-  grade         String
-  gradingPeriod String
-  teacherId     String
-  comments      String?
-  campusId      String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@schema("public")
-}
-
-enum EventType {
-  Holiday
-  ParentTeacherConference
-  Assembly
-  FieldTrip
-  ExamPeriod
-  Other
-
-  @@schema("public")
-}
-
-model CalendarEvent {
-  id            String    @id @default(cuid())
-  title         String
-  description   String?
-  eventType     EventType
-  startDate     DateTime
-  endDate       DateTime?
-  campusId      String
-  isSchoolClosed Boolean   @default(false)
-  createdById   String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@schema("public")
-}
-
-enum DayOfWeek {
-  Monday
-  Tuesday
-  Wednesday
-  Thursday
-  Friday
-
-  @@schema("public")
-}
-
-model CafeteriaMenu {
-  id            String    @id @default(cuid())
-  weekStartDate DateTime
-  dayOfWeek     DayOfWeek
-  menuItems     Json
-  specialNotes  String?
-  campusId      String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@unique([campusId, weekStartDate, dayOfWeek])
   @@schema("public")
 }

@@ -1,5 +1,4 @@
 import { auth } from "./auth";
-import { getAuthenticatedClient } from "./auth.utils";
 import { headers } from "next/headers";
 
 interface OrganizationWithRole {
@@ -218,113 +217,6 @@ export const canViewUsers = async (
     return await isOrgAdmin(userId, organizationId);
   } catch (error) {
     console.error("Error checking user view permission:", error);
-    return false;
-  }
-};
-
-export const isSchoolAdmin = async (userId: string, campusId: string): Promise<boolean> => {
-  return await isOrgAdmin(userId, campusId);
-};
-
-export const canManageTeachers = async (userId: string, campusId: string): Promise<boolean> => {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (session?.user?.role === "super-admin") {
-      return true;
-    }
-
-    return await isOrgAdmin(userId, campusId);
-  } catch (error) {
-    console.error("Error checking teacher management permission:", error);
-    return false;
-  }
-};
-
-export const canManageStudents = async (userId: string, campusId: string): Promise<boolean> => {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (session?.user?.role === "super-admin") {
-      return true;
-    }
-
-    return await isOrgAdmin(userId, campusId);
-  } catch (error) {
-    console.error("Error checking student management permission:", error);
-    return false;
-  }
-};
-
-export const canViewStudentDetails = async (userId: string, studentId: string, campusId: string): Promise<boolean> => {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (session?.user?.role === "super-admin") {
-      return true;
-    }
-
-    if (await isOrgAdmin(userId, campusId)) {
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error("Error checking student view permission:", error);
-    return false;
-  }
-};
-
-export const isTeacherInCampus = async (userId: string, campusId: string): Promise<boolean> => {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (session?.user?.role === "super-admin") {
-      return true;
-    }
-
-    const userOrgs = await getUserOrganizations(userId);
-    return userOrgs.some(org => org.id === campusId);
-  } catch (error) {
-    console.error("Error checking teacher campus assignment:", error);
-    return false;
-  }
-};
-
-export const isParentOfStudent = async (userId: string, studentId: string): Promise<boolean> => {
-  try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (session?.user?.role === "super-admin") {
-      return true;
-    }
-
-    const { db } = await getAuthenticatedClient();
-
-    const parentProfile = await db.parent.findUnique({
-      where: { userId },
-      include: {
-        students: {
-          where: {
-            studentId,
-          },
-        },
-      },
-    });
-
-    return parentProfile ? parentProfile.students.length > 0 : false;
-  } catch (error) {
-    console.error("Error checking parent-student relationship:", error);
     return false;
   }
 };

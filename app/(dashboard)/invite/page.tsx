@@ -29,7 +29,7 @@ export default function InvitePage() {
   const allOrganizations =
     userWithMembers?.members?.map((member) => ({
       id: member.organizationId,
-      name: member.campus.name,
+      name: member.organization.name,
       role: member.role,
     })) || [];
 

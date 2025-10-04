@@ -33,7 +33,7 @@ export const getQuizResultAction = async (
         userId: userIdToQuery,
       },
       include: {
-        assessment: {
+        quiz: {
           include: {
             questions: {
               orderBy: { order: "asc" },
@@ -50,7 +50,7 @@ export const getQuizResultAction = async (
 
     if (isViewingOtherUser) {
       const isSuperAdminUser = await isSuperAdmin();
-      const canManageResponsesForOrg = await canManageResponses(currentUserId, response.assessment.organizationId);
+      const canManageResponsesForOrg = await canManageResponses(currentUserId, response.quiz.organizationId);
 
 
       if (!isSuperAdminUser && !canManageResponsesForOrg) {
@@ -63,7 +63,7 @@ export const getQuizResultAction = async (
     if (!isSuperAdminUser) {
       const userOrganizations = await getUserOrganizations(currentUserId);
       const hasAccess = userOrganizations.some(
-        (org) => org.id === response.assessment.organizationId
+        (org) => org.id === response.quiz.organizationId
       );
 
       if (!hasAccess) {

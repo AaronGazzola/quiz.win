@@ -3,7 +3,7 @@
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
-import { Assessment } from "@prisma/client";
+import { Quiz } from "@prisma/client";
 import { headers } from "next/headers";
 import { DashboardMetrics, QuizWithDetails, ResponseWithUser, ResponseWithDetails } from "./page.types";
 
@@ -78,10 +78,10 @@ export const getDashboardMetricsAction = async (
     if (!isSuperAdmin && userOrgIds.length === 0) {
       return getActionResponse({
         data: {
-          totalAssessments: 0,
+          totalQuizzes: 0,
           completedToday: 0,
-          totalStudents: 0,
-          totalTeachers: 0,
+          teamMembers: 0,
+          activeInvites: 0,
         }
       });
     }
@@ -105,16 +105,18 @@ export const getDashboardMetricsAction = async (
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [totalAssessments, completedToday, totalStudents, totalTeachers] = await Promise.all([
-      db.assessment.count({
+    const [totalQuizzes, completedToday, teamMembers, activeInvites] = await Promise.all([
+      // Total quizzes in selected organizations
+      db.quiz.count({
         where: {
           organizationId: { in: targetOrgIds },
         },
       }),
 
+      // Quiz responses completed today
       db.response.count({
         where: {
-          assessment: {
+          quiz: {
             organizationId: { in: targetOrgIds },
           },
           completedAt: {
@@ -124,18 +126,21 @@ export const getDashboardMetricsAction = async (
         },
       }),
 
+      // Team members (only for admin users)
       hasAdminAccess
-        ? db.student.count({
+        ? db.member.count({
             where: {
-              campusId: { in: targetOrgIds },
+              organizationId: { in: targetOrgIds },
             },
           })
         : 0,
 
+      // Active invites (only for admin users)
       hasAdminAccess
-        ? db.teacher.count({
+        ? db.invitation.count({
             where: {
-              campusId: { in: targetOrgIds },
+              organizationId: { in: targetOrgIds },
+              status: "pending",
             },
           })
         : 0,
@@ -143,10 +148,10 @@ export const getDashboardMetricsAction = async (
 
     return getActionResponse({
       data: {
-        totalAssessments,
+        totalQuizzes,
         completedToday,
-        totalStudents,
-        totalTeachers,
+        teamMembers,
+        activeInvites,
       }
     });
   } catch (error) {
@@ -217,7 +222,7 @@ export const getQuizzesAction = async (
       : { createdAt: "desc" as const };
 
     const [quizzes, totalCount] = await Promise.all([
-      db.assessment.findMany({
+      db.quiz.findMany({
         where,
         orderBy,
         skip: page * itemsPerPage,
@@ -225,7 +230,7 @@ export const getQuizzesAction = async (
         include: {
           questions: true,
           responses: true,
-          campus: {
+          organization: {
             select: {
               id: true,
               name: true,
@@ -239,7 +244,7 @@ export const getQuizzesAction = async (
           },
         },
       }),
-      db.assessment.count({ where }),
+      db.quiz.count({ where }),
     ]);
 
     const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -257,8 +262,8 @@ export const getQuizzesAction = async (
 };
 
 export const createQuizAction = async (
-  data: Pick<Assessment, "title" | "description" | "organizationId">
-): Promise<ActionResponse<Assessment>> => {
+  data: Pick<Quiz, "title" | "description" | "organizationId">
+): Promise<ActionResponse<Quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -270,7 +275,7 @@ export const createQuizAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.assessment.create({
+    const quiz = await db.quiz.create({
       data: {
         title: data.title,
         description: data.description,
@@ -287,8 +292,8 @@ export const createQuizAction = async (
 
 export const updateQuizAction = async (
   id: string,
-  data: Partial<Pick<Assessment, "title" | "description">>
-): Promise<ActionResponse<Assessment>> => {
+  data: Partial<Pick<Quiz, "title" | "description">>
+): Promise<ActionResponse<Quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -300,7 +305,7 @@ export const updateQuizAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.assessment.update({
+    const quiz = await db.quiz.update({
       where: { id },
       data: {
         ...(data.title && { title: data.title }),
@@ -316,7 +321,7 @@ export const updateQuizAction = async (
 
 export const deleteQuizAction = async (
   id: string
-): Promise<ActionResponse<Assessment>> => {
+): Promise<ActionResponse<Quiz>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -336,7 +341,7 @@ export const deleteQuizAction = async (
       where: { quizId: id },
     });
 
-    const quiz = await db.assessment.delete({
+    const quiz = await db.quiz.delete({
       where: { id },
     });
 
@@ -368,7 +373,7 @@ export const bulkDeleteQuizzesAction = async (
       where: { quizId: { in: ids } },
     });
 
-    const result = await db.assessment.deleteMany({
+    const result = await db.quiz.deleteMany({
       where: { id: { in: ids } },
     });
 
@@ -409,13 +414,13 @@ export const getQuizResponsesAction = async (
     } = params;
 
     // First, verify the quiz exists and get its organization
-    const quiz = await db.assessment.findUnique({
+    const quiz = await db.quiz.findUnique({
       where: { id: quizId },
       select: { organizationId: true },
     });
 
     if (!quiz) {
-      return getActionResponse({ error: "Assessment not found" });
+      return getActionResponse({ error: "Quiz not found" });
     }
 
     // If organizationIds are provided, verify the quiz belongs to one of them
@@ -539,7 +544,7 @@ export const getResponseDetailAction = async (
             email: true,
           },
         },
-        assessment: {
+        quiz: {
           select: {
             id: true,
             title: true,
@@ -559,7 +564,7 @@ export const getResponseDetailAction = async (
     const userMembership = await db.member.findFirst({
       where: {
         userId: session.user.id,
-        organizationId: response.assessment.organizationId,
+        organizationId: response.quiz.organizationId,
         role: { in: ["admin", "owner"] },
       },
     });
@@ -595,13 +600,13 @@ export const getUserResponseAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.assessment.findUnique({
+    const quiz = await db.quiz.findUnique({
       where: { id: quizId },
       select: { organizationId: true },
     });
 
     if (!quiz) {
-      return getActionResponse({ error: "Assessment not found" });
+      return getActionResponse({ error: "Quiz not found" });
     }
 
     const userMembership = await db.member.findFirst({
@@ -632,7 +637,7 @@ export const getUserResponseAction = async (
             email: true,
           },
         },
-        assessment: {
+        quiz: {
           select: {
             id: true,
             title: true,

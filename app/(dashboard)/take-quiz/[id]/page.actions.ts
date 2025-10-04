@@ -22,7 +22,7 @@ export const getQuizForTakingAction = async (
 
     const { db } = await getAuthenticatedClient();
 
-    const quiz = await db.assessment.findFirst({
+    const quiz = await db.quiz.findFirst({
       where: {
         id: quizId,
         isActive: true,
@@ -118,7 +118,7 @@ export const getExistingResponseAction = async (
         userId: session.user.id,
       },
       include: {
-        assessment: {
+        quiz: {
           select: {
             id: true,
             title: true,

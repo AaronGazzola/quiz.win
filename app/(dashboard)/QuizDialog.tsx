@@ -139,21 +139,21 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-xl z-50 overflow-hidden">
           <div className="flex flex-col h-full">
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <Dialog.Title className="text-xl font-semibold text-foreground">
+            <div className="flex items-center justify-between p-6 border-b">
+              <Dialog.Title className="text-xl font-semibold">
                 {isEditing ? "Edit Quiz" : "Create New Quiz"}
               </Dialog.Title>
-              <Dialog.Close className="p-1 hover:bg-accent rounded-md transition-colors">
-                <X className="w-5 h-5 text-foreground" />
+              <Dialog.Close className="p-1 hover:bg-gray-100 rounded-md">
+                <X className="w-5 h-5" />
               </Dialog.Close>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <Label.Root htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
+                  <Label.Root htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
                     Quiz Title*
                   </Label.Root>
                   <input
@@ -162,12 +162,12 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter quiz title"
-                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <Label.Root htmlFor="description" className="block text-sm font-medium text-foreground mb-1">
+                  <Label.Root htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
                     Description
                   </Label.Root>
                   <textarea
@@ -176,7 +176,7 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Enter quiz description (optional)"
                     rows={3}
-                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -184,10 +184,10 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
               {!isEditing && (
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-foreground">Questions</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Questions</h3>
                     <button
                       onClick={addQuestion}
-                      className="inline-flex items-center px-3 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm transition-colors"
+                      className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Question
@@ -196,13 +196,13 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
 
                   <div className="space-y-6">
                     {questions.map((question, questionIndex) => (
-                      <div key={questionIndex} className="border border-border rounded-lg p-4 bg-card">
+                      <div key={questionIndex} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-foreground">Question {questionIndex + 1}</h4>
+                          <h4 className="font-medium text-gray-900">Question {questionIndex + 1}</h4>
                           {questions.length > 1 && (
                             <button
                               onClick={() => removeQuestion(questionIndex)}
-                              className="p-1 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                              className="p-1 text-red-500 hover:bg-red-50 rounded-md"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -211,7 +211,7 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
 
                         <div className="space-y-4">
                           <div>
-                            <Label.Root className="block text-sm font-medium text-foreground mb-1">
+                            <Label.Root className="block text-sm font-medium text-gray-700 mb-1">
                               Question Text*
                             </Label.Root>
                             <textarea
@@ -219,19 +219,19 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
                               onChange={(e) => updateQuestion(questionIndex, "question", e.target.value)}
                               placeholder="Enter the question"
                               rows={2}
-                              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                           </div>
 
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <Label.Root className="block text-sm font-medium text-foreground">
+                              <Label.Root className="block text-sm font-medium text-gray-700">
                                 Answer Options*
                               </Label.Root>
                               {question.options.length < 6 && (
                                 <button
                                   onClick={() => addOption(questionIndex)}
-                                  className="text-primary hover:text-primary/80 text-sm transition-colors"
+                                  className="text-blue-600 hover:text-blue-700 text-sm"
                                 >
                                   Add Option
                                 </button>
@@ -246,19 +246,19 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
                                     name={`correct-${questionIndex}`}
                                     checked={question.correctAnswer === option && option !== ""}
                                     onChange={() => updateQuestion(questionIndex, "correctAnswer", option)}
-                                    className="text-primary accent-primary"
+                                    className="text-blue-600"
                                   />
                                   <input
                                     type="text"
                                     value={option}
                                     onChange={(e) => updateQuestionOption(questionIndex, optionIndex, e.target.value)}
                                     placeholder={`Option ${optionIndex + 1}`}
-                                    className="flex-1 px-3 py-2 border border-input bg-background text-foreground rounded-md focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                   />
                                   {question.options.length > 2 && (
                                     <button
                                       onClick={() => removeOption(questionIndex, optionIndex)}
-                                      className="p-1 text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+                                      className="p-1 text-red-500 hover:bg-red-50 rounded-md"
                                     >
                                       <Minus className="w-4 h-4" />
                                     </button>
@@ -268,7 +268,7 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
                             </div>
 
                             {question.correctAnswer && (
-                              <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                              <p className="text-sm text-green-600 mt-2">
                                 Correct answer: {question.correctAnswer}
                               </p>
                             )}
@@ -281,14 +281,14 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
               )}
             </div>
 
-            <div className="flex items-center justify-end space-x-3 p-6 border-t border-border bg-muted/50">
+            <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50">
               <button
                 onClick={() => {
                   onOpenChange(false);
                   resetForm();
                 }}
                 disabled={isLoading}
-                className="px-4 py-2 text-foreground bg-background border border-input rounded-md hover:bg-accent disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -296,8 +296,8 @@ export function QuizDialog({ open, onOpenChange, quiz, organizationId }: QuizDia
                 onClick={handleSave}
                 disabled={isLoading || !title.trim()}
                 className={cn(
-                  "px-4 py-2 text-primary-foreground rounded-md disabled:opacity-50 transition-colors",
-                  isLoading ? "bg-muted" : "bg-primary hover:bg-primary/90"
+                  "px-4 py-2 text-white rounded-md disabled:opacity-50",
+                  isLoading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
                 )}
               >
                 {isLoading ? "Saving..." : isEditing ? "Update Quiz" : "Create Quiz"}

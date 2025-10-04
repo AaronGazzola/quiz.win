@@ -1,16 +1,13 @@
-import { User, Member, Campus, Teacher, Student, Parent } from "@prisma/client";
+import { User, Member, Organization } from "@prisma/client";
 
 export interface UserWithDetails extends User {
   members: (Member & {
-    campus: Campus;
+    organization: Organization;
   })[];
   _count: {
     members: number;
   };
-  campusName?: string;
-  teacherProfile?: Teacher | null;
-  studentProfile?: Student | null;
-  parentProfile?: Parent | null;
+  organizationName?: string;
 }
 
 export interface UsersData {

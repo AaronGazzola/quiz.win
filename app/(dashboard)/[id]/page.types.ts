@@ -1,7 +1,7 @@
-import { Response, Assessment, Question } from "@prisma/client";
+import { Response, Quiz, Question } from "@prisma/client";
 
 export interface QuizResultData extends Response {
-  assessment: Assessment & {
+  quiz: Quiz & {
     questions: Question[];
   };
 }

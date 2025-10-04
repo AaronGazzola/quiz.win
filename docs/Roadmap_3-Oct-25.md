@@ -30,21 +30,15 @@ Roadmap for refactoring the existing quiz-based LMS into a demonstration platfor
 
 ### 📍 NEXT STEPS
 
-1. ✅ Add Password model to schema and update authentication configuration - COMPLETED
-2. ✅ Update environment variables (.env, .env.example) with DEV_PASSWORD - COMPLETED
-3. ✅ Refactor seed script to use DEV_PASSWORD and add education-appropriate data - COMPLETED
-4. ✅ Redesign sign-in page with password-first UX and user selection cards - COMPLETED
-5. ✅ Update schema to reflect school terminology (Campus, Teacher, Student, Parent) - COMPLETED
-6. ✅ Implement basic student and teacher profile extensions - COMPLETED
-7. ✅ Add parent-teacher relationship model - COMPLETED
-8. ✅ Create campus management interface - COMPLETED
-9. ✅ Update dashboard to show school-relevant metrics - COMPLETED
-10. ✅ Create Student Management Page - COMPLETED
-11. ✅ Create Parent Management Page - COMPLETED
-12. ✅ Update User Management Page with userType and profile status - COMPLETED
-13. ✅ Create Classroom Management Page - COMPLETED
-14. ✅ Create Assessment Management Pages (Phase 4.8) - COMPLETED
-15. ✅ Update Navigation and Layout (Phase 5) - COMPLETED
+1. Add Password model to schema and update authentication configuration
+2. Update environment variables (.env, .env.example) with DEV_PASSWORD
+3. Refactor seed script to use DEV_PASSWORD and add education-appropriate data
+4. Redesign sign-in page with password-first UX and user selection cards
+5. Update schema to reflect school terminology (Campus, Teacher, Student, Parent)
+6. Implement basic student and teacher profile extensions
+7. Add parent-teacher relationship model
+8. Create campus management interface
+9. Update dashboard to show school-relevant metrics
 
 ---
 
@@ -59,11 +53,11 @@ Roadmap for refactoring the existing quiz-based LMS into a demonstration platfor
 
 ---
 
-## ✅ Phase 1: Database Schema Refactoring - COMPLETED
+## Phase 1: Database Schema Refactoring
 
 Rename and extend existing models to reflect school management context.
 
-### ✅ 1.1 Update Organization Model to Campus (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.1 Update Organization Model to Campus (`prisma/schema.prisma`)
 
 Transform Organization model to Campus with school-specific fields:
 
@@ -78,7 +72,7 @@ Transform Organization model to Campus with school-specific fields:
 - Maintain existing RLS and isolation patterns
 - Add campus-specific metadata (principal, capacity, contact info)
 
-### ✅ 1.2 Extend User Model for School Roles (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.2 Extend User Model for School Roles (`prisma/schema.prisma`)
 
 Add school-specific profile data to User model:
 
@@ -92,7 +86,7 @@ Add school-specific profile data to User model:
 - User → Parent profile (one-to-one, optional)
 - User → Student profile (one-to-one, optional)
 
-### ✅ 1.3 Create Teacher Profile Model (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.3 Create Teacher Profile Model (`prisma/schema.prisma`)
 
 Extend user data with teacher-specific information:
 
@@ -108,7 +102,7 @@ Extend user data with teacher-specific information:
 - Subject assignment tracking
 - Employment history management
 
-### ✅ 1.4 Create Student Profile Model (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.4 Create Student Profile Model (`prisma/schema.prisma`)
 
 Student-specific data with parent relationships:
 
@@ -126,7 +120,7 @@ Student-specific data with parent relationships:
 - Student → Campus (many-to-one)
 - Student → Quiz Responses (existing, one-to-many)
 
-### ✅ 1.5 Create Parent Profile Model (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.5 Create Parent Profile Model (`prisma/schema.prisma`)
 
 Parent-specific data and relationships:
 
@@ -139,7 +133,7 @@ Parent-specific data and relationships:
 - Parent → Students (many-to-many through StudentParent)
 - Parent → Messages (for parent-teacher communication)
 
-### ✅ 1.6 Create Classroom Model (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.6 Create Classroom Model (`prisma/schema.prisma`)
 
 Core entity for grouping students and organizing instruction:
 
@@ -160,7 +154,7 @@ Core entity for grouping students and organizing instruction:
 - Classroom → Assessments (one-to-many)
 - Classroom → AttendanceSessions (one-to-many)
 
-### ✅ 1.7 Update Quiz Model to Assessment (`prisma/schema.prisma`) - COMPLETED
+### ✅ 1.7 Update Quiz Model to Assessment (`prisma/schema.prisma`)
 
 Contextualize quiz system for educational assessments:
 
@@ -179,43 +173,43 @@ Contextualize quiz system for educational assessments:
 
 ---
 
-## ✅ Phase 2: Role System Refactoring - COMPLETED
+## Phase 2: Role System Refactoring
 
 Update existing role-based access control for school context.
 
-### ✅ 2.1 Update Role Utilities (`lib/role.utils.ts`) - COMPLETED
+### ✅ 2.1 Update Role Utilities (`lib/role.utils.ts`)
 
-Refactored existing permission functions for school roles:
+Refactor existing permission functions for school roles:
 
-- ✅ `isSchoolAdmin(userId, campusId)` - replaces isOrgAdmin
-- ✅ `canManageTeachers(userId, campusId)` - admin only
-- ✅ `canManageStudents(userId, campusId)` - admin only
-- ✅ `canViewStudentDetails(userId, studentId, campusId)` - admins (parent/teacher checks to be added in database queries)
-- ✅ `isTeacherInCampus(userId, campusId)` - verify teacher campus membership
-- ✅ `isParentOfStudent(userId, studentId)` - verify parent relationship (base implementation)
+- `isSchoolAdmin(userId, campusId)` - replaces isOrgAdmin
+- `canManageTeachers(userId, campusId)` - admin only
+- `canManageStudents(userId, campusId)` - admin and teachers
+- `canViewStudentDetails(userId, studentId)` - parents, teachers, admins
+- `isTeacherInCampus(userId, campusId)` - verify teacher assignment
+- `isParentOfStudent(userId, studentId)` - verify parent relationship
 
 **Key Permission Levels:**
 - Super Admin: Full system access
 - Campus Admin: Full campus access
-- Teacher: Campus member access (specific student access via database queries)
-- Parent: Own children access (to be enforced via database queries)
+- Teacher: Class and assigned student access
+- Parent: Own children access only
 
-### ✅ 2.2 Update Data Access Utilities (`lib/data-access.ts`) - COMPLETED
+### ✅ 2.2 Update Action Utilities (`lib/action.utils.ts`)
 
-Extended existing RLS helpers for school entities:
+Extend existing RLS helpers for school entities:
 
-- ✅ `validateCampusAccess(userId, campusId, action)` - campus-level permission check
-- ✅ `getAccessibleCampuses(userId, adminOnly)` - list campuses user can access
-- ✅ `withCampusPermission(userId, campusId, resource, action, operation)` - execute operation with permission check
-- ✅ Maintained existing security patterns from organization-based system
+- `getAuthenticatedClient()` - maintain existing pattern
+- Add campus-level RLS filters
+- Add student data isolation by parent/teacher relationship
+- Maintain existing security patterns
 
 ---
 
-## ✅ Phase 3: API Actions Refactoring - COMPLETED
+## Phase 3: API Actions Refactoring
 
 Update existing server actions for school context.
 
-### ✅ 3.1 Campus Management Actions (`app/(dashboard)/campus/page.actions.ts`) - COMPLETED
+### ✅ 3.1 Campus Management Actions (`app/(dashboard)/campus/page.actions.ts`)
 
 Refactor organization actions for campus management:
 
@@ -229,7 +223,7 @@ Refactor organization actions for campus management:
 - Campus admins can only modify their campus
 - Super-admins can manage all campuses
 
-### ✅ 3.2 Teacher Management Actions (`app/(dashboard)/teachers/page.actions.ts`) - COMPLETED
+### ✅ 3.2 Teacher Management Actions (`app/(dashboard)/teachers/page.actions.ts`)
 
 New actions for teacher profiles:
 
@@ -243,7 +237,7 @@ New actions for teacher profiles:
 - Extend with teacher-specific data
 - Maintain campus-level isolation
 
-### ✅ 3.3 Student Management Actions (`app/(dashboard)/students/page.actions.ts`) - COMPLETED
+### ✅ 3.3 Student Management Actions (`app/(dashboard)/students/page.actions.ts`)
 
 Student profile and enrollment management:
 
@@ -258,7 +252,7 @@ Student profile and enrollment management:
 - Teachers can view assigned students
 - Admins have full campus access
 
-### ✅ 3.4 Parent Management Actions (`app/(dashboard)/parents/page.actions.ts`) - COMPLETED
+### ✅ 3.4 Parent Management Actions (`app/(dashboard)/parents/page.actions.ts`)
 
 Parent profile and relationship management:
 
@@ -271,7 +265,7 @@ Parent profile and relationship management:
 - Parents can only manage their own profile
 - Teachers/admins can view parent contact info
 
-### ✅ 3.5 Classroom Management Actions (`app/(dashboard)/classrooms/page.actions.ts`) - COMPLETED
+### ✅ 3.5 Classroom Management Actions (`app/(dashboard)/classrooms/page.actions.ts`)
 
 New actions for classroom operations:
 
@@ -288,7 +282,7 @@ New actions for classroom operations:
 - Admins have full classroom access for their campus
 - Campus-level isolation maintained
 
-### ✅ 3.6 Assessment Actions (`app/(dashboard)/assessments/page.actions.ts`) - COMPLETED
+### ✅ 3.6 Assessment Actions (`app/(dashboard)/assessments/page.actions.ts`)
 
 Refactor quiz actions for assessments:
 
@@ -309,7 +303,7 @@ Refactor quiz actions for assessments:
 
 Update existing pages and components for school terminology.
 
-### ✅ 4.0 Redesign Sign-In Page (`app/(auth)/sign-in/page.tsx`) - COMPLETED
+### ⏳ 4.0 Redesign Sign-In Page (`app/(auth)/sign-in/page.tsx`)
 
 Replace existing magic link authentication UX with streamlined password-based authentication:
 
@@ -341,197 +335,173 @@ Replace existing magic link authentication UX with streamlined password-based au
 - Click card to sign in as that user
 
 **Technical Implementation:**
-- ✅ Created `page.actions.ts` with password length lookup, verification, and user fetch actions
-- ✅ Redesigned sign-in page with password-first UX
-- ✅ Auto-submit on password length match
-- ✅ User selection card grid after successful password verification
-- ✅ Better Auth email/password authentication
-- ✅ Smooth transitions and loading states with Loader2 component
-- ✅ Build passes successfully
+- Leverage sign-in logic from `DevSignInButtons.tsx`
+- Fetch user list after password verification
+- Use Better Auth email/password authentication
+- Smooth transitions and loading states
+- Remove old magic link and email verification flows
 
 **Security Notes:**
 - Development/demo environment only
 - Production environments should use proper authentication
 - Password shared across all demo users for ease of demonstration
 
-### ✅ 4.1 Update Dashboard (`app/(dashboard)/page.tsx`) - COMPLETED
+### ✅ 4.1 Update Dashboard (`app/(dashboard)/page.tsx`)
 
-Dashboard updated with school-specific metrics:
+Modify dashboard metrics for school context:
 
-- ✅ Replaced "Quizzes" with "Assessments"
-- ✅ Replaced "Team Members" with "Total Students"
-- ✅ Replaced "Active Invites" with "Total Teachers"
-- ✅ Updated metrics queries to count from Student and Teacher models
-- ✅ Updated all "Quiz" labels to "Assessment" throughout the page
-- ✅ Maintained existing dashboard layout and patterns
-- ✅ Fixed all Organization → Campus references across the codebase
+- Replace "Quizzes" with "Assessments"
+- Replace "Team Members" with "Staff & Students"
+- Add "Total Students" metric
+- Add "Total Teachers" metric
+- Add campus filter (if super-admin)
 
-### ✅ 4.2 Create Campus Management Page (`app/(dashboard)/campus/page.tsx`) - COMPLETED
+**Key Changes:**
+- Update metric queries to use new models
+- Maintain existing dashboard layout and patterns
+- Add school-relevant visualizations
+
+### ✅ 4.2 Create Campus Management Page (`app/(dashboard)/campus/page.tsx`)
 
 New page for campus administration:
 
-- ✅ Campus list table with campus details
-- ✅ Campus stats display (students, teachers, parents, classrooms, assessments)
-- ✅ Create/edit campus functionality
-- ✅ Campus details form (name, slug, location, principal, contact, phone, capacity)
+- Campus list table (super-admin view)
+- Campus details form (name, location, principal, contact)
+- Staff and student count display
+- Campus switching for super-admins
 
 **Components:**
-- ✅ `page.tsx` - Server component wrapper
-- ✅ `page.client.tsx` (CampusManagementClient) - Main campus management interface
-- ✅ `page.hooks.tsx` (useCampusManagement) - Data fetching and state management
-- ✅ `CampusDialog` - Create/edit campus dialog with form validation
-- ✅ Created missing UI components: `card`, `input`, `label`, `table`
+- `CampusTable` - list campuses with search/sort
+- `CampusDialog` - create/edit campus
+- `CampusStats` - enrollment and staff metrics
 
-### ✅ 4.3 Create Teacher Management Page (`app/(dashboard)/teachers/page.tsx`) - COMPLETED
+### ✅ 4.3 Create Teacher Management Page (`app/(dashboard)/teachers/page.tsx`)
 
 Teacher profile management interface:
 
-- ✅ Teacher list table filtered by campus
-- ✅ Teacher profile display (name, email, employee ID, subjects, certifications)
-- ✅ Edit teacher functionality (subjects, certifications, employee ID, CV URL)
-- ✅ Subject and certification management with preset options and custom input
+- Teacher list table with search and filters
+- Teacher profile form (certifications, subjects, contact)
+- Subject assignment interface
+- CV upload (future enhancement)
 
 **Components:**
-- ✅ `page.tsx` - Server component wrapper
-- ✅ `page.client.tsx` (TeacherManagementClient) - Main teacher management interface
-- ✅ `page.hooks.tsx` (useTeacherManagement) - Data fetching filtered by campus
-- ✅ `TeacherDialog` - Edit teacher dialog with subjects and certifications management
-- ✅ Badge components for subjects (secondary variant) and certifications (outline variant)
+- `TeacherTable` - list with certification status
+- `TeacherProfileDialog` - create/edit teacher
+- `SubjectAssignmentDialog` - assign subjects
 
-**Notes:**
-- Create teacher functionality requires user account creation first
-- Dialog shows message directing to user creation when no teacher is selected
-
-### ✅ 4.4 Create Student Management Page (`app/(dashboard)/students/page.tsx`) - COMPLETED
+### ✅ 4.4 Create Student Management Page (`app/(dashboard)/students/page.tsx`)
 
 Student enrollment and profile management:
 
-- ✅ Student list table with grade/campus filters
-- ✅ Student profile form (grade, parents, medical info, emergency contacts)
-- ✅ Parent assignment interface (add/remove parents)
-- ✅ Medical info management (allergies, conditions, medications)
-- ✅ Photo URL field
+- Student list table with grade/campus filters
+- Student profile form (grade, parents, medical info, emergency contacts)
+- Parent assignment interface
+- Authorized pickup management
 
 **Components:**
-- ✅ `page.tsx` - Server component wrapper
-- ✅ `page.client.tsx` (StudentManagementClient) - Main student management interface
-- ✅ `page.hooks.tsx` (useStudentManagement) - Data fetching with grade and search filters
-- ✅ `StudentDialog` - Edit student dialog with parent assignment and medical info
-- ✅ Grade filter and search functionality
+- `StudentTable` - list with grade/parent info
+- `StudentProfileDialog` - create/edit student
+- `ParentLinkDialog` - assign parents to student
+- `AuthorizedPickupList` - manage pickup contacts
 
-### ✅ 4.5 Create Parent Management Page (`app/(dashboard)/parents/page.tsx`) - COMPLETED
+### ✅ 4.5 Create Parent Management Page (`app/(dashboard)/parents/page.tsx`)
 
 Parent profile and student relationship management:
 
-- ✅ Parent list table with children count
-- ✅ Parent profile form (contact info, relationship, occupation)
-- ✅ Student assignment interface (add/remove students)
-- ✅ Primary contact flag
-- ✅ Phone and email management
+- Parent list table
+- Parent profile form (contact info, relationship)
+- Student assignment interface
 
 **Components:**
-- ✅ `page.tsx` - Server component wrapper
-- ✅ `page.client.tsx` (ParentManagementClient) - Main parent management interface
-- ✅ `page.hooks.tsx` (useParentManagement) - Data fetching filtered by campus
-- ✅ `ParentDialog` - Edit parent dialog with student assignment
-- ✅ Relationship type selector (Mother, Father, Guardian, etc.)
+- `ParentTable` - list with children count
+- `ParentProfileDialog` - create/edit parent
+- `StudentAssignmentDialog` - link students
 
-### ✅ 4.6 Update User Management Page (`app/(dashboard)/users/page.tsx`) - COMPLETED
+### ✅ 4.6 Update User Management Page (`app/(dashboard)/users/page.tsx`)
 
 Extend existing user management for school roles:
 
-- ✅ Add `userType` column to display (Teacher, Parent, Student, Admin)
-- ✅ Display profile completion status with icons (Complete/Incomplete)
-- ✅ Include teacher/student/parent profiles in query
-- ✅ Keep existing user ban/role management
+- Add `userType` filter (Teacher, Parent, Student, Admin)
+- Display role-specific profile status
+- Link to role-specific profile pages
+- Keep existing user ban/role management
 
 **Key Changes:**
-- ✅ Added userType column with Badge display
-- ✅ Added profile completion status indicator (CheckCircle/XCircle icons)
-- ✅ Extended UserWithDetails type to include profiles
-- ✅ Updated getUsersAction to include teacherProfile, studentProfile, parentProfile
-- ✅ Added getProfileStatus helper function
+- Add userType column to table
+- Add profile completion status indicator
+- Link to teacher/student/parent details
 
-### ✅ 4.7 Create Classroom Management Page (`app/(dashboard)/classrooms/page.tsx`) - COMPLETED
+### ✅ 4.7 Create Classroom Management Page (`app/(dashboard)/classrooms/page.tsx`)
 
 Classroom and enrollment management:
 
-- ✅ Classroom list table with grade/subject filters
-- ✅ Classroom creation form (name, grade, subject, teacher, room, capacity)
-- ✅ Student enrollment interface (add/remove students)
-- ✅ Class roster display with enrollment count
+- Classroom list table with grade/subject filters
+- Classroom creation form (name, grade, subject, teacher, room)
+- Student enrollment interface (add/remove students)
+- Class roster view with student details
 
 **Components:**
-- ✅ `page.tsx` - Server component wrapper
-- ✅ `page.client.tsx` (ClassroomManagementClient) - Main classroom management interface
-- ✅ `page.hooks.tsx` (useClassroomManagement) - Data fetching with grade and subject filters
-- ✅ `ClassroomDialog` - Create/edit classroom with teacher assignment
-- ✅ `EnrollmentDialog` - Manage student enrollment (add/remove)
-- ✅ Grade and subject filter dropdowns
-- ✅ Enrollment capacity tracking
+- `ClassroomTable` - list with teacher and enrollment count
+- `ClassroomDialog` - create/edit classroom
+- `EnrollmentDialog` - manage student enrollment
+- `ClassroomRosterView` - detailed class roster
 
-### ✅ 4.8 Update Assessment Pages (`app/(dashboard)/assessments/*`) - COMPLETED
+### ✅ 4.8 Update Assessment Pages (`app/(dashboard)/assessments/*`)
 
-Assessment terminology and actions completed:
+Refactor quiz pages for assessment context:
 
-- ✅ Assessment actions fully implemented with school context
-- ✅ Subject and grade level support added
-- ✅ Classroom assignment functionality (assignAssessmentToClassroom)
-- ✅ Individual student assignment functionality (assignAssessmentToStudents)
-- ✅ Grade/response tracking maintained
-- ✅ Assessment creation, update, and grading actions complete
+- Rename "Quiz" → "Assessment" throughout
+- Add subject and grade level display
+- Add classroom assignment interface
+- Add individual student assignment interface
+- Keep existing multiple-choice quiz UX
+- Maintain response tracking and grading
 
-**Completed Features:**
-- `getAssessments` - list assessments with filters (subject, gradeLevel, classroomId)
-- `createAssessment` - create with subject/grade/classroom/assignedTo
-- `updateAssessment` - update assessment details
-- `assignAssessmentToClassroom` - assign to classroom
-- `assignAssessmentToStudents` - assign to specific students
-- `gradeAssessment` - score responses
-- `getAssessmentResponses` - retrieve student responses
-
-**Note:** UI pages for assessment management can be added in future phases as needed
+**Components:**
+- `AssessmentDialog` - create/edit with subject/grade
+- `AssignToClassroomDialog` - assign to classroom
+- `AssignStudentsDialog` - assign to specific students
+- Keep existing quiz-taking interface
 
 ---
 
-## ✅ Phase 5: Navigation and Layout Updates - COMPLETED
+## Phase 5: Navigation and Layout Updates
 
-Updated navigation to reflect school management structure.
+Update navigation to reflect school management structure.
 
-### ✅ 5.1 Update Dashboard Layout (`app/(dashboard)/layout.tsx`) - COMPLETED
+### ✅ 5.1 Update Dashboard Layout (`app/(dashboard)/layout.tsx`)
 
-Modified navigation for school context:
+Modify sidebar navigation for school context:
 
-**Completed Navigation Structure:**
-- ✅ Header title changed to "Abraham Lincoln Academy"
-- ✅ Dashboard (home)
-- ✅ Classrooms
-- ✅ Students
-- ✅ Teachers
-- ✅ Parents
-- ✅ Assessments (renamed from Quizzes)
-- ✅ Campus (admin only)
-- ✅ Users (admin only)
-- ✅ Invitations (admin only)
+**Navigation Structure:**
+- Dashboard (home)
+- Classrooms (new)
+- Students (new)
+- Teachers (new)
+- Parents (new)
+- Assessments (renamed from Quizzes)
+- Messages (new)
+- Attendance (new)
+- Grades (new)
+- Calendar (new)
+- Cafeteria (new)
+- Campus (admin only)
+- Users (admin only)
+- Invitations (admin only)
 
-**Navigation Implementation:**
-- Main navigation links added for all core school management pages
-- Admin-only sections properly gated with `hasAdminAccess` check
-- Clean, organized navigation structure in header
+**Role-Based Navigation:**
+- Super Admin: All pages
+- Campus Admin: All except Campus management
+- Teacher: Dashboard, Classrooms, Students (assigned only), Assessments, Messages, Attendance, Grades
+- Parent: Dashboard, Messages, Students (own children), Assessments (children's), Grades (children's), Calendar, Cafeteria
 
-**Future Enhancements (Later Phases):**
-- Messages, Attendance, Grades, Calendar, Cafeteria pages
-- Role-based navigation filtering (Teacher/Parent specific views)
+### ✅ 5.2 Update Organization Selector (`components/OrganizationSelector.tsx`)
 
-### ✅ 5.2 Update Organization Selector (`components/OrganizationSelector.tsx`) - COMPLETED
+Rename to Campus Selector:
 
-Campus terminology updates:
-
-- ✅ Updated button label "Organization" → "Campus"
-- ✅ Updated empty state message "No organizations found" → "No campuses found"
-- ✅ Updated add button "Add Organization" → "Add Campus"
-- ✅ Updated AddOrganizationDialog title and labels to use "Campus"
-- ✅ Maintained existing campus switching functionality
+- Update labels "Organization" → "Campus"
+- Add location display
+- Keep existing switching functionality
 
 ---
 
@@ -539,29 +509,29 @@ Campus terminology updates:
 
 Migrate existing data and create school-specific seed data.
 
-### ✅ 6.0 Authentication Schema Updates (`prisma/schema.prisma`, `.env`, `.env.example`) - COMPLETED
+### ⏳ 6.0 Authentication Schema Updates (`prisma/schema.prisma`, `.env`, `.env.example`)
 
 Update authentication system for streamlined development workflow:
 
 **Schema Changes:**
-- ✅ Created `Password` model with:
+- Create `Password` model with:
   - `id` (primary key)
   - `hash` (hashed password string)
   - `length` (integer, stores unhashed password length)
   - `createdAt` / `updatedAt` timestamps
-- ✅ Email/password authentication enabled in Better Auth configuration
-- ✅ Email verification requirement disabled (`requireEmailVerification: false`)
+- Enable email/password authentication in all environments
+- Remove email verification requirement
 
 **Environment Configuration:**
-- ✅ Added `DEV_PASSWORD` to `.env` and `.env.example`
-- Ready to use `DEV_PASSWORD` for all seed users in seed script
+- Add `DEV_PASSWORD` to `.env` and `.env.example`
+- Use `DEV_PASSWORD` for all seed users instead of hardcoded "Password123!"
 
 **Key Features:**
-- Password length lookup endpoint ready for implementation
-- Secure password hashing ready for implementation
-- Single shared development password configured
+- Password length lookup endpoint for client-side validation
+- Secure password hashing with bcrypt/argon2
+- Single shared development password for all seed users
 
-### ✅ 6.1 Create Migration Script (`scripts/migrate-to-school.ts`) - SKIPPED (Not needed - seed script handles initial data)
+### ⏳ 6.1 Create Migration Script (`scripts/migrate-to-school.ts`)
 
 Script to transform existing data:
 
@@ -577,43 +547,37 @@ Script to transform existing data:
 4. Create sample teacher/student/parent profiles
 5. Link existing quiz responses to new assessment model
 
-### ✅ 6.2 Update Seed Script (`scripts/seed.ts`) - COMPLETED
+### ⏳ 6.2 Update Seed Script (`scripts/seed.ts`)
 
-Created school-specific seed data with education platform context:
+Create school-specific seed data with education platform context:
 
 **User Data:**
-- ✅ 2 campuses: Abraham Lincoln Academy - Lagos & Abuja
-- ✅ Teachers: Mrs. Sarah Johnson (Math), Mr. James Anderson (Science), Ms. Emily Chen (English), Mr. Michael Brown (History)
-- ✅ Students: Sophia Williams, Oliver Thompson, Emma Davis, Liam Martinez, Ava Garcia
-- ✅ Parents: David Williams, Mary Thompson, John Davis
-- ✅ Campus administrators: Dr. Adebayo Okonkwo (Lagos), Mrs. Chimamanda Nwosu (Abuja)
-- ✅ Appropriate role assignments (super-admin, admin, teacher, parent, student)
+- Multiple campuses with school-appropriate names
+- Teachers across subjects with realistic names and roles
+- Students across grades with cute avatar images
+- Parent profiles with student relationships
+- Appropriate role assignments (Teacher, Parent, Student, Admin)
 
 **Password Management:**
-- ✅ Hash `DEV_PASSWORD` from environment variable
-- ✅ Store password hash and length in `Password` table
-- ✅ Replace existing password row on each seed run
-- ✅ Apply hashed password to all seed users
+- Hash `DEV_PASSWORD` from environment variable
+- Store password hash and length in `Password` table
+- Replace existing password row on each seed run
+- Apply hashed password to all seed users
 
-**Seed Data Structure (Core - Phase 6.2):**
-- ✅ 2 campuses with school-appropriate metadata (location, principal, capacity, phone)
-- ✅ Balanced teacher/student distribution across campuses
-- ✅ 4 education-appropriate assessments (Math, Science, English, History)
-- ✅ 11 grade-appropriate questions for assessments
-- ✅ 5 student assessment responses with realistic scores
-- ✅ Realistic names appropriate for education platform
-
-**Future Enhancements (Later Phases):**
-- ⏳ Classrooms created for each grade/subject combination
-- ⏳ Students enrolled in appropriate classrooms
-- ⏳ Teachers assigned to classrooms
-- ⏳ Parents linked to 1-3 students
-- ⏳ Sample attendance records for recent dates
-- ⏳ Sample grades for students across subjects
-- ⏳ Emergency contacts and authorized pickups for students
-- ⏳ Avatar images for all users (students, teachers, parents)
-- ⏳ Sample calendar events (holidays, parent-teacher conferences)
-- ⏳ Weekly cafeteria menus
+**Seed Data Structure:**
+- Each campus has balanced teacher/student distribution
+- Classrooms created for each grade/subject combination
+- Students enrolled in appropriate classrooms
+- Teachers assigned to classrooms
+- Parents linked to 1-3 students
+- Assessments assigned to classrooms with school subjects
+- Sample attendance records for recent dates
+- Sample grades for students across subjects
+- Emergency contacts and authorized pickups for students
+- Cute avatar images for all users (students, teachers, parents)
+- Realistic names appropriate for education platform
+- Sample calendar events (holidays, parent-teacher conferences)
+- Weekly cafeteria menus
 
 ---
 
@@ -730,30 +694,24 @@ Polish dashboard for presentation:
 ## 📊 Implementation Priority
 
 **IMMEDIATE PRIORITY (Authentication & Demo Setup):**
-1. ✅ Phase 6.0: Authentication schema updates (Password model, DEV_PASSWORD) - COMPLETED
-2. ✅ Phase 6.2: Update seed script with education-appropriate data - COMPLETED
-3. ✅ Phase 4.0: Redesign sign-in page with password-first UX - COMPLETED
-4. ✅ Phase 1: Database schema refactoring (Campus, Teacher, Student, Parent models) - COMPLETED
-5. ✅ Phase 2: Role system updates for school context - COMPLETED
+1. Phase 6.0: Authentication schema updates (Password model, DEV_PASSWORD)
+2. Phase 6.2: Update seed script with education-appropriate data and avatars
+3. Phase 4.0: Redesign sign-in page with password-first UX
 
-**HIGH PRIORITY (Core Infrastructure):**
-6. ✅ Phase 3: API actions for core entities (including Classroom) - COMPLETED
-7. ✅ Phase 4.1: Dashboard UI updates - COMPLETED
-8. ✅ Phase 4.2-4.3: Campus and Teacher Management pages - COMPLETED
-9. ✅ Phase 4.4-4.7: UI updates (Student, Parent, User, Classroom Management) - COMPLETED
-10. ✅ Phase 4.8: Assessment Management actions - COMPLETED
-11. ✅ Phase 5: Navigation and layout updates - COMPLETED
+**HIGH PRIORITY (Core Demo Features):**
+4. Phase 1: Database schema refactoring (Campus, Teacher, Student, Parent models)
+5. Phase 2: Role system updates for school context
+6. Phase 4: UI updates (Dashboard, Student Management, Teacher Management)
+7. Phase 6.1: Data migration for school context
 
-**MEDIUM PRIORITY (Job Posting Features - MVP):**
-12. ✅ Phase 10: Communication features (Messages, Announcements) - COMPLETED
-13. ✅ Phase 11: Attendance & Grading - COMPLETED
-14. Phase 12: Calendar & Cafeteria
+**MEDIUM PRIORITY (Enhanced Functionality):**
+8. Phase 3: Complete API actions for all entities
+9. Phase 5: Navigation and layout polish
+10. Phase 9: Demo preparation and polish
 
-**LOW PRIORITY (Polish & Documentation):**
-12. Phase 6.1: Data migration script
-13. Phase 7: Security testing
-14. Phase 8: Documentation
-15. Phase 9: Demo polish and preparation
+**LOW PRIORITY (Documentation & Testing):**
+11. Phase 7: Security testing
+12. Phase 8: Documentation
 
 ---
 
@@ -771,11 +729,11 @@ This refactored project will demonstrate:
 
 ---
 
-## ✅ Phase 10: Communication Features - COMPLETED
+## Phase 10: Communication Features
 
 Essential communication features from job posting.
 
-### ✅ 10.1 Create Message Model (`prisma/schema.prisma`) - COMPLETED
+### ⏳ 10.1 Create Message Model (`prisma/schema.prisma`)
 
 Parent-teacher messaging system:
 
@@ -794,7 +752,7 @@ Parent-teacher messaging system:
 - Message → Recipient (User)
 - Message → Campus (for isolation)
 
-### ✅ 10.2 Create Announcement Model (`prisma/schema.prisma`) - COMPLETED
+### ⏳ 10.2 Create Announcement Model (`prisma/schema.prisma`)
 
 Mass communication system:
 
@@ -814,7 +772,7 @@ Mass communication system:
 - Announcement → Campus
 - Announcement → Classroom (optional)
 
-### ✅ 10.3 Messaging Actions (`app/(dashboard)/messages/page.actions.ts`) - COMPLETED
+### ⏳ 10.3 Messaging Actions (`app/(dashboard)/messages/page.actions.ts`)
 
 Message management:
 
@@ -830,7 +788,7 @@ Message management:
 - Parents can message their children's teachers
 - Admins can message anyone in their campus
 
-### ✅ 10.4 Announcement Actions (`app/(dashboard)/announcements/page.actions.ts`) - COMPLETED
+### ⏳ 10.4 Announcement Actions (`app/(dashboard)/announcements/page.actions.ts`)
 
 Announcement management:
 
@@ -845,7 +803,7 @@ Announcement management:
 - Campus-level isolation
 - Parents see announcements relevant to their children
 
-### ✅ 10.5 Messages Page (`app/(dashboard)/messages/page.tsx`) - COMPLETED
+### ⏳ 10.5 Messages Page (`app/(dashboard)/messages/page.tsx`)
 
 Parent-teacher messaging interface:
 
@@ -860,7 +818,7 @@ Parent-teacher messaging interface:
 - `ComposeMessageDialog` - new message form
 - `UnreadBadge` - notification count
 
-### ✅ 10.6 Announcements Page (`app/(dashboard)/announcements/page.tsx`) - COMPLETED
+### ⏳ 10.6 Announcements Page (`app/(dashboard)/announcements/page.tsx`)
 
 Mass communication display:
 
@@ -877,11 +835,11 @@ Mass communication display:
 
 ---
 
-## ✅ Phase 11: Attendance & Grading - COMPLETED
+## Phase 11: Attendance & Grading
 
 Core operational features from job posting.
 
-### ✅ 11.1 Create Attendance Models (`prisma/schema.prisma`) - COMPLETED
+### ⏳ 11.1 Create Attendance Models (`prisma/schema.prisma`)
 
 Digital attendance tracking:
 
@@ -907,7 +865,7 @@ Digital attendance tracking:
 - AttendanceRecord → Session
 - AttendanceRecord → Student
 
-### ✅ 11.2 Create Grade Model (`prisma/schema.prisma`) - COMPLETED
+### ⏳ 11.2 Create Grade Model (`prisma/schema.prisma`)
 
 Digital grade tracking and report cards:
 
@@ -928,7 +886,7 @@ Digital grade tracking and report cards:
 - Grade → Teacher
 - Grade → Campus
 
-### ✅ 11.3 Attendance Actions (`app/(dashboard)/attendance/page.actions.ts`) - COMPLETED
+### ⏳ 11.3 Attendance Actions (`app/(dashboard)/attendance/page.actions.ts`)
 
 Attendance management:
 
@@ -944,7 +902,7 @@ Attendance management:
 - Parents can view their children's attendance
 - Admins can view/edit all campus attendance
 
-### ✅ 11.4 Grade Actions (`app/(dashboard)/grades/page.actions.ts`) - COMPLETED
+### ⏳ 11.4 Grade Actions (`app/(dashboard)/grades/page.actions.ts`)
 
 Grade management:
 
@@ -960,7 +918,7 @@ Grade management:
 - Students can view their own grades
 - Admins have full access
 
-### ✅ 11.5 Attendance Page (`app/(dashboard)/attendance/page.tsx`) - COMPLETED
+### ⏳ 11.5 Attendance Page (`app/(dashboard)/attendance/page.tsx`)
 
 Attendance marking and viewing:
 
@@ -976,7 +934,7 @@ Attendance marking and viewing:
 - `StudentAttendanceStats` - attendance percentage display
 - `BulkMarkDialog` - quick mark all present
 
-### ✅ 11.6 Grades Page (`app/(dashboard)/grades/page.tsx`) - COMPLETED
+### ⏳ 11.6 Grades Page (`app/(dashboard)/grades/page.tsx`)
 
 Grade entry and report card viewing:
 
@@ -993,11 +951,11 @@ Grade entry and report card viewing:
 
 ---
 
-## ✅ Phase 12: Calendar & Cafeteria - COMPLETED
+## Phase 12: Calendar & Cafeteria
 
 Informational features from job posting.
 
-### ✅ 12.1 Create Calendar Model (`prisma/schema.prisma`) - COMPLETED
+### ⏳ 12.1 Create Calendar Model (`prisma/schema.prisma`)
 
 Academic calendar with events:
 
@@ -1016,7 +974,7 @@ Academic calendar with events:
 - CalendarEvent → Campus
 - CalendarEvent → Creator (User)
 
-### ✅ 12.2 Create Cafeteria Menu Model (`prisma/schema.prisma`) - COMPLETED
+### ⏳ 12.2 Create Cafeteria Menu Model (`prisma/schema.prisma`)
 
 Weekly menu management:
 
@@ -1031,7 +989,7 @@ Weekly menu management:
 **Key Relations:**
 - CafeteriaMenu → Campus
 
-### ✅ 12.3 Calendar Actions (`app/(dashboard)/calendar/page.actions.ts`) - COMPLETED
+### ⏳ 12.3 Calendar Actions (`app/(dashboard)/calendar/page.actions.ts`)
 
 Calendar event management:
 
@@ -1045,7 +1003,7 @@ Calendar event management:
 - Only admins can create/edit events
 - All users can view events for their campus
 
-### ✅ 12.4 Cafeteria Actions (`app/(dashboard)/cafeteria/page.actions.ts`) - COMPLETED
+### ⏳ 12.4 Cafeteria Actions (`app/(dashboard)/cafeteria/page.actions.ts`)
 
 Menu management:
 
@@ -1058,7 +1016,7 @@ Menu management:
 - Only admins can create/edit menus
 - All users can view menus
 
-### ✅ 12.5 Calendar Page (`app/(dashboard)/calendar/page.tsx`) - COMPLETED
+### ⏳ 12.5 Calendar Page (`app/(dashboard)/calendar/page.tsx`)
 
 Academic calendar display:
 
@@ -1074,7 +1032,7 @@ Academic calendar display:
 - `CreateEventDialog` - event creation form
 - `UpcomingEventsWidget` - next events preview
 
-### ✅ 12.6 Cafeteria Page (`app/(dashboard)/cafeteria/page.tsx`) - COMPLETED
+### ⏳ 12.6 Cafeteria Page (`app/(dashboard)/cafeteria/page.tsx`)
 
 Menu display and management:
 
@@ -1094,21 +1052,21 @@ Menu display and management:
 ## 📊 Updated Implementation Priority
 
 **IMMEDIATE PRIORITY (Authentication & Demo Setup):**
-1. ✅ Phase 6.0: Authentication schema updates (Password model, DEV_PASSWORD) - COMPLETED
-2. ✅ Phase 6.2: Update seed script with education-appropriate data - COMPLETED
-3. ✅ Phase 4.0: Redesign sign-in page with password-first UX - COMPLETED
+1. Phase 6.0: Authentication schema updates (Password model, DEV_PASSWORD)
+2. Phase 6.2: Update seed script with education-appropriate data and avatars
+3. Phase 4.0: Redesign sign-in page with password-first UX
 
 **HIGH PRIORITY (Core Infrastructure):**
-4. ✅ Phase 1: Database schema refactoring (Campus, Teacher, Student, Parent, Classroom models) - COMPLETED
-5. ✅ Phase 2: Role system updates for school context - COMPLETED
-6. ✅ Phase 3: API actions for core entities (including Classroom) - COMPLETED
-7. ✅ Phase 4: UI updates (Dashboard, Student, Teacher, Parent, Classroom Management) - COMPLETED
-8. ✅ Phase 5: Navigation and layout updates - COMPLETED
+4. Phase 1: Database schema refactoring (Campus, Teacher, Student, Parent, Classroom models)
+5. Phase 2: Role system updates for school context
+6. Phase 3: API actions for core entities (including Classroom)
+7. Phase 4: UI updates (Dashboard, Student, Teacher, Parent, Classroom Management)
+8. Phase 5: Navigation and layout updates
 
 **MEDIUM PRIORITY (Job Posting Features - MVP):**
-9. ✅ Phase 10: Communication features (Messages, Announcements) - COMPLETED
-10. ✅ Phase 11: Attendance & Grading - COMPLETED
-11. ✅ Phase 12: Calendar & Cafeteria - COMPLETED
+9. Phase 10: Communication features (Messages, Announcements)
+10. Phase 11: Attendance & Grading
+11. Phase 12: Calendar & Cafeteria
 
 **LOW PRIORITY (Polish & Documentation):**
 12. Phase 6.1: Data migration script
@@ -1135,7 +1093,7 @@ This project will demonstrate **all core features** from the Abraham Lincoln Ame
 8. **Digital Grade Tracking**: Teacher grade entry and report card viewing
 9. **Report Card Display**: Grade viewing by subject and grading period
 
-### Communication Platform ✅
+### Communication Platform ✓
 10. **Parent-Teacher Messaging**: Direct messaging between parents and teachers
 11. **Mass Communication**: Announcements with audience targeting
 12. **Newsletter Templates**: Predefined announcement formats
