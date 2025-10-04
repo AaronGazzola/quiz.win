@@ -1,8 +1,16 @@
 # Project Roadmap Template & Instructions
 
-## Naming convention
+The roadmap is an ordered sequence of detailed, specific, technical instructions to implement ALL of the requested functionality. Do not skip any functionality, the roadmap needs to be exhaustive. Don't include any testing in the roadmap.
+Only mark a task as complete when the feature that the task describes is fully implemented.
 
-Name the file `docs/Roadmap_[date]`, with this date format: 1-Jun-25
+## Purpose & Intended Use
+
+A project roadmap serves as:
+
+- **Implementation Guide**: Step-by-step instructions for building complete features
+- **Progress Tracker**: Live document showing current status and remaining work
+- **Reference Document**: Historical record of development decisions and implementations
+- **Scope Manager**: Clear boundaries for what gets built in each phase
 
 ## Roadmap Structure & Format
 
@@ -97,7 +105,7 @@ Include in each task:
 
 ### Status Indicators
 
-- **✅ COMPLETED**: Feature is fully implemented and tested
+- **✅ COMPLETED**: Feature is fully implemented
 - **🔄 IN PROGRESS**: Currently being worked on
 - **⏳ REMAINING**: Planned for future implementation
 - **🚀 READY TO USE**: Available for users in current state
@@ -114,3 +122,26 @@ Include in each task:
 - Commit messages should reference phase completion: `feat(phaseX): complete [Phase Name] implementation`
 - Tag major milestones for easy reference
 - Include roadmap updates in feature commits
+
+## Pre-Final Step: App-Wide Styling Polish & Refactor
+
+Before production build validation, perform a comprehensive styling assessment and refactor:
+
+1. Assess entire application styling for consistency and modern aesthetics
+2. Implement dark and light mode using latest Tailwind CSS v4 approach
+3. Ensure modern, elegant, and consistent styling across all components
+4. Verify sufficient spacing and padding throughout the application
+5. Validate adequate contrast between all text and background colors in both modes
+6. Check for and fix any styling inconsistencies or accessibility issues
+7. Ensure responsive design works correctly across all breakpoints
+
+## Final Step: Production Build Validation
+
+The final step of every roadmap implementation is to validate the production build:
+
+1. Run `npm run build`
+2. Fix any errors that occur during the build process
+3. Address all warnings until none remain
+4. Repeat until the build completes successfully with zero errors and zero warnings
+
+This ensures all code is production-ready and free of type errors, import issues, or configuration problems.
