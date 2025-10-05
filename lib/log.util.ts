@@ -7,6 +7,7 @@ export enum LOG_LABELS {
   RATE_LIMIT = "rate-limit",
   IMAGE = "image",
   WIDGET = "widget",
+  DATA_FETCH = "data-fetch",
 }
 
 interface ConditionalLogOptions {
@@ -37,7 +38,7 @@ export function conditionalLog(
     const processedData = deepStringify(data, maxStringLength, new WeakSet());
     const result = JSON.stringify(processedData);
     console.log(result.replace(/\s+/g, ""));
-  } catch (error) {
+  } catch {
     console.log(JSON.stringify({ error: "Failed to stringify data", label }));
   }
 }

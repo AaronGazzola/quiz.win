@@ -45,6 +45,7 @@ import { QuizDialog } from "./QuizDialog";
 
 export function DashboardPageContent() {
   const { data: user } = useGetUser();
+  console.log({ user });
   const { data: userWithMembers } = useGetUserMembers();
   const { selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
   const hasAdminAccess = useAdminAccess();
@@ -282,7 +283,7 @@ export function DashboardPageContent() {
           <p className="text-muted-foreground">
             Welcome back,{" "}
             {user ? (
-              user.email
+              <span suppressHydrationWarning>{user.email}</span>
             ) : (
               <span className="inline-block w-32 h-4 bg-muted rounded-lg"></span>
             )}
@@ -930,11 +931,11 @@ export function DashboardPageContent() {
                   <tbody className="bg-card divide-y divide-border">
                     {responseDetail.quiz.Question.map((question, index) => {
                       const userAnswers = Array.isArray(responseDetail.answers)
-                        ? responseDetail.answers as Array<{
+                        ? (responseDetail.answers as Array<{
                             questionId: string;
                             selectedAnswer: string;
                             isCorrect: boolean;
-                          }>
+                          }>)
                         : [];
                       const userAnswerObject = userAnswers.find(
                         (answer) => answer.questionId === question.id
@@ -968,8 +969,12 @@ export function DashboardPageContent() {
                                 key={optionIndex}
                                 className={cn(
                                   "px-6 py-4 text-sm",
-                                  isUserAnswer && isCorrectAnswer && "bg-green-100",
-                                  isUserAnswer && !isCorrectAnswer && "bg-red-100"
+                                  isUserAnswer &&
+                                    isCorrectAnswer &&
+                                    "bg-green-100",
+                                  isUserAnswer &&
+                                    !isCorrectAnswer &&
+                                    "bg-red-100"
                                 )}
                               >
                                 <div className="flex flex-col items-center space-y-1">
@@ -978,13 +983,12 @@ export function DashboardPageContent() {
                                       Solution
                                     </Badge>
                                   )}
-                                  {isUserAnswer && (
-                                    isCorrectAnswer ? (
+                                  {isUserAnswer &&
+                                    (isCorrectAnswer ? (
                                       <Check className="w-6 h-6 text-green-600" />
                                     ) : (
                                       <X className="w-6 h-6 text-red-600" />
-                                    )
-                                  )}
+                                    ))}
                                 </div>
                               </td>
                             );
@@ -1083,11 +1087,11 @@ export function DashboardPageContent() {
                   <tbody className="bg-card divide-y divide-border">
                     {userResponse.quiz.Question.map((question, index) => {
                       const userAnswers = Array.isArray(userResponse.answers)
-                        ? userResponse.answers as Array<{
+                        ? (userResponse.answers as Array<{
                             questionId: string;
                             selectedAnswer: string;
                             isCorrect: boolean;
-                          }>
+                          }>)
                         : [];
                       const userAnswerObject = userAnswers.find(
                         (answer) => answer.questionId === question.id
@@ -1121,8 +1125,12 @@ export function DashboardPageContent() {
                                 key={optionIndex}
                                 className={cn(
                                   "px-6 py-4 text-sm",
-                                  isUserAnswer && isCorrectAnswer && "bg-green-100",
-                                  isUserAnswer && !isCorrectAnswer && "bg-red-100"
+                                  isUserAnswer &&
+                                    isCorrectAnswer &&
+                                    "bg-green-100",
+                                  isUserAnswer &&
+                                    !isCorrectAnswer &&
+                                    "bg-red-100"
                                 )}
                               >
                                 <div className="flex flex-col items-center space-y-1">
@@ -1131,13 +1139,12 @@ export function DashboardPageContent() {
                                       Solution
                                     </Badge>
                                   )}
-                                  {isUserAnswer && (
-                                    isCorrectAnswer ? (
+                                  {isUserAnswer &&
+                                    (isCorrectAnswer ? (
                                       <Check className="w-6 h-6 text-green-600" />
                                     ) : (
                                       <X className="w-6 h-6 text-red-600" />
-                                    )
-                                  )}
+                                    ))}
                                 </div>
                               </td>
                             );
