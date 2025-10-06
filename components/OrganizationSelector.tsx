@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetUserMembers, useAdminAccess, useCreateOrganization, useGetAllOrganizations } from "@/app/layout.hooks";
+import { useGetUser, useAdminAccess, useCreateOrganization, useGetAllOrganizations } from "@/app/layout.hooks";
 import { useAppStore } from "@/app/layout.stores";
 import { queryClient } from "@/app/layout.providers";
 import { Button } from "@/components/ui/button";
@@ -18,54 +18,58 @@ import {
   isSuperAdmin,
 } from "@/lib/client-role.utils";
 import { Building2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AddOrganizationDialog } from "./AddOrganizationDialog";
 
 export function OrganizationSelector() {
-  const { data: userWithMembers } = useGetUserMembers();
+  const { data: user } = useGetUser();
   const { data: allOrganizations } = useGetAllOrganizations();
   const { selectedOrganizationIds, setSelectedOrganizationIds } =
     useAppStore();
 
-  console.log(JSON.stringify({t:'OrgSelector:render',sIds:selectedOrganizationIds}));
   const hasAdminAccess = useAdminAccess();
   const createOrgMutation = useCreateOrganization();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
-  const isSuperAdminUser = isSuperAdmin(userWithMembers || null);
+  const isSuperAdminUser = isSuperAdmin(user || null);
 
-  const organizations = isSuperAdminUser && allOrganizations
-    ? allOrganizations.map((org) => ({
-        id: org.id,
-        name: org.name,
-        role: "admin" as const,
-      }))
-    : userWithMembers?.member?.map((memberItem) => ({
-        id: memberItem.organizationId,
-        name: memberItem.organization.name,
-        role: memberItem.role,
-      })) || [];
+  const organizations = useMemo(() => {
+    return isSuperAdminUser && allOrganizations
+      ? allOrganizations.map((org) => ({
+          id: org.id,
+          name: org.name,
+          role: "admin" as const,
+        }))
+      : user?.member?.map((memberItem) => ({
+          id: memberItem.organizationId,
+          name: memberItem.organization.name,
+          role: memberItem.role,
+        })) || [];
+  }, [isSuperAdminUser, allOrganizations, user?.member]);
 
-  console.log(JSON.stringify({t:'OrgSelector:orgs',count:organizations.length,orgIds:organizations.map(o=>o.id),isSuperAdmin:isSuperAdminUser}));
+  const adminStatusByOrg = useMemo(() => {
+    return isSuperAdminUser && allOrganizations
+      ? Object.fromEntries(allOrganizations.map(org => [org.id, true]))
+      : getAdminStatusByOrganization(user || null);
+  }, [isSuperAdminUser, allOrganizations, user]);
 
-  const adminStatusByOrg = isSuperAdminUser && allOrganizations
-    ? Object.fromEntries(allOrganizations.map(org => [org.id, true]))
-    : getAdminStatusByOrganization(userWithMembers || null);
   const hasPartialAdmin = hasPartialAdminAccess(
-    userWithMembers || null,
+    user || null,
     selectedOrganizationIds
   );
 
+  useEffect(() => {
+    if (organizations.length > 0 && selectedOrganizationIds.length === 0) {
+      const allOrgIds = organizations.map(org => org.id);
+      setSelectedOrganizationIds(allOrgIds);
+    }
+  }, [organizations, selectedOrganizationIds.length, setSelectedOrganizationIds]);
+
   const handleOrganizationToggle = (orgId: string, checked: boolean) => {
-    console.log(JSON.stringify({t:'OrgSelector:toggle',orgId,checked,prevIds:selectedOrganizationIds}));
     if (checked) {
-      const newIds = [...selectedOrganizationIds, orgId];
-      console.log(JSON.stringify({t:'OrgSelector:adding',newIds}));
-      setSelectedOrganizationIds(newIds);
+      setSelectedOrganizationIds([...selectedOrganizationIds, orgId]);
     } else {
-      const newIds = selectedOrganizationIds.filter((id) => id !== orgId);
-      console.log(JSON.stringify({t:'OrgSelector:removing',newIds}));
-      setSelectedOrganizationIds(newIds);
+      setSelectedOrganizationIds(selectedOrganizationIds.filter((id) => id !== orgId));
     }
   };
 
@@ -74,7 +78,7 @@ export function OrganizationSelector() {
       await createOrgMutation.mutateAsync(name);
       setShowAddDialog(false);
       queryClient.invalidateQueries({ queryKey: ["organizations", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["user", "members"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
     } catch {
 
     }
@@ -115,7 +119,6 @@ export function OrganizationSelector() {
               {organizations.map((org) => {
                 const isSelected = selectedOrganizationIds.includes(org.id);
                 const isAdmin = adminStatusByOrg[org.id];
-                console.log(JSON.stringify({t:'OrgSelector:renderItem',orgId:org.id,name:org.name,isSelected,isAdmin}));
 
                 return (
                   <DropdownMenuCheckboxItem

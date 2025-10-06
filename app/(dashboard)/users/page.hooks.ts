@@ -5,10 +5,13 @@ import { toast } from "sonner";
 import { getUsersAction, toggleUserBanAction, changeUserRoleAction, bulkToggleUserBanAction, updateMultipleUserRolesAction } from "./page.actions";
 import { useUserTableStore } from "./page.stores";
 import { useEffect } from "react";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 
 export const useGetUsers = (organizationIds?: string[]) => {
   const { search, sort, page, itemsPerPage } = useUserTableStore();
   const orgIdsKey = organizationIds?.join(',') || '';
+
+  conditionalLog({hook:"useGetUsers",status:"initialized",hasOrgIds:!!organizationIds?.length,orgCount:organizationIds?.length,search},{label:LOG_LABELS.DATA_FETCH});
 
   return useQuery({
     queryKey: [
@@ -21,6 +24,7 @@ export const useGetUsers = (organizationIds?: string[]) => {
       itemsPerPage
     ],
     queryFn: async () => {
+      conditionalLog({hook:"useGetUsers",status:"fetching",orgIds:organizationIds,search,page},{label:LOG_LABELS.DATA_FETCH});
       const { data, error } = await getUsersAction(
         organizationIds,
         search || undefined,
@@ -29,7 +33,11 @@ export const useGetUsers = (organizationIds?: string[]) => {
         page,
         itemsPerPage
       );
-      if (error) throw new Error(error);
+      if (error) {
+        conditionalLog({hook:"useGetUsers",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        throw new Error(error);
+      }
+      conditionalLog({hook:"useGetUsers",status:"success",userCount:data?.users?.length,total:data?.total},{label:LOG_LABELS.DATA_FETCH});
       return data;
     },
     staleTime: 1000 * 60 * 2,

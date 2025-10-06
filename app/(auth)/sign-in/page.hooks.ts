@@ -2,17 +2,24 @@
 
 import { signIn } from "@/lib/auth-client";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getPasswordLengthAction, getUsersWithOrganizationsAction, verifyPasswordAction } from "./page.actions";
 
 export const useGetPasswordLength = () => {
+  conditionalLog({hook:"useGetPasswordLength",status:"initialized"},{label:LOG_LABELS.DATA_FETCH});
+
   return useQuery({
     queryKey: ["passwordLength"],
     queryFn: async () => {
+      conditionalLog({hook:"useGetPasswordLength",status:"fetching"},{label:LOG_LABELS.DATA_FETCH});
       const { data, error } = await getPasswordLengthAction();
-      if (error) throw error;
+      if (error) {
+        conditionalLog({hook:"useGetPasswordLength",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        throw error;
+      }
+      conditionalLog({hook:"useGetPasswordLength",status:"success",passwordLength:data},{label:LOG_LABELS.DATA_FETCH});
       return data;
     },
     staleTime: Infinity,
@@ -41,11 +48,18 @@ export const useVerifyPassword = (onSuccess: (isValid: boolean) => void, onError
 };
 
 export const useGetUsers = (enabled: boolean) => {
+  conditionalLog({hook:"useGetUsers_signIn",status:"initialized",enabled},{label:LOG_LABELS.DATA_FETCH});
+
   return useQuery({
     queryKey: ["users"],
     queryFn: async () => {
+      conditionalLog({hook:"useGetUsers_signIn",status:"fetching"},{label:LOG_LABELS.DATA_FETCH});
       const { data, error } = await getUsersWithOrganizationsAction();
-      if (error) throw error;
+      if (error) {
+        conditionalLog({hook:"useGetUsers_signIn",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        throw error;
+      }
+      conditionalLog({hook:"useGetUsers_signIn",status:"success",userCount:data?.length},{label:LOG_LABELS.DATA_FETCH});
       return data;
     },
     enabled,
@@ -55,6 +69,7 @@ export const useGetUsers = (enabled: boolean) => {
 
 export const useSignInWithPassword = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
@@ -62,6 +77,7 @@ export const useSignInWithPassword = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
       toast.success("Successfully signed in");
       router.push("/");
     },

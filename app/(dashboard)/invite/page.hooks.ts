@@ -4,13 +4,21 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getOrganizationsAction } from "./page.actions";
 import { organization } from "@/lib/auth-client";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 
 export const useGetOrganizations = () => {
+  conditionalLog({hook:"useGetOrganizations",status:"initialized"},{label:LOG_LABELS.DATA_FETCH});
+
   return useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
+      conditionalLog({hook:"useGetOrganizations",status:"fetching"},{label:LOG_LABELS.DATA_FETCH});
       const { data, error } = await getOrganizationsAction();
-      if (error) throw new Error(error);
+      if (error) {
+        conditionalLog({hook:"useGetOrganizations",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        throw new Error(error);
+      }
+      conditionalLog({hook:"useGetOrganizations",status:"success",orgCount:data?.length},{label:LOG_LABELS.DATA_FETCH});
       return data || [];
     },
     staleTime: 1000 * 60 * 5,
