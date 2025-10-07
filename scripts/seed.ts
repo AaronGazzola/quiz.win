@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { auth } from "../lib/auth";
 import bcrypt from "bcryptjs";
 import "better-auth/node";
+import { auth } from "../lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -135,17 +135,20 @@ async function seed() {
     for (const userData of usersData) {
       console.log(`Creating user: ${userData.email}`);
 
-      const signupRequest = new Request(`${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userData.email,
-          password: devPassword,
-          name: userData.name,
-        }),
-      });
+      const signupRequest = new Request(
+        `${process.env.BASE_URL}/api/auth/sign-up/email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: userData.email,
+            password: devPassword,
+            name: userData.name,
+          }),
+        }
+      );
 
       const response = await auth.handler(signupRequest);
       const result = await response.json();
@@ -179,7 +182,8 @@ async function seed() {
           name: "HealthCare Partners",
           slug: "healthcare-partners",
           metadata: {
-            description: "Comprehensive medical training and patient care excellence",
+            description:
+              "Comprehensive medical training and patient care excellence",
             industry: "Healthcare",
             focus: "Medical Training",
           },
@@ -190,7 +194,8 @@ async function seed() {
           name: "TechCorp Solutions",
           slug: "techcorp-solutions",
           metadata: {
-            description: "Enterprise technology training and software development",
+            description:
+              "Enterprise technology training and software development",
             industry: "Technology",
             focus: "Corporate Training",
           },
@@ -216,22 +221,86 @@ async function seed() {
 
     console.log("🤝 Creating organization memberships...");
     const memberships = [
-      { userId: users[1].id, organizationId: organizations[0].id, role: "owner" },
-      { userId: users[2].id, organizationId: organizations[0].id, role: "admin" },
-      { userId: users[3].id, organizationId: organizations[0].id, role: "member" },
-      { userId: users[4].id, organizationId: organizations[0].id, role: "member" },
-      { userId: users[5].id, organizationId: organizations[1].id, role: "owner" },
-      { userId: users[6].id, organizationId: organizations[1].id, role: "admin" },
-      { userId: users[7].id, organizationId: organizations[1].id, role: "member" },
-      { userId: users[8].id, organizationId: organizations[1].id, role: "member" },
-      { userId: users[9].id, organizationId: organizations[0].id, role: "admin" },
-      { userId: users[9].id, organizationId: organizations[1].id, role: "member" },
-      { userId: users[10].id, organizationId: organizations[0].id, role: "member" },
-      { userId: users[10].id, organizationId: organizations[1].id, role: "admin" },
-      { userId: users[11].id, organizationId: organizations[0].id, role: "member" },
-      { userId: users[11].id, organizationId: organizations[1].id, role: "member" },
-      { userId: users[12].id, organizationId: organizations[0].id, role: "admin" },
-      { userId: users[12].id, organizationId: organizations[1].id, role: "admin" },
+      {
+        userId: users[1].id,
+        organizationId: organizations[0].id,
+        role: "owner",
+      },
+      {
+        userId: users[2].id,
+        organizationId: organizations[0].id,
+        role: "admin",
+      },
+      {
+        userId: users[3].id,
+        organizationId: organizations[0].id,
+        role: "member",
+      },
+      {
+        userId: users[4].id,
+        organizationId: organizations[0].id,
+        role: "member",
+      },
+      {
+        userId: users[5].id,
+        organizationId: organizations[1].id,
+        role: "owner",
+      },
+      {
+        userId: users[6].id,
+        organizationId: organizations[1].id,
+        role: "admin",
+      },
+      {
+        userId: users[7].id,
+        organizationId: organizations[1].id,
+        role: "member",
+      },
+      {
+        userId: users[8].id,
+        organizationId: organizations[1].id,
+        role: "member",
+      },
+      {
+        userId: users[9].id,
+        organizationId: organizations[0].id,
+        role: "admin",
+      },
+      {
+        userId: users[9].id,
+        organizationId: organizations[1].id,
+        role: "member",
+      },
+      {
+        userId: users[10].id,
+        organizationId: organizations[0].id,
+        role: "member",
+      },
+      {
+        userId: users[10].id,
+        organizationId: organizations[1].id,
+        role: "admin",
+      },
+      {
+        userId: users[11].id,
+        organizationId: organizations[0].id,
+        role: "member",
+      },
+      {
+        userId: users[11].id,
+        organizationId: organizations[1].id,
+        role: "member",
+      },
+      {
+        userId: users[12].id,
+        organizationId: organizations[0].id,
+        role: "admin",
+      },
+      {
+        userId: users[12].id,
+        organizationId: organizations[1].id,
+        role: "admin",
+      },
     ];
 
     await Promise.all(
@@ -368,7 +437,8 @@ async function seed() {
               "Hospital Insurance Protection and Access Act",
               "Health Information Processing and Accountability Act",
             ],
-            correctAnswer: "Health Insurance Portability and Accountability Act",
+            correctAnswer:
+              "Health Insurance Portability and Accountability Act",
             order: 1,
           },
           {
@@ -379,11 +449,13 @@ async function seed() {
               "Only medical diagnoses",
               "Only insurance information",
             ],
-            correctAnswer: "Any health information that can identify an individual",
+            correctAnswer:
+              "Any health information that can identify an individual",
             order: 2,
           },
           {
-            question: "When can PHI be disclosed without patient authorization?",
+            question:
+              "When can PHI be disclosed without patient authorization?",
             options: [
               "For treatment, payment, and healthcare operations",
               "To any healthcare worker who asks",
@@ -400,34 +472,19 @@ async function seed() {
         questions: [
           {
             question: "What does the suffix '-itis' mean?",
-            options: [
-              "Inflammation",
-              "Removal",
-              "Study of",
-              "Disease",
-            ],
+            options: ["Inflammation", "Removal", "Study of", "Disease"],
             correctAnswer: "Inflammation",
             order: 1,
           },
           {
             question: "What does 'brady-' mean as a prefix?",
-            options: [
-              "Fast",
-              "Slow",
-              "Above",
-              "Below",
-            ],
+            options: ["Fast", "Slow", "Above", "Below"],
             correctAnswer: "Slow",
             order: 2,
           },
           {
             question: "What does 'cardio' refer to?",
-            options: [
-              "Heart",
-              "Lungs",
-              "Liver",
-              "Brain",
-            ],
+            options: ["Heart", "Lungs", "Liver", "Brain"],
             correctAnswer: "Heart",
             order: 3,
           },
@@ -437,7 +494,8 @@ async function seed() {
         quizId: quizzes[3].id,
         questions: [
           {
-            question: "What is the purpose of multi-factor authentication (MFA)?",
+            question:
+              "What is the purpose of multi-factor authentication (MFA)?",
             options: [
               "To slow down the login process",
               "To add an extra layer of security beyond passwords",
@@ -455,7 +513,8 @@ async function seed() {
               "A network scanning technique",
               "A password cracking method",
             ],
-            correctAnswer: "An attempt to obtain sensitive information through deceptive emails",
+            correctAnswer:
+              "An attempt to obtain sensitive information through deceptive emails",
             order: 2,
           },
           {
@@ -477,7 +536,8 @@ async function seed() {
               "Managers should have all privileges",
               "No one should have any privileges",
             ],
-            correctAnswer: "Users should only have access to resources needed for their job",
+            correctAnswer:
+              "Users should only have access to resources needed for their job",
             order: 4,
           },
         ],
@@ -525,12 +585,7 @@ async function seed() {
         questions: [
           {
             question: "What is the first phase of the SDLC?",
-            options: [
-              "Implementation",
-              "Planning",
-              "Testing",
-              "Maintenance",
-            ],
+            options: ["Implementation", "Planning", "Testing", "Maintenance"],
             correctAnswer: "Planning",
             order: 1,
           },
@@ -553,7 +608,8 @@ async function seed() {
               "Testing only at the end",
               "Deploying every day",
             ],
-            correctAnswer: "Regularly merging code changes into a shared repository",
+            correctAnswer:
+              "Regularly merging code changes into a shared repository",
             order: 3,
           },
         ],
@@ -561,7 +617,15 @@ async function seed() {
     ];
 
     console.log("❓ Creating questions and storing references...");
-    const createdQuestions: Record<string, Array<{ id: string; question: string; correctAnswer: string; order: number }>> = {};
+    const createdQuestions: Record<
+      string,
+      Array<{
+        id: string;
+        question: string;
+        correctAnswer: string;
+        order: number;
+      }>
+    > = {};
 
     for (const questionSet of questionSets) {
       const questions = await Promise.all(
@@ -574,24 +638,28 @@ async function seed() {
           })
         )
       );
-      createdQuestions[questionSet.quizId] = questions.map(q => ({
+      createdQuestions[questionSet.quizId] = questions.map((q) => ({
         id: q.id,
         question: q.question,
         correctAnswer: q.correctAnswer,
-        order: q.order
+        order: q.order,
       }));
     }
 
     console.log("📊 Creating quiz responses...");
 
-    const createAnswersArray = (quizId: string, answersByOrder: Record<string, string>) => {
+    const createAnswersArray = (
+      quizId: string,
+      answersByOrder: Record<string, string>
+    ) => {
       const questions = createdQuestions[quizId];
-      return questions.map(question => {
-        const selectedAnswer = answersByOrder[question.order.toString()] || null;
+      return questions.map((question) => {
+        const selectedAnswer =
+          answersByOrder[question.order.toString()] || null;
         return {
           questionId: question.id,
           selectedAnswer,
-          isCorrect: selectedAnswer === question.correctAnswer
+          isCorrect: selectedAnswer === question.correctAnswer,
         };
       });
     };
