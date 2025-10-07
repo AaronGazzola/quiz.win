@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ExtendedUser } from "@/app/layout.types"
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util"
 
 interface UserAvatarMenuProps {
   user: ExtendedUser | null
@@ -100,7 +101,10 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onSignOut} className="cursor-pointer">
+        <DropdownMenuItem onClick={() => {
+          conditionalLog({ component: "UserAvatarMenu", action: "sign_out_clicked", email: user?.email }, { label: LOG_LABELS.AUTH });
+          onSignOut();
+        }} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </DropdownMenuItem>

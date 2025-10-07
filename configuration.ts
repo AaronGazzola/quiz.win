@@ -1,4 +1,5 @@
 export const configuration = {
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
   paths: {
     signIn: "/sign-in",
     home: "/",

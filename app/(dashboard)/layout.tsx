@@ -13,6 +13,7 @@ import { ExtendedUser } from "@/app/layout.types";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
 import { signOut } from "@/lib/auth-client";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -33,17 +34,32 @@ export default function DashboardLayout({
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      conditionalLog({ location: "handleSignOut", status: "start", userId: user?.id }, { label: LOG_LABELS.AUTH });
 
-    queryClient.invalidateQueries();
+      conditionalLog({ location: "handleSignOut", status: "calling_signOut" }, { label: LOG_LABELS.AUTH });
+      await signOut();
+      conditionalLog({ location: "handleSignOut", status: "signOut_complete" }, { label: LOG_LABELS.AUTH });
 
-    reset();
-    resetAuthLayout();
-    resetQuizTable();
-    resetResponseTable();
-    resetQuiz();
+      conditionalLog({ location: "handleSignOut", status: "invalidating_queries" }, { label: LOG_LABELS.AUTH });
+      queryClient.invalidateQueries();
+      conditionalLog({ location: "handleSignOut", status: "queries_invalidated" }, { label: LOG_LABELS.AUTH });
 
-    router.push("/sign-in");
+      conditionalLog({ location: "handleSignOut", status: "resetting_stores" }, { label: LOG_LABELS.AUTH });
+      reset();
+      resetAuthLayout();
+      resetQuizTable();
+      resetResponseTable();
+      resetQuiz();
+      conditionalLog({ location: "handleSignOut", status: "stores_reset" }, { label: LOG_LABELS.AUTH });
+
+      conditionalLog({ location: "handleSignOut", status: "navigating_to_sign_in" }, { label: LOG_LABELS.AUTH });
+      router.push("/sign-in");
+      conditionalLog({ location: "handleSignOut", status: "complete" }, { label: LOG_LABELS.AUTH });
+    } catch (error) {
+      conditionalLog({ location: "handleSignOut", status: "error", error }, { label: LOG_LABELS.AUTH });
+      throw error;
+    }
   };
 
   return (
