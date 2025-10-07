@@ -77,7 +77,7 @@ export const useGetQuizzes = (organizationIds?: string[]) => {
         conditionalLog({hook:"useGetQuizzes",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetQuizzes",status:"success",quizCount:data?.quizzes?.length,total:data?.total},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog({hook:"useGetQuizzes",status:"success",quizCount:data?.quizzes?.length,totalCount:data?.totalCount},{label:LOG_LABELS.DATA_FETCH});
       return data;
     },
     staleTime: 1000 * 60 * 5,
@@ -226,7 +226,7 @@ export const useGetQuizResponses = (
         conditionalLog({hook:"useGetQuizResponses",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetQuizResponses",status:"success",responseCount:data?.responses?.length,total:data?.total},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog({hook:"useGetQuizResponses",status:"success",responseCount:data?.responses?.length,totalCount:data?.totalCount},{label:LOG_LABELS.DATA_FETCH});
       return data;
     },
     enabled,

@@ -37,7 +37,7 @@ export const useGetUsers = (organizationIds?: string[]) => {
         conditionalLog({hook:"useGetUsers",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetUsers",status:"success",userCount:data?.users?.length,total:data?.total},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog({hook:"useGetUsers",status:"success",userCount:data?.users?.length,totalCount:data?.totalCount},{label:LOG_LABELS.DATA_FETCH});
       return data;
     },
     staleTime: 1000 * 60 * 2,
