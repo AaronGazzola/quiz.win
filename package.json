@@ -26,7 +26,9 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "test:report": "tsx scripts/generate-test-report.ts",
+    "test:report:cleanup": "tsx scripts/generate-test-report.ts --cleanup"
   },
   "prisma": {
     "seed": "tsx scripts/seed.ts"
