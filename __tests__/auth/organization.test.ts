@@ -1,13 +1,7 @@
-/**
- * @jest-environment jsdom
- */
-
 import {
   createOrganizationAction,
   getOrganizationsAction,
 } from "@/app/(dashboard)/invite/page.actions";
-
-// Mock the auth module
 jest.mock("@/lib/auth", () => ({
   auth: {
     api: {
@@ -18,12 +12,10 @@ jest.mock("@/lib/auth", () => ({
   },
 }));
 
-// Mock the headers function
 jest.mock("next/headers", () => ({
   headers: jest.fn().mockResolvedValue({}),
 }));
 
-// Mock role utilities
 jest.mock("@/lib/role.utils", () => ({
   isSuperAdmin: jest.fn(),
   getUserAdminOrganizations: jest.fn(),

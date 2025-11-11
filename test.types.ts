@@ -1,0 +1,98 @@
+export enum TestId {
+  AUTH_EMAIL_INPUT = "auth-email-input",
+  AUTH_PASSWORD_INPUT = "auth-password-input",
+  AUTH_NAME_INPUT = "auth-name-input",
+  AUTH_SIGNIN_BUTTON = "auth-signin-button",
+  AUTH_SIGNUP_BUTTON = "auth-signup-button",
+  AUTH_SIGNUP_LINK = "auth-signup-link",
+  AUTH_SIGNIN_LINK = "auth-signin-link",
+  AUTH_CREATE_ACCOUNT_HEADING = "auth-create-account-heading",
+  AUTH_SIGNOUT_BUTTON = "auth-signout-button",
+
+  NAV_SIGNIN_BUTTON = "nav-signin-button",
+  NAV_SIGNUP_BUTTON = "nav-signup-button",
+  NAV_DASHBOARD_LINK = "nav-dashboard-link",
+  NAV_USER_MENU = "nav-user-menu",
+
+  QUIZ_LIST_CONTAINER = "quiz-list-container",
+  QUIZ_CARD = "quiz-card",
+  QUIZ_TITLE = "quiz-title",
+  QUIZ_DESCRIPTION = "quiz-description",
+  QUIZ_CREATE_BUTTON = "quiz-create-button",
+  QUIZ_EDIT_BUTTON = "quiz-edit-button",
+  QUIZ_DELETE_BUTTON = "quiz-delete-button",
+  QUIZ_SUBMIT_BUTTON = "quiz-submit-button",
+
+  QUESTION_CONTAINER = "question-container",
+  QUESTION_TEXT = "question-text",
+  QUESTION_OPTION = "question-option",
+  QUESTION_CREATE_BUTTON = "question-create-button",
+  QUESTION_EDIT_BUTTON = "question-edit-button",
+  QUESTION_DELETE_BUTTON = "question-delete-button",
+
+  RESPONSE_CONTAINER = "response-container",
+  RESPONSE_LIST = "response-list",
+  RESPONSE_ITEM = "response-item",
+  RESPONSE_USER = "response-user",
+  RESPONSE_SCORE = "response-score",
+  RESPONSE_TIMESTAMP = "response-timestamp",
+  RESPONSE_EXPORT_BUTTON = "response-export-button",
+
+  ORG_SELECTOR = "org-selector",
+  ORG_SWITCHER = "org-switcher",
+  ORG_NAME = "org-name",
+  ORG_CREATE_BUTTON = "org-create-button",
+  ORG_FILTER = "org-filter",
+
+  INVITE_EMAIL_INPUT = "invite-email-input",
+  INVITE_ROLE_SELECT = "invite-role-select",
+  INVITE_SEND_BUTTON = "invite-send-button",
+  INVITE_LIST = "invite-list",
+  INVITE_ACCEPT_BUTTON = "invite-accept-button",
+  INVITE_REJECT_BUTTON = "invite-reject-button",
+
+  USER_PROFILE = "user-profile",
+  USER_EMAIL = "user-email",
+  USER_ROLE_BADGE = "user-role-badge",
+  USER_LIST = "user-list",
+  USER_MANAGEMENT_TABLE = "user-management-table",
+
+  FORM_SUBMIT_BUTTON = "form-submit-button",
+  FORM_CANCEL_BUTTON = "form-cancel-button",
+  FORM_CONTAINER = "form-container",
+  FORM_ERROR = "form-error",
+  FORM_SUCCESS = "form-success",
+
+  TOAST_ERROR = "toast-error",
+  TOAST_SUCCESS = "toast-success",
+  TOAST_INFO = "toast-info",
+
+  LOADING_SPINNER = "loading-spinner",
+  LOADING_SKELETON = "loading-skeleton",
+
+  DIALOG = "dialog",
+  DIALOG_TITLE = "dialog-title",
+  DIALOG_DESCRIPTION = "dialog-description",
+  DIALOG_CONFIRM = "dialog-confirm",
+  DIALOG_CANCEL = "dialog-cancel",
+
+  TABLE_CONTAINER = "table-container",
+  TABLE_ROW = "table-row",
+  TABLE_HEADER = "table-header",
+  TABLE_CELL = "table-cell",
+
+  BREADCRUMB = "breadcrumb",
+  BREADCRUMB_ITEM = "breadcrumb-item",
+
+  PAGINATION = "pagination",
+  PAGINATION_PREV = "pagination-prev",
+  PAGINATION_NEXT = "pagination-next",
+
+  SEARCH_INPUT = "search-input",
+  FILTER_BUTTON = "filter-button",
+  SORT_BUTTON = "sort-button",
+
+  DASHBOARD_CONTAINER = "dashboard-container",
+  DASHBOARD_STATS = "dashboard-stats",
+  DASHBOARD_RECENT = "dashboard-recent",
+}

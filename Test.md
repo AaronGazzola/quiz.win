@@ -2,8 +2,14 @@
 
 ## Run All Tests
 
+**Command:** `npm run test:all`
+✓ Runs the complete test suite including all unit, integration, and e2e tests
+
 **Command:** `npm run test`
-✓ Runs the complete test suite across all test files
+✓ Runs unit and integration tests only (Jest)
+
+**Command:** `npm run test:e2e`
+✓ Runs end-to-end tests only (Playwright)
 
 ## Test Index
 
@@ -11,9 +17,10 @@
 2. [Organization API Tests](#2-organization-api-tests) - `npm run test -- __tests__/auth/organization.test.ts`
 3. [Permission System Tests](#3-permission-system-tests) - `npm run test -- __tests__/auth/permissions.test.ts`
 4. [Dual-Table Component Tests](#4-dual-table-component-tests) - `npm run test -- __tests__/pages/dual-table.test.ts`
-5. [End-to-End Page Tests](#5-end-to-end-page-tests) - `npm run test -- __tests__/e2e/existing-pages.test.ts`
-6. [Organization Role Access Stress Tests (Mock)](#6-organization-role-access-stress-tests-mock) - `npm run test:stress`
-7. [🔥 REAL DATABASE Security Audit Tests](#7-real-database-security-audit-tests) - `npm run test:real-security`
+5. [End-to-End Page Tests (Jest)](#5-end-to-end-page-tests-jest) - `npm run test -- __tests__/e2e/existing-pages.test.ts`
+6. [Organization Role Access Stress Tests](#6-organization-role-access-stress-tests) - `npm run test:stress`
+7. [REAL DATABASE Security Audit Tests](#7-real-database-security-audit-tests) - `npm run test:real-security`
+8. [Authentication E2E Tests (Playwright)](#8-authentication-e2e-tests-playwright) - `npm run test:e2e:auth`
 
 ## 1. Role Utility Tests
 
@@ -600,13 +607,40 @@ For each combination of **[User Role] × [Table] × [CRUD Operation]**:
 9. Add rate limiting for bulk operations
 10. Regular security audits and penetration testing
 
+## 8. Authentication E2E Tests (Playwright)
+
+**File:** `e2e/auth.spec.ts`
+**Command:** `npm run test:e2e:auth`
+
+### Authentication Flow
+
+- should complete full authentication flow: signup -> signout -> signin
+  ✓ Validates complete user authentication lifecycle from account creation to signin
+
+**Pass Conditions:**
+- Signup form is visible on page load
+- User can successfully create account with email, password, and name
+- User is redirected to dashboard after signup
+- User can successfully sign out and is redirected to home page
+- User can successfully sign in with existing credentials
+- User is redirected to dashboard after signin
+
 ## Test Commands
 
 To run specific test categories:
 
 ```bash
-# All tests
+# All tests (Jest + Playwright)
+npm run test:all
+
+# Jest unit tests only
 npm run test
+
+# Playwright e2e tests only
+npm run test:e2e
+
+# Specific e2e test
+npm run test:e2e:auth
 
 # Role utility tests
 npm run test -- __tests__/lib/role.utils.test.ts
@@ -620,7 +654,7 @@ npm run test -- __tests__/auth/permissions.test.ts
 # Dual-table component tests
 npm run test -- __tests__/pages/dual-table.test.ts
 
-# End-to-end tests
+# End-to-end tests (Jest)
 npm run test -- __tests__/e2e/existing-pages.test.ts
 
 # Organization role access stress tests
@@ -642,6 +676,11 @@ npm run test:watch
 npm run test -- --testPathPattern=stress
 npm run test -- --testNamePattern="Auth Schema"
 npm run test -- --testNamePattern="Quiz Table"
+
+# Playwright specific modes
+npm run test:e2e:headed    # Run with visible browser
+npm run test:e2e:trace     # Run with full trace for debugging
+npm run test:e2e:debug     # Run in debug mode
 ```
 
 ## Test Environment Setup

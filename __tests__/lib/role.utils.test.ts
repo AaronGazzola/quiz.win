@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import { isAdmin, isSuperAdmin, isOrgAdminClient, canInviteUsers } from "@/lib/client-role.utils";
 
 describe("Role Utilities", () => {

@@ -1,10 +1,4 @@
-/**
- * @jest-environment jsdom
- */
-
 import { getOrgScopedData, getUserMemberOrganizations, getUserAdminOrganizations } from "@/lib/data-access";
-
-// Mock the auth module
 jest.mock("@/lib/auth", () => ({
   auth: {
     api: {
