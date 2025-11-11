@@ -169,6 +169,7 @@ class ConsolidatedReporter implements Reporter {
 
     if (afterallFiles.length > 0 && process.env.TEST_SUMMARY_ONLY === "true") {
       console.log("\n📊 Sub-Test Results:\n");
+      let aggregatedStats = { total: 0, passed: 0, failed: 0 };
       for (const file of afterallFiles) {
         const data = JSON.parse(
           fs.readFileSync(
@@ -184,9 +185,14 @@ class ConsolidatedReporter implements Reporter {
             );
           });
         }
+        if (data.stats) {
+          aggregatedStats.total += data.stats.total || 0;
+          aggregatedStats.passed += data.stats.passed || 0;
+          aggregatedStats.failed += data.stats.failed || 0;
+        }
       }
       console.log(
-        `\n${data.stats?.total || 0} sub-tests | ${data.stats?.passed || 0} passed | ${data.stats?.failed || 0} failed\n`
+        `\n${aggregatedStats.total} sub-tests | ${aggregatedStats.passed} passed | ${aggregatedStats.failed} failed\n`
       );
     }
   }

@@ -5,18 +5,16 @@ const prisma = new PrismaClient();
 export async function cleanupTestUser(email: string) {
   await prisma.response.deleteMany({
     where: {
-      profile: {
-        user: {
-          email,
-        },
+      user: {
+        email,
       },
     },
   });
 
   await prisma.profile.deleteMany({
     where: {
-      user: {
-        email,
+      userId: {
+        in: (await prisma.user.findMany({ where: { email } })).map((u) => u.id),
       },
     },
   });
@@ -39,7 +37,7 @@ export async function cleanupTestUser(email: string) {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { members: true },
+    include: { member: true },
   });
 
   if (user) {
@@ -49,7 +47,7 @@ export async function cleanupTestUser(email: string) {
 
     await prisma.invitation.deleteMany({
       where: {
-        OR: [{ email }, { organizationId: { in: user.members.map((m) => m.organizationId) } }],
+        OR: [{ email }, { organizationId: { in: user.member.map((m) => m.organizationId) } }],
       },
     });
   }
@@ -62,12 +60,12 @@ export async function cleanupTestUser(email: string) {
 export async function cleanupTestOrganization(slug: string) {
   const org = await prisma.organization.findUnique({
     where: { slug },
-    include: { quizzes: { include: { questions: true } }, members: true },
+    include: { quiz: { include: { Question: true } }, member: true },
   });
 
   if (!org) return;
 
-  const quizIds = org.quizzes.map((q) => q.id);
+  const quizIds = org.quiz.map((q) => q.id);
 
   await prisma.response.deleteMany({
     where: { quizId: { in: quizIds } },
