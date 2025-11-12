@@ -614,16 +614,19 @@ For each combination of **[User Role] × [Table] × [CRUD Operation]**:
 
 ### Authentication Flow
 
-- should complete full authentication flow: signup -> signout -> signin
-  ✓ Validates complete user authentication lifecycle from account creation to signin
+- should complete full authentication flow: sign in -> sign out
+  ✓ Validates user authentication lifecycle using dev sign-in flow
 
 **Pass Conditions:**
-- Signup form is visible on page load
-- User can successfully create account with email, password, and name
-- User is redirected to dashboard after signup
-- User can successfully sign out and is redirected to home page
-- User can successfully sign in with existing credentials
-- User is redirected to dashboard after signin
+- Sign-in page loads successfully at /sign-in
+- Dev user cards are visible on the page
+- User can click on a dev user card to sign in
+- User is redirected to dashboard (/) after sign in
+- User avatar menu is visible in the navigation
+- User can open the avatar menu dropdown
+- Sign out button is visible in the dropdown menu
+- User can click sign out button
+- User is redirected to /sign-in after sign out
 
 ## Test Commands
 
