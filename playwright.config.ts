@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
-import { configuration } from "./configuration";
+
+const baseURL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -7,9 +8,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [["./e2e/utils/consolidated-reporter.ts"]],
+  reporter: "list",
   use: {
-    baseURL: configuration.baseURL || "http://localhost:3000",
+    baseURL,
     trace: process.env.TRACE === "true" ? "on" : "on-first-retry",
     screenshot: "only-on-failure",
     video: process.env.TRACE === "true" ? "on" : "off",
@@ -25,8 +26,8 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
-    url: configuration.baseURL || "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    url: baseURL,
+    reuseExistingServer: true,
     timeout: 120000,
   },
   timeout: 120000,

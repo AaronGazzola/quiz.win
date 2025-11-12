@@ -287,6 +287,7 @@ function UserCard({
       <button
         onClick={() => onClick(user)}
         disabled={isAnyLoading}
+        data-testid={`user-card-${user.email}`}
         className={cn(
           "w-full flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-accent transition-colors relative",
           isAnyLoading && !isLoading && "opacity-50 cursor-not-allowed",

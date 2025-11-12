@@ -8,6 +8,8 @@ export enum TestId {
   AUTH_SIGNIN_LINK = "auth-signin-link",
   AUTH_CREATE_ACCOUNT_HEADING = "auth-create-account-heading",
   AUTH_SIGNOUT_BUTTON = "auth-signout-button",
+  AUTH_AVATAR_MENU = "auth-avatar-menu",
+  AUTH_USER_CARD = "user-card",
 
   NAV_SIGNIN_BUTTON = "nav-signin-button",
   NAV_SIGNUP_BUTTON = "nav-signup-button",

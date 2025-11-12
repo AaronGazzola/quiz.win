@@ -1,32 +1,22 @@
-import { test, expect } from "./utils/test-fixtures";
-import { TestId } from "../test.types";
 import {
   TestResultLogger,
+  clickByTestId,
   formatTestConditions,
   logTestResult,
-  fillByTestId,
-  clickByTestId,
-  isVisibleByTestId,
   waitForButtonVisibility,
-  generateUniqueEmail,
 } from "@/lib/test.utils";
-import { cleanupTestUser } from "./utils/test-cleanup";
 import * as fs from "fs";
 import * as path from "path";
+import { TestId } from "../test.types";
+import { test } from "./utils/test-fixtures";
 
 test.describe("Authentication Tests", () => {
   const logger = new TestResultLogger("auth");
-  const TEST_EMAIL = generateUniqueEmail("test@example.com");
-  const TEST_PASSWORD = "Test123!";
-  const TEST_NAME = "Test User";
-
-  test.beforeAll(async () => {
-    await cleanupTestUser(TEST_EMAIL);
-  });
+  const TEST_USER_EMAIL_DOMAIN =
+    process.env.NEXT_PUBLIC_TEST_USER_EMAIL_DOMAIN || "gazzola.dev";
+  const TEST_USER_EMAIL = `dr.sarah.chen@${TEST_USER_EMAIL_DOMAIN}`;
 
   test.afterAll(async () => {
-    await cleanupTestUser(TEST_EMAIL);
-
     logger.finalizeUnreachedTests();
 
     const summary = logger.getSummary();
@@ -64,107 +54,110 @@ test.describe("Authentication Tests", () => {
     );
   });
 
-  test("should complete full authentication flow: signup -> signout -> signin", async ({
+  test("should complete full authentication flow: signin -> signout -> signin", async ({
     page,
   }) => {
     logger.registerExpectedTest(
-      "Auth - Signup form visible",
-      formatTestConditions({ page: "auth", action: "initial load" }),
-      "Signup form should be visible"
+      "Auth - User card visible",
+      formatTestConditions({ page: "sign-in", action: "initial load" }),
+      "User card should be visible"
     );
     logger.registerExpectedTest(
-      "Auth - Account created",
-      formatTestConditions({ page: "auth", action: "form submitted" }),
-      "User should be redirected to dashboard"
+      "Auth - First signin successful",
+      formatTestConditions({ page: "sign-in", action: "user card clicked" }),
+      "User should be redirected to root"
     );
     logger.registerExpectedTest(
       "Auth - Signout successful",
       formatTestConditions({ page: "dashboard", action: "signout clicked" }),
-      "User should be redirected to home and see signin button"
+      "User should be redirected to sign-in and see user cards"
     );
     logger.registerExpectedTest(
-      "Auth - Signin successful",
-      formatTestConditions({ page: "auth", action: "signin submitted" }),
-      "User should be redirected to dashboard"
+      "Auth - Second signin successful",
+      formatTestConditions({ page: "sign-in", action: "user card clicked" }),
+      "User should be redirected to root"
     );
 
-    await page.goto("/auth/signup");
+    await page.goto("/sign-in");
 
-    let signupFormVisible = false;
+    let userCardVisible = false;
     try {
-      await expect(page.getByTestId(TestId.AUTH_EMAIL_INPUT)).toBeVisible({
-        timeout: 10000,
-      });
-      signupFormVisible = await isVisibleByTestId(
-        page,
-        TestId.AUTH_EMAIL_INPUT,
-        10000
+      await page.waitForSelector(
+        `[data-testid="${TestId.AUTH_USER_CARD}-${TEST_USER_EMAIL}"]`,
+        { timeout: 10000 }
       );
+      userCardVisible = true;
     } catch (error) {
-      signupFormVisible = false;
+      userCardVisible = false;
     }
 
     await logTestResult(
       logger,
       page,
-      "Auth - Signup form visible",
-      formatTestConditions({ page: "auth", action: "initial load" }),
-      "Signup form should be visible",
-      signupFormVisible,
-      "Signup form visible",
-      "Signup form not found"
+      "Auth - User card visible",
+      formatTestConditions({ page: "sign-in", action: "initial load" }),
+      "User card should be visible",
+      userCardVisible,
+      "User card visible",
+      "User card not found"
     );
 
-    if (!signupFormVisible) {
-      throw new Error("Signup form not visible");
+    if (!userCardVisible) {
+      throw new Error("User card not visible");
     }
 
-    await fillByTestId(page, TestId.AUTH_EMAIL_INPUT, TEST_EMAIL);
-    await fillByTestId(page, TestId.AUTH_PASSWORD_INPUT, TEST_PASSWORD);
-    await fillByTestId(page, TestId.AUTH_NAME_INPUT, TEST_NAME);
-    await clickByTestId(page, TestId.AUTH_SIGNUP_BUTTON);
+    await page.click(
+      `[data-testid="${TestId.AUTH_USER_CARD}-${TEST_USER_EMAIL}"]`
+    );
 
-    let accountCreated = false;
+    let firstSigninSuccessful = false;
     try {
-      await page.waitForURL("/dashboard", { timeout: 10000 });
-      accountCreated = true;
+      await page.waitForURL("/", { timeout: 10000 });
+      firstSigninSuccessful = true;
     } catch (error) {
-      accountCreated = false;
+      firstSigninSuccessful = false;
     }
 
     await logTestResult(
       logger,
       page,
-      "Auth - Account created",
-      formatTestConditions({ page: "auth", action: "form submitted" }),
-      "User should be redirected to dashboard",
-      accountCreated,
-      "Redirected to dashboard",
-      "Failed to redirect to dashboard"
+      "Auth - First signin successful",
+      formatTestConditions({ page: "sign-in", action: "user card clicked" }),
+      "User should be redirected to root",
+      firstSigninSuccessful,
+      "Redirected to root",
+      "Failed to redirect to root"
     );
 
-    if (!accountCreated) {
-      throw new Error("Account creation failed");
+    if (!firstSigninSuccessful) {
+      throw new Error("First signin failed");
     }
 
-    const signoutButtonVisible = await waitForButtonVisibility(
+    const avatarMenuVisible = await waitForButtonVisibility(
       page,
-      TestId.AUTH_SIGNOUT_BUTTON,
+      TestId.AUTH_AVATAR_MENU,
       10000
     );
-    if (signoutButtonVisible) {
-      await clickByTestId(page, TestId.AUTH_SIGNOUT_BUTTON);
+    if (avatarMenuVisible) {
+      await clickByTestId(page, TestId.AUTH_AVATAR_MENU);
+      const signoutButtonVisible = await waitForButtonVisibility(
+        page,
+        TestId.AUTH_SIGNOUT_BUTTON,
+        10000
+      );
+      if (signoutButtonVisible) {
+        await clickByTestId(page, TestId.AUTH_SIGNOUT_BUTTON);
+      }
     }
 
     let signoutSuccessful = false;
     try {
-      await page.waitForURL("/", { timeout: 10000 });
-      const signinVisible = await waitForButtonVisibility(
-        page,
-        TestId.NAV_SIGNIN_BUTTON,
-        10000
+      await page.waitForURL("/sign-in", { timeout: 10000 });
+      await page.waitForSelector(
+        `[data-testid="${TestId.AUTH_USER_CARD}-${TEST_USER_EMAIL}"]`,
+        { timeout: 10000 }
       );
-      signoutSuccessful = signinVisible;
+      signoutSuccessful = true;
     } catch (error) {
       signoutSuccessful = false;
     }
@@ -174,7 +167,7 @@ test.describe("Authentication Tests", () => {
       page,
       "Auth - Signout successful",
       formatTestConditions({ page: "dashboard", action: "signout clicked" }),
-      "User should be redirected to home and see signin button",
+      "User should be redirected to sign-in and see user cards",
       signoutSuccessful,
       "Signout successful",
       "Signout failed"
@@ -184,32 +177,32 @@ test.describe("Authentication Tests", () => {
       throw new Error("Signout failed");
     }
 
-    await page.goto("/auth/signin");
-    await fillByTestId(page, TestId.AUTH_EMAIL_INPUT, TEST_EMAIL);
-    await fillByTestId(page, TestId.AUTH_PASSWORD_INPUT, TEST_PASSWORD);
-    await clickByTestId(page, TestId.AUTH_SIGNIN_BUTTON);
+    await page.goto("/sign-in");
+    await page.click(
+      `[data-testid="${TestId.AUTH_USER_CARD}-${TEST_USER_EMAIL}"]`
+    );
 
-    let signinSuccessful = false;
+    let secondSigninSuccessful = false;
     try {
-      await page.waitForURL("/dashboard", { timeout: 10000 });
-      signinSuccessful = true;
+      await page.waitForURL("/", { timeout: 10000 });
+      secondSigninSuccessful = true;
     } catch (error) {
-      signinSuccessful = false;
+      secondSigninSuccessful = false;
     }
 
     await logTestResult(
       logger,
       page,
-      "Auth - Signin successful",
-      formatTestConditions({ page: "auth", action: "signin submitted" }),
-      "User should be redirected to dashboard",
-      signinSuccessful,
+      "Auth - Second signin successful",
+      formatTestConditions({ page: "sign-in", action: "user card clicked" }),
+      "User should be redirected to root",
+      secondSigninSuccessful,
       "Signin successful",
       "Signin failed"
     );
 
-    if (!signinSuccessful) {
-      throw new Error("Signin failed");
+    if (!secondSigninSuccessful) {
+      throw new Error("Second signin failed");
     }
   });
 });

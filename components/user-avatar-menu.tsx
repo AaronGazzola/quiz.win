@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ExtendedUser } from "@/app/layout.types"
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util"
+import { TestId } from "@/test.types"
 
 interface UserAvatarMenuProps {
   user: ExtendedUser | null
@@ -67,7 +68,7 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-8 w-8 cursor-pointer">
+        <Avatar className="h-8 w-8 cursor-pointer" data-testid={TestId.AUTH_AVATAR_MENU}>
           <AvatarFallback className="text-xs">
             {getInitials(user?.email)}
           </AvatarFallback>
@@ -104,7 +105,7 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
         <DropdownMenuItem onClick={() => {
           conditionalLog({ component: "UserAvatarMenu", action: "sign_out_clicked", email: user?.email }, { label: LOG_LABELS.AUTH });
           onSignOut();
-        }} className="cursor-pointer">
+        }} className="cursor-pointer" data-testid={TestId.AUTH_SIGNOUT_BUTTON}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </DropdownMenuItem>

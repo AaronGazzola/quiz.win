@@ -16,7 +16,7 @@
     "test:real-security": "jest __tests__/stress/real-organization-role-access.test.ts",
     "test:security-audit": "npm run test:real-security",
     "test:e2e": "playwright test",
-    "test:e2e:auth": "playwright test e2e/auth.spec.ts",
+    "test:e2e:auth": "playwright test e2e/auth.spec.ts --workers=1",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:trace": "TRACE=true playwright test",
     "test:e2e:debug": "playwright test --debug",
