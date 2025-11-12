@@ -33,6 +33,43 @@ test.describe("Feature Name Tests", () => {
 
 **IMPORTANT:** Always import `test` and `expect` from `"./utils/test-fixtures"`, NOT from `"@playwright/test"`. The custom fixtures automatically capture diagnostic data.
 
+## Test Structure with Step Logging
+
+```typescript
+import { test, expect } from "./utils/test-fixtures";
+import { TestId } from "../test.types";
+import { TestStepLogger } from "./utils/test-logger";
+
+test.describe("Feature Name Tests", () => {
+  test("should perform multi-step flow", async ({ page }) => {
+    const logger = new TestStepLogger("Multi-step Flow");
+
+    await logger.step("Navigate to page", async () => {
+      await page.goto("/");
+      await expect(page).toHaveURL("/");
+    });
+
+    await logger.step("Click button", async () => {
+      await page.getByTestId(TestId.ELEMENT).click();
+    });
+
+    await logger.step("Verify result", async () => {
+      await expect(page.getByTestId(TestId.RESULT)).toBeVisible({
+        timeout: 10000,
+      });
+    });
+  });
+});
+```
+
+**Console Output:**
+```
+🧪 Multi-step Flow
+   01. Navigate to page... ✓
+   02. Click button... ✓
+   03. Verify result... ✓
+```
+
 ## Navigation Patterns
 
 ### Direct Navigation

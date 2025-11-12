@@ -68,6 +68,7 @@ project/
 │   └── utils/
 │       ├── test-cleanup.ts
 │       ├── test-fixtures.ts
+│       ├── test-logger.ts
 │       └── consolidated-reporter.ts
 ├── __tests__/
 │   └── unit-test.test.ts
@@ -97,6 +98,66 @@ export enum TestId {
 
 - `data-testid` - Identifies the element
 - `data-state` - Identifies the current state of the element
+
+### Test Step Logging
+
+Use `TestStepLogger` to log each test step to the console **in real-time as tests run** with checkmarks (✓) or crosses (✗).
+
+**Benefits:**
+- **Real-time console output** - See steps execute live during test runs
+- Clear indication of which step failed
+- Step logs also appear in test reports (Console Output section)
+- Automatic error handling and step numbering
+- Uses stderr for immediate output (not buffered by Playwright)
+
+**Usage:**
+
+```typescript
+import { TestStepLogger } from './utils/test-logger';
+
+test('should complete user flow', async ({ page }) => {
+  const logger = new TestStepLogger('User Flow Test');
+
+  await logger.step('Navigate to homepage', async () => {
+    await page.goto('/');
+    await expect(page).toHaveURL('/');
+  });
+
+  await logger.step('Click login button', async () => {
+    await page.getByTestId(TestId.LOGIN_BUTTON).click();
+  });
+
+  await logger.step('Enter credentials', async () => {
+    await page.getByTestId(TestId.EMAIL_INPUT).fill('user@example.com');
+    await page.getByTestId(TestId.PASSWORD_INPUT).fill('password123');
+  });
+});
+```
+
+**Console Output:**
+```
+🧪 User Flow Test
+   01. Navigate to homepage... ✓
+   02. Click login button... ✓
+   03. Enter credentials... ✓
+```
+
+If a step fails:
+```
+🧪 User Flow Test
+   01. Navigate to homepage... ✓
+   02. Click login button... ✗
+```
+
+**Alternative: Manual Step Logging**
+
+For steps that don't fit the async wrapper pattern:
+
+```typescript
+const logger = new TestStepLogger('Test Name');
+const result = someCondition;
+logger.logStep('Check condition', result);
+```
 
 For detailed examples of test patterns, see [`docs/test.util.md`](test.util.md).
 
@@ -1271,6 +1332,7 @@ Required in `.env` and `.env.local`:
 - **Test Directory:** `./e2e`
 - **Workers:** 1 in CI, `undefined` (optimal) locally
 - **Retries:** 2 in CI, 0 locally
+- **Reporters:** `list` (real-time output) + `consolidated-reporter` (detailed reports)
 - **Screenshots:** Only on failure
 - **Traces:** On first retry (standard mode) or all tests (trace mode)
 - **Timeout:** 120000ms (2 minutes) for both test execution and web server startup
