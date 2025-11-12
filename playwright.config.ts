@@ -8,7 +8,6 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  timeout: 120000,
   reporter: [["list"], ["./e2e/utils/consolidated-reporter.ts"]],
   outputDir: process.env.TEST_RUN_ID
     ? `test-results/${process.env.TEST_RUN_ID}`
