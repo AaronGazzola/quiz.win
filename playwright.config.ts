@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import dotenv from "dotenv";
+dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.local", override: true });
 const baseURL = process.env.BETTER_AUTH_URL || "http://localhost:3000";
 
 export default defineConfig({
@@ -13,7 +16,7 @@ export default defineConfig({
     ? `test-results/${process.env.TEST_RUN_ID}`
     : "test-results/default",
   use: {
-    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    baseURL: baseURL,
     trace: process.env.TEST_TRACE === "true" ? "on" : "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -25,11 +28,4 @@ export default defineConfig({
       },
     },
   ],
-  webServer: process.env.SKIP_WEB_SERVER
-    ? undefined
-    : {
-        command: "npm run dev",
-        url: baseURL,
-        reuseExistingServer: true,
-      },
 });
