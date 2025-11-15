@@ -3,7 +3,6 @@
 import {
   useAdminAccess,
   useGetUser,
-  useGetUserMembers,
 } from "@/app/layout.hooks";
 import { queryClient } from "@/app/layout.providers";
 import { useAppStore } from "@/app/layout.stores";
@@ -27,9 +26,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  useGetDashboardMetrics,
+  useDashboardPageData,
   useGetQuizResponses,
-  useGetQuizzes,
   useGetResponseDetail,
   useGetUserResponse,
   useProcessInvitation,
@@ -41,38 +39,43 @@ import {
   useQuizTableStore,
   useResponseDetailStore,
   useResponseTableStore,
+  useDashboardDataStore,
+  useResponseDataStore,
 } from "./page.stores";
 import { QuizDialog } from "./QuizDialog";
 
 export function DashboardPageContent() {
-  const { data: user } = useGetUser();
+  const { data: user, isLoading: userLoading } = useGetUser();
   console.log({ user });
-  const { data: userWithMembers } = useGetUserMembers();
   const { selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
   const hasAdminAccess = useAdminAccess();
+  const isInitializing = userLoading;
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
 
   const organizations = useMemo(
     () =>
-      userWithMembers?.member?.map((memberItem) => ({
+      user?.member?.map((memberItem) => ({
         id: memberItem.organizationId,
         name: memberItem.organization.name,
         slug: memberItem.organization.slug || "",
         role: memberItem.role,
       })) || [],
-    [userWithMembers?.member]
+    [user?.member]
   );
 
   const processInvitationMutation = useProcessInvitation();
   const router = useRouter();
 
-  const {
-    data: metrics,
-    isLoading: metricsLoading,
-    isFetching: metricsFetching,
-  } = useGetDashboardMetrics(selectedOrganizationIds);
+  const { isLoading: pageDataLoading, isFetching: pageDataFetching } = useDashboardPageData(selectedOrganizationIds);
+
+  const { metrics, quizzes: quizzesFromStore, quizzesTotalCount, quizzesTotalPages } = useDashboardDataStore();
+
+  const isLoading = pageDataLoading;
+  const quizzesFetching = pageDataFetching;
+  const metricsLoading = pageDataLoading;
+  const metricsFetching = pageDataFetching;
 
   const {
     search,
@@ -112,46 +115,17 @@ export function DashboardPageContent() {
     reset: resetResponseDetail,
   } = useResponseDetailStore();
 
-  const {
-    data: quizData,
-    isLoading,
-    isFetching: quizzesFetching,
-  } = useGetQuizzes(selectedOrganizationIds);
-  const {
-    data: responsesData,
-    isLoading: responsesLoading,
-    isFetching: responsesFetching,
-  } = useGetQuizResponses(selectedQuizId, selectedOrganizationIds);
-  const {
-    data: responseDetail,
-    isLoading: responseDetailLoading,
-    isFetching: responseDetailFetching,
-  } = useGetResponseDetail(selectedResponseId);
-  const {
-    data: userResponse,
-    isLoading: userResponseLoading,
-    isFetching: userResponseFetching,
-  } = useGetUserResponse(selectedQuizId);
+  const { isLoading: responsesLoading, isFetching: responsesFetching } = useGetQuizResponses(selectedQuizId, selectedOrganizationIds);
+  const { isLoading: responseDetailLoading, isFetching: responseDetailFetching } = useGetResponseDetail(selectedResponseId);
+  const { isLoading: userResponseLoading, isFetching: userResponseFetching } = useGetUserResponse(selectedQuizId);
 
-  const quizzes = quizData?.quizzes || [];
+  const { responses, responsesTotalCount: responsesTotalCountFromStore, responsesTotalPages: responsesTotalPagesFromStore, responseDetail, userResponse } = useResponseDataStore();
+
+  const quizzes = quizzesFromStore || [];
 
   const selectedQuiz = quizzes.find((quiz) => quiz.id === selectedQuizId);
-  const totalPages = quizData?.totalPages || 0;
-  const totalItems = quizData?.totalCount || 0;
-
-  useEffect(() => {
-    if (
-      organizations &&
-      organizations.length > 0 &&
-      selectedOrganizationIds.length === 0
-    ) {
-      setSelectedOrganizationIds(organizations.map((org) => org.id));
-    }
-  }, [
-    organizations,
-    selectedOrganizationIds.length,
-    setSelectedOrganizationIds,
-  ]);
+  const totalPages = quizzesTotalPages || 0;
+  const totalItems = quizzesTotalCount || 0;
 
   useViewportResize((height) => {
     const newItemsPerPage = calculateItemsPerPage(height);
@@ -269,9 +243,9 @@ export function DashboardPageContent() {
     toggleResponseSelected(responseId);
   };
 
-  const responses = responsesData?.responses || [];
-  const responsesTotalPages = responsesData?.totalPages || 0;
-  const responsesTotalItems = responsesData?.totalCount || 0;
+  const responsesData = responses || [];
+  const responsesTotalPages = responsesTotalPagesFromStore || 0;
+  const responsesTotalItems = responsesTotalCountFromStore || 0;
 
   return (
     <div
@@ -292,7 +266,7 @@ export function DashboardPageContent() {
         </div>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
         <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
@@ -347,7 +321,7 @@ export function DashboardPageContent() {
           </div>
         </div>
 
-        {hasAdminAccess && (
+        {!isInitializing && hasAdminAccess && (
           <>
             <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
@@ -467,7 +441,7 @@ export function DashboardPageContent() {
                   Qs
                 </th>
 
-                {hasAdminAccess && (
+                {!isInitializing && hasAdminAccess && (
                   <th data-testid={TestId.DASHBOARD_QUIZ_TABLE_RESPONSES_COL} className="hidden sm:table-cell px-2 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Responses
                   </th>
@@ -501,7 +475,7 @@ export function DashboardPageContent() {
                     <td className="px-2 sm:px-6 py-2 sm:py-4">
                       <div className="h-3 sm:h-4 bg-muted rounded w-6 sm:w-8" />
                     </td>
-                    {hasAdminAccess && (
+                    {!isInitializing && hasAdminAccess && (
                       <td className="hidden sm:table-cell px-2 sm:px-6 py-2 sm:py-4">
                         <div className="h-3 sm:h-4 bg-muted rounded w-6 sm:w-8" />
                       </td>
@@ -575,7 +549,7 @@ export function DashboardPageContent() {
                       {quiz._count.Question}
                     </td>
 
-                    {hasAdminAccess && (
+                    {!isInitializing && hasAdminAccess && (
                       <td className="hidden sm:table-cell px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-foreground">
                         {quiz._count.Response}
                       </td>
@@ -616,7 +590,7 @@ export function DashboardPageContent() {
         </div>
       </div>
 
-      {selectedQuizId && hasAdminAccess && (
+      {selectedQuizId && !isInitializing && hasAdminAccess && (
         <div className="bg-card border border-border rounded-lg">
           <div className="p-3 sm:p-4 border-b border-border">
             <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
@@ -703,7 +677,7 @@ export function DashboardPageContent() {
                       </td>
                     </tr>
                   ))
-                ) : responses.length === 0 ? (
+                ) : responsesData.length === 0 ? (
                   <tr>
                     <td
                       colSpan={4}
@@ -715,7 +689,7 @@ export function DashboardPageContent() {
                     </td>
                   </tr>
                 ) : (
-                  responses.map((response) => (
+                  responsesData.map((response) => (
                     <tr
                       key={response.id}
                       data-testid={`${TestId.DASHBOARD_RESPONSES_TABLE_ROW}-${response.id}`}
@@ -834,7 +808,7 @@ export function DashboardPageContent() {
         </div>
       )}
 
-      {selectedQuizId && hasAdminAccess && selectedResponseId && (
+      {selectedQuizId && !isInitializing && hasAdminAccess && selectedResponseId && (
         <div data-testid={TestId.DASHBOARD_RESPONSE_DETAIL} className="bg-card border border-border rounded-lg">
           <div className="p-3 sm:p-4 border-b border-border">
             <div>
@@ -1010,7 +984,7 @@ export function DashboardPageContent() {
         </div>
       )}
 
-      {selectedQuizId && !hasAdminAccess && (
+      {selectedQuizId && !isInitializing && !hasAdminAccess && (
         <div data-testid={TestId.DASHBOARD_USER_RESPONSE} className="bg-card border border-border rounded-lg">
           <div className="p-3 sm:p-4 border-b border-border">
             <div>

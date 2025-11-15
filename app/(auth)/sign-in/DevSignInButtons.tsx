@@ -4,9 +4,13 @@ import { signIn } from "@/lib/auth-client";
 import { DevUser, getDevUsers } from "@/lib/dev-users";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { getUserAction } from "../../layout.actions";
+import { getUserMembersAction, getAllOrganizationsAction } from "../../layout.actions";
 import { useAppStore, useRedirectStore } from "../../layout.stores";
 import { TestId } from "@/test.types";
+import { useQueryClient } from "@tanstack/react-query";
+import { getPendingInvitationsForUserAction } from "@/app/(dashboard)/layout.actions";
+import { getDashboardMetricsAction, getQuizzesAction } from "@/app/(dashboard)/page.actions";
+import { useDashboardDataStore } from "@/app/(dashboard)/page.stores";
 
 interface DevSignInButtonsProps {
   onSigningIn?: (email: string) => void;
@@ -17,41 +21,82 @@ export default function DevSignInButtons({
 }: DevSignInButtonsProps) {
   const [loadingUser, setLoadingUser] = useState<string | null>(null);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const { setUser } = useAppStore();
+  const { setUser, setAllOrganizations, setPendingInvitations, setSelectedOrganizationIds } = useAppStore();
   const { setUserData } = useRedirectStore();
+  const { setMetrics, setQuizzes } = useDashboardDataStore();
 
   if (process.env.NODE_ENV === "production") {
     return null;
   }
 
   const handleDevSignIn = async (user: DevUser) => {
-
     setLoadingUser(user.email);
     onSigningIn?.(user.email);
 
     try {
-
       const { error } = await signIn.email({
         email: user.email,
         password: "Password123!",
       });
 
-
       if (error) {
         return;
       }
 
-      const { data: userData, error: userError } = await getUserAction();
+      const { data: userData, error: userError } = await getUserMembersAction();
 
-      if (userError) {
+      if (userError || !userData) {
         return;
       }
 
-      if (userData) {
-        setUser(userData);
-        setUserData(userData);
+      setUser(userData);
+      setUserData(userData);
+
+      const pendingInvitationsPromise = getPendingInvitationsForUserAction().then(result => {
+        if (result.data) {
+          setPendingInvitations(result.data);
+        }
+        return result.data || [];
+      });
+
+      const organizationsPromise = userData.role === "super-admin"
+        ? getAllOrganizationsAction().then(result => {
+            if (result.data) {
+              setAllOrganizations(result.data);
+            }
+            return result.data || [];
+          })
+        : Promise.resolve([]);
+
+      await Promise.all([pendingInvitationsPromise, organizationsPromise]);
+
+      const organizationIds = userData.member?.map(m => m.organizationId) || [];
+      if (organizationIds.length > 0) {
+        setSelectedOrganizationIds(organizationIds);
+
+        const [metricsResult, quizzesResult] = await Promise.all([
+          getDashboardMetricsAction(organizationIds),
+          getQuizzesAction({
+            organizationIds,
+            page: 0,
+            itemsPerPage: 10,
+          }),
+        ]);
+
+        if (metricsResult.data) {
+          setMetrics(metricsResult.data);
+        }
+
+        if (quizzesResult.data) {
+          setQuizzes(quizzesResult.data.quizzes, quizzesResult.data.totalCount, quizzesResult.data.totalPages);
+        }
       }
+
+      queryClient.setQueryData(["user"], userData);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       router.push("/");
     } catch {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useGetUser, useGetUserMembers, useCreateOrganization } from "@/app/layout.hooks";
+import { useGetUser, useCreateOrganization } from "@/app/layout.hooks";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,21 +22,20 @@ import {
 
 export function InvitePageContent() {
   const { data: user } = useGetUser();
-  const { data: userWithMembers } = useGetUserMembers();
   const createOrgMutation = useCreateOrganization();
   const sendInvitationsMutation = useSendInvitations();
 
   const allOrganizations =
-    userWithMembers?.member?.map((memberItem) => ({
+    user?.member?.map((memberItem) => ({
       id: memberItem.organizationId,
       name: memberItem.organization.name,
       role: memberItem.role,
     })) || [];
 
-  const adminStatusByOrg = getAdminStatusByOrganization(userWithMembers || null);
+  const adminStatusByOrg = getAdminStatusByOrganization(user || null);
   const organizations = allOrganizations.filter((org) => adminStatusByOrg[org.id]);
   const isSuperAdminUser = isSuperAdmin(user || null);
-  const loadingOrgs = !userWithMembers;
+  const loadingOrgs = !user;
 
   const [emails, setEmails] = useState("");
   const [selectedRole, setSelectedRole] = useState<"admin" | "member" | "">("");

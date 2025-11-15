@@ -4,11 +4,15 @@ import { useAuthLayoutStore } from "@/app/(auth)/layout.stores";
 import {
   useQuizTableStore,
   useResponseTableStore,
+  useResponseDetailStore,
+  useBulkOperationStore,
+  useQuizDialogStore,
+  useDashboardDataStore,
+  useResponseDataStore,
 } from "@/app/(dashboard)/page.stores";
 import { useQuizPlayerStore } from "@/app/(dashboard)/take-quiz/[id]/page.stores";
 import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
-import { queryClient } from "@/app/layout.providers";
-import { useAppStore } from "@/app/layout.stores";
+import { useAppStore, useRedirectStore } from "@/app/layout.stores";
 import { ExtendedUser } from "@/app/layout.types";
 import { InvitationToasts } from "@/components/InvitationToasts";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
@@ -17,6 +21,7 @@ import { signOut } from "@/lib/auth-client";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function DashboardLayout({
   children,
@@ -25,14 +30,19 @@ export default function DashboardLayout({
 }) {
   const { data: user, isLoading } = useGetUser();
   const { reset } = useAppStore();
+  const { reset: resetRedirect } = useRedirectStore();
   const hasAdminAccess = useAdminAccess();
   const { reset: resetAuthLayout } = useAuthLayoutStore();
   const { reset: resetQuizTable } = useQuizTableStore();
-
   const { reset: resetResponseTable } = useResponseTableStore();
-
+  const { reset: resetResponseDetail } = useResponseDetailStore();
+  const { reset: resetBulkOperation } = useBulkOperationStore();
+  const { close: closeQuizDialog } = useQuizDialogStore();
+  const { reset: resetDashboardData } = useDashboardDataStore();
+  const { reset: resetResponseData } = useResponseDataStore();
   const { resetQuiz } = useQuizPlayerStore();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     try {
@@ -42,15 +52,21 @@ export default function DashboardLayout({
       await signOut();
       conditionalLog({ location: "handleSignOut", status: "signOut_complete" }, { label: LOG_LABELS.AUTH });
 
-      conditionalLog({ location: "handleSignOut", status: "invalidating_queries" }, { label: LOG_LABELS.AUTH });
-      queryClient.invalidateQueries();
-      conditionalLog({ location: "handleSignOut", status: "queries_invalidated" }, { label: LOG_LABELS.AUTH });
+      conditionalLog({ location: "handleSignOut", status: "clearing_cache" }, { label: LOG_LABELS.AUTH });
+      queryClient.clear();
+      conditionalLog({ location: "handleSignOut", status: "cache_cleared" }, { label: LOG_LABELS.AUTH });
 
       conditionalLog({ location: "handleSignOut", status: "resetting_stores" }, { label: LOG_LABELS.AUTH });
       reset();
+      resetRedirect();
       resetAuthLayout();
       resetQuizTable();
       resetResponseTable();
+      resetResponseDetail();
+      resetBulkOperation();
+      closeQuizDialog();
+      resetDashboardData();
+      resetResponseData();
       resetQuiz();
       conditionalLog({ location: "handleSignOut", status: "stores_reset" }, { label: LOG_LABELS.AUTH });
 

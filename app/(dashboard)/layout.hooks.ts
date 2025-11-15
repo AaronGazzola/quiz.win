@@ -8,11 +8,13 @@ import {
   getPendingInvitationsForUserAction,
 } from "./layout.actions";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
+import { useAppStore } from "@/app/layout.stores";
 
 export const useGetPendingInvitations = () => {
+  const { setPendingInvitations } = useAppStore();
   conditionalLog({hook:"useGetPendingInvitations",status:"initialized"},{label:LOG_LABELS.DATA_FETCH});
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["pending-invitations"],
     queryFn: async () => {
       conditionalLog({hook:"useGetPendingInvitations",status:"fetching"},{label:LOG_LABELS.DATA_FETCH});
@@ -22,11 +24,14 @@ export const useGetPendingInvitations = () => {
         throw new Error(error);
       }
       conditionalLog({hook:"useGetPendingInvitations",status:"success",invitationCount:data?.length},{label:LOG_LABELS.DATA_FETCH});
-      return data || [];
+      const invitations = data || [];
+      setPendingInvitations(invitations);
+      return invitations;
     },
     staleTime: 1000 * 60,
-    refetchInterval: 1000 * 60 * 2,
   });
+
+  return query;
 };
 
 export const useAcceptInvitation = () => {

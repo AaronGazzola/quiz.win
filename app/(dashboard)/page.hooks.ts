@@ -21,6 +21,8 @@ import {
   useBulkOperationStore,
   useQuizTableStore,
   useResponseTableStore,
+  useDashboardDataStore,
+  useResponseDataStore,
 } from "./page.stores";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 
@@ -42,6 +44,7 @@ export const useDebounce = <T>(value: T, delay: number): T => {
 
 export const useGetQuizzes = (organizationIds?: string[]) => {
   const { search, sort, page, itemsPerPage } = useQuizTableStore();
+  const { setQuizzes } = useDashboardDataStore();
   const debouncedSearch = useDebounce(search, 300);
   const orgIdsKey = organizationIds?.join(",") || "";
 
@@ -68,7 +71,7 @@ export const useGetQuizzes = (organizationIds?: string[]) => {
 
   conditionalLog({hook:"useGetQuizzes",status:"initialized",hasOrgIds:!!organizationIds?.length,orgCount:organizationIds?.length,search:debouncedSearch},{label:LOG_LABELS.DATA_FETCH});
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["quizzes", queryParams],
     queryFn: async () => {
       conditionalLog({hook:"useGetQuizzes",status:"fetching",orgIds:organizationIds,search:debouncedSearch,page},{label:LOG_LABELS.DATA_FETCH});
@@ -83,6 +86,14 @@ export const useGetQuizzes = (organizationIds?: string[]) => {
     staleTime: 1000 * 60 * 5,
     placeholderData: (previousData) => previousData,
   });
+
+  useEffect(() => {
+    if (query.data) {
+      setQuizzes(query.data.quizzes, query.data.totalCount, query.data.totalPages);
+    }
+  }, [query.data, setQuizzes]);
+
+  return query;
 };
 
 export const useCreateQuiz = () => {
@@ -186,6 +197,7 @@ export const useGetQuizResponses = (
   organizationIds?: string[]
 ) => {
   const { search, sort, page, itemsPerPage } = useResponseTableStore();
+  const { setResponses } = useResponseDataStore();
   const debouncedSearch = useDebounce(search, 300);
   const orgIdsKey = organizationIds?.join(",") || "";
 
@@ -216,7 +228,7 @@ export const useGetQuizResponses = (
   const enabled = !!queryParams;
   conditionalLog({hook:"useGetQuizResponses",status:"initialized",enabled,quizId,hasOrgIds:!!organizationIds?.length},{label:LOG_LABELS.DATA_FETCH});
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["quiz-responses", queryParams],
     queryFn: async () => {
       if (!queryParams) return null;
@@ -233,6 +245,14 @@ export const useGetQuizResponses = (
     staleTime: 1000 * 60 * 5,
     placeholderData: (previousData) => previousData,
   });
+
+  useEffect(() => {
+    if (query.data) {
+      setResponses(query.data.responses, query.data.totalCount, query.data.totalPages);
+    }
+  }, [query.data, setResponses]);
+
+  return query;
 };
 
 export const useExportResponses = () => {
@@ -337,12 +357,13 @@ export const useProcessInvitation = () => {
 };
 
 export const useGetDashboardMetrics = (organizationIds?: string[]) => {
+  const { setMetrics } = useDashboardDataStore();
   const orgIdsKey = organizationIds?.join(',') || '';
 
   const enabled = !!organizationIds;
   conditionalLog({hook:"useGetDashboardMetrics",status:"initialized",enabled,hasOrgIds:!!organizationIds?.length},{label:LOG_LABELS.DATA_FETCH});
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["dashboard-metrics", orgIdsKey],
     queryFn: async () => {
       conditionalLog({hook:"useGetDashboardMetrics",status:"fetching",orgIds:organizationIds},{label:LOG_LABELS.DATA_FETCH});
@@ -357,13 +378,22 @@ export const useGetDashboardMetrics = (organizationIds?: string[]) => {
     staleTime: 1000 * 60 * 5,
     enabled,
   });
+
+  useEffect(() => {
+    if (query.data) {
+      setMetrics(query.data);
+    }
+  }, [query.data, setMetrics]);
+
+  return query;
 };
 
 export const useGetResponseDetail = (responseId: string | null) => {
+  const { setResponseDetail } = useResponseDataStore();
   const enabled = !!responseId;
   conditionalLog({hook:"useGetResponseDetail",status:"initialized",enabled,responseId},{label:LOG_LABELS.DATA_FETCH});
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["response-detail", responseId],
     queryFn: async () => {
       if (!responseId) return null;
@@ -379,13 +409,20 @@ export const useGetResponseDetail = (responseId: string | null) => {
     enabled,
     staleTime: 1000 * 60 * 5,
   });
+
+  useEffect(() => {
+    setResponseDetail(query.data ?? null);
+  }, [query.data, setResponseDetail]);
+
+  return query;
 };
 
 export const useGetUserResponse = (quizId: string | null) => {
+  const { setUserResponse } = useResponseDataStore();
   const enabled = !!quizId;
   conditionalLog({hook:"useGetUserResponse",status:"initialized",enabled,quizId},{label:LOG_LABELS.DATA_FETCH});
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["user-response", quizId],
     queryFn: async () => {
       if (!quizId) return null;
@@ -401,4 +438,21 @@ export const useGetUserResponse = (quizId: string | null) => {
     enabled,
     staleTime: 1000 * 60 * 5,
   });
+
+  useEffect(() => {
+    setUserResponse(query.data ?? null);
+  }, [query.data, setUserResponse]);
+
+  return query;
+};
+
+export const useDashboardPageData = (organizationIds?: string[]) => {
+  const metrics = useGetDashboardMetrics(organizationIds);
+  const quizzes = useGetQuizzes(organizationIds);
+
+  return {
+    isLoading: metrics.isLoading || quizzes.isLoading,
+    isFetching: metrics.isFetching || quizzes.isFetching,
+    error: metrics.error || quizzes.error,
+  };
 };

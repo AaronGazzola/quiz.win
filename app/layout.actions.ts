@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { isSuperAdmin } from "@/lib/role.utils";
 import { headers } from "next/headers";
-import { user, Profile } from "@prisma/client";
+import { user, Profile, organization } from "@prisma/client";
 import { ExtendedUser } from "./layout.types";
 
 export const getUserAction = async (): Promise<ActionResponse<user | null>> => {
@@ -144,7 +144,7 @@ export const getUserProfileAction = async (): Promise<ActionResponse<Profile | n
   }
 };
 
-export const getAllOrganizationsAction = async (): Promise<ActionResponse<Array<{id: string; name: string; slug: string; logo: string | null; metadata: unknown; createdAt: Date; updatedAt: Date}> | null>> => {
+export const getAllOrganizationsAction = async (): Promise<ActionResponse<organization[] | null>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),

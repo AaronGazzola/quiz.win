@@ -71,6 +71,7 @@ export interface BulkOperationState {
   isLoading: boolean;
   setVisible: (visible: boolean) => void;
   setLoading: (loading: boolean) => void;
+  reset: () => void;
 }
 
 export interface QuizTableProps {

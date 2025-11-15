@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { TableState, BulkOperationState, QuizWithDetails, ResponseTableState, ResponseDetailState } from "./page.types";
+import { TableState, BulkOperationState, QuizWithDetails, ResponseTableState, ResponseDetailState, DashboardMetrics, ResponseWithUser, ResponseWithDetails } from "./page.types";
 
 const initialTableState = {
   search: "",
@@ -137,4 +137,60 @@ export const useResponseDetailStore = create<ResponseDetailState>()((set) => ({
   setSelectedResponseId: (responseId) => set({ selectedResponseId: responseId }),
   setViewMode: (mode) => set({ viewMode: mode }),
   reset: () => set(initialResponseDetailState),
+}));
+
+const initialDashboardDataState = {
+  metrics: null as DashboardMetrics | null,
+  quizzes: null as QuizWithDetails[] | null,
+  quizzesTotalCount: 0,
+  quizzesTotalPages: 0,
+};
+
+export const useDashboardDataStore = create<{
+  metrics: DashboardMetrics | null;
+  quizzes: QuizWithDetails[] | null;
+  quizzesTotalCount: number;
+  quizzesTotalPages: number;
+  setMetrics: (metrics: DashboardMetrics | null) => void;
+  setQuizzes: (quizzes: QuizWithDetails[] | null, totalCount: number, totalPages: number) => void;
+  reset: () => void;
+}>()((set) => ({
+  ...initialDashboardDataState,
+  setMetrics: (metrics) => set({ metrics }),
+  setQuizzes: (quizzes, totalCount, totalPages) => set({
+    quizzes,
+    quizzesTotalCount: totalCount,
+    quizzesTotalPages: totalPages
+  }),
+  reset: () => set(initialDashboardDataState),
+}));
+
+const initialResponseDataState = {
+  responses: null as ResponseWithUser[] | null,
+  responsesTotalCount: 0,
+  responsesTotalPages: 0,
+  responseDetail: null as ResponseWithDetails | null,
+  userResponse: null as ResponseWithDetails | null,
+};
+
+export const useResponseDataStore = create<{
+  responses: ResponseWithUser[] | null;
+  responsesTotalCount: number;
+  responsesTotalPages: number;
+  responseDetail: ResponseWithDetails | null;
+  userResponse: ResponseWithDetails | null;
+  setResponses: (responses: ResponseWithUser[] | null, totalCount: number, totalPages: number) => void;
+  setResponseDetail: (detail: ResponseWithDetails | null) => void;
+  setUserResponse: (response: ResponseWithDetails | null) => void;
+  reset: () => void;
+}>()((set) => ({
+  ...initialResponseDataState,
+  setResponses: (responses, totalCount, totalPages) => set({
+    responses,
+    responsesTotalCount: totalCount,
+    responsesTotalPages: totalPages
+  }),
+  setResponseDetail: (detail) => set({ responseDetail: detail }),
+  setUserResponse: (response) => set({ userResponse: response }),
+  reset: () => set(initialResponseDataState),
 }));

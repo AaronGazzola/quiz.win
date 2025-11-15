@@ -56,6 +56,7 @@ export const useGetUser = () => {
       );
       setUser(data ?? null);
       setUserData(data ?? null);
+
       return data ?? null;
     },
     staleTime: 1000 * 60 * 5,
@@ -127,31 +128,14 @@ export const useSignIn = () => {
         { hook: "useSignIn", status: "success", userId: data?.id },
         { label: LOG_LABELS.DATA_FETCH }
       );
-      if (data) {
-        setUser(data);
-        setUserData(data);
-      }
+      if (!data) return;
+
+      setUser(data);
+      setUserData(data);
+      queryClient.setQueryData(["user"], data);
 
       conditionalLog(
-        { hook: "useSignIn", status: "prefetching_data" },
-        { label: LOG_LABELS.DATA_FETCH }
-      );
-
-      await Promise.all([
-        queryClient.prefetchQuery({
-          queryKey: ["user"],
-          queryFn: () => getUserMembersAction(),
-        }),
-        data?.role === "super-admin"
-          ? queryClient.prefetchQuery({
-              queryKey: ["organizations", "all"],
-              queryFn: () => getAllOrganizationsAction(),
-            })
-          : Promise.resolve(),
-      ]);
-
-      conditionalLog(
-        { hook: "useSignIn", status: "prefetch_complete_navigating" },
+        { hook: "useSignIn", status: "navigating_to_dashboard" },
         { label: LOG_LABELS.DATA_FETCH }
       );
       toast.success("Successfully signed in");
@@ -166,14 +150,6 @@ export const useSignIn = () => {
       toast.error(error?.message || "Failed to sign in");
     },
   });
-};
-
-export const useGetUserMembers = () => {
-  conditionalLog(
-    { hook: "useGetUserMembers", status: "deprecated_use_useGetUser_instead" },
-    { label: LOG_LABELS.DATA_FETCH }
-  );
-  return useGetUser();
 };
 
 export const useGetUserProfile = () => {
@@ -217,12 +193,12 @@ export const useGetUserProfile = () => {
 };
 
 export const useAdminAccess = () => {
-  const { data: userWithMembers } = useGetUserMembers();
+  const { data: user } = useGetUser();
   const { selectedOrganizationIds } = useAppStore();
 
-  const isSuperAdminUser = isSuperAdmin(userWithMembers || null);
+  const isSuperAdminUser = isSuperAdmin(user || null);
   const hasAdminUI = canAccessAdminUI(
-    userWithMembers || null,
+    user || null,
     selectedOrganizationIds
   );
 
@@ -247,6 +223,7 @@ export const useCreateOrganization = () => {
 
 export const useGetAllOrganizations = () => {
   const { data: user } = useGetUser();
+  const { setAllOrganizations } = useAppStore();
 
   const enabled = !!user?.id && user?.role === "super-admin";
   conditionalLog(
@@ -283,7 +260,9 @@ export const useGetAllOrganizations = () => {
         },
         { label: LOG_LABELS.DATA_FETCH }
       );
-      return data ?? [];
+      const organizations = data ?? [];
+      setAllOrganizations(organizations);
+      return organizations;
     },
     enabled,
     staleTime: 1000 * 60 * 10,

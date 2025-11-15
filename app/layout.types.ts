@@ -15,6 +15,12 @@ export interface organizationWithmember extends organization {
   member: member;
 }
 
+export interface PendingInvitation {
+  organizationId: string;
+  organizationName: string;
+  role: string;
+}
+
 export interface AppState {
   user: user | null;
   setUser: (user: user | null) => void;
@@ -22,6 +28,10 @@ export interface AppState {
   setTempEmail: (tempEmail: string) => void;
   selectedOrganizationIds: string[];
   setSelectedOrganizationIds: (organizationIds: string[]) => void;
+  allOrganizations: organization[] | null;
+  setAllOrganizations: (organizations: organization[] | null) => void;
+  pendingInvitations: PendingInvitation[] | null;
+  setPendingInvitations: (invitations: PendingInvitation[] | null) => void;
   reset: () => void;
 }
 

@@ -55,11 +55,21 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
     return "System"
   }
 
-  if (!mounted || isLoading || !user) {
+  if (!mounted) {
     return (
       <Avatar className="h-8 w-8 cursor-pointer">
         <AvatarFallback className="text-xs">
-          {isLoading || !user ? <Skeleton className="h-3 w-6 rounded" /> : getInitials(user.email)}
+          <Skeleton className="h-3 w-6 rounded" />
+        </AvatarFallback>
+      </Avatar>
+    )
+  }
+
+  if (isLoading || !user) {
+    return (
+      <Avatar className="h-8 w-8 cursor-pointer">
+        <AvatarFallback className="text-xs">
+          <Skeleton className="h-3 w-6 rounded" />
         </AvatarFallback>
       </Avatar>
     )

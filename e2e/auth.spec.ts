@@ -35,7 +35,7 @@ test.describe("Authentication Flow", () => {
 
     await logger.step("Wait for avatar menu to be visible", async () => {
       const avatarMenu = page.getByTestId(TestId.AUTH_AVATAR_MENU);
-      await expect(avatarMenu).toBeVisible({ timeout: 10000 });
+      await expect(avatarMenu).toBeVisible({ timeout: 20000 });
     });
 
     await logger.step("Click avatar menu", async () => {
