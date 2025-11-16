@@ -1,6 +1,7 @@
 import { getUserOrganizations, getUserAdminOrganizations } from "./role.utils";
 import { auth } from "./auth";
 import { headers } from "next/headers";
+import { getAuthenticatedClient } from "./auth.utils";
 
 export const getOrgScopedData = async <T>(
   _userId: string,
@@ -32,7 +33,17 @@ export const validateOrgAccess = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const { db } = await getAuthenticatedClient();
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
+    if (dbUser?.role === "super-admin") {
       return true;
     }
 
@@ -64,7 +75,17 @@ export const getOrgScopedQuizzes = async (
     headers: await headers(),
   });
 
-  if (session?.user?.role === "super-admin") {
+  if (!session?.user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { db } = await getAuthenticatedClient();
+  const dbUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true }
+  });
+
+  if (dbUser?.role === "super-admin") {
     if (!organizationId) {
       const allOrgs = await auth.api.listOrganizations({
         headers: await headers(),
@@ -96,7 +117,17 @@ export const getOrgScopedUsers = async (
     headers: await headers(),
   });
 
-  if (session?.user?.role === "super-admin") {
+  if (!session?.user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { db } = await getAuthenticatedClient();
+  const dbUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true }
+  });
+
+  if (dbUser?.role === "super-admin") {
     if (!organizationId) {
       const allOrgs = await auth.api.listOrganizations({
         headers: await headers(),
@@ -131,7 +162,17 @@ export const withOrgPermission = async <T>(
     headers: await headers(),
   });
 
-  if (session?.user?.role === "super-admin") {
+  if (!session?.user) {
+    throw new Error("Not authenticated");
+  }
+
+  const { db } = await getAuthenticatedClient();
+  const dbUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true }
+  });
+
+  if (dbUser?.role === "super-admin") {
     return await operation();
   }
 

@@ -360,8 +360,7 @@ export const useGetDashboardMetrics = (organizationIds?: string[]) => {
   const { setMetrics } = useDashboardDataStore();
   const orgIdsKey = organizationIds?.join(',') || '';
 
-  const enabled = !!organizationIds;
-  conditionalLog({hook:"useGetDashboardMetrics",status:"initialized",enabled,hasOrgIds:!!organizationIds?.length},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog({hook:"useGetDashboardMetrics",status:"initialized",hasOrgIds:!!organizationIds?.length},{label:LOG_LABELS.DATA_FETCH});
 
   const query = useQuery({
     queryKey: ["dashboard-metrics", orgIdsKey],
@@ -376,7 +375,6 @@ export const useGetDashboardMetrics = (organizationIds?: string[]) => {
       return data;
     },
     staleTime: 1000 * 60 * 5,
-    enabled,
   });
 
   useEffect(() => {

@@ -48,7 +48,6 @@ export function DashboardPageContent() {
   const { data: user, isLoading: userLoading } = useGetUser();
   console.log({ user });
   const { selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
-  const hasAdminAccess = useAdminAccess();
   const isInitializing = userLoading;
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
@@ -68,9 +67,11 @@ export function DashboardPageContent() {
   const processInvitationMutation = useProcessInvitation();
   const router = useRouter();
 
-  const { isLoading: pageDataLoading, isFetching: pageDataFetching } = useDashboardPageData(selectedOrganizationIds);
+  const { isLoading: pageDataLoading, isFetching: pageDataFetching } = useDashboardPageData(selectedOrganizationIds.length > 0 ? selectedOrganizationIds : undefined);
 
   const { metrics, quizzes: quizzesFromStore, quizzesTotalCount, quizzesTotalPages } = useDashboardDataStore();
+
+  const hasAdminAccess = metrics?.hasAdminAccess ?? false;
 
   const isLoading = pageDataLoading;
   const quizzesFetching = pageDataFetching;
@@ -267,7 +268,7 @@ export function DashboardPageContent() {
       </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
-        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
               <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
@@ -294,7 +295,7 @@ export function DashboardPageContent() {
           </div>
         </div>
 
-        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-green-500/10 rounded-lg">
               <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
@@ -321,9 +322,9 @@ export function DashboardPageContent() {
           </div>
         </div>
 
-        {!isInitializing && hasAdminAccess && (
+        {hasAdminAccess && (
           <>
-            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
                   <Users className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
@@ -352,7 +353,7 @@ export function DashboardPageContent() {
               </div>
             </div>
 
-            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
                   <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
@@ -441,7 +442,7 @@ export function DashboardPageContent() {
                   Qs
                 </th>
 
-                {!isInitializing && hasAdminAccess && (
+                {hasAdminAccess && (
                   <th data-testid={TestId.DASHBOARD_QUIZ_TABLE_RESPONSES_COL} className="hidden sm:table-cell px-2 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Responses
                   </th>
@@ -475,7 +476,7 @@ export function DashboardPageContent() {
                     <td className="px-2 sm:px-6 py-2 sm:py-4">
                       <div className="h-3 sm:h-4 bg-muted rounded w-6 sm:w-8" />
                     </td>
-                    {!isInitializing && hasAdminAccess && (
+                    {hasAdminAccess && (
                       <td className="hidden sm:table-cell px-2 sm:px-6 py-2 sm:py-4">
                         <div className="h-3 sm:h-4 bg-muted rounded w-6 sm:w-8" />
                       </td>
@@ -549,7 +550,7 @@ export function DashboardPageContent() {
                       {quiz._count.Question}
                     </td>
 
-                    {!isInitializing && hasAdminAccess && (
+                    {hasAdminAccess && (
                       <td className="hidden sm:table-cell px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-foreground">
                         {quiz._count.Response}
                       </td>
@@ -590,7 +591,7 @@ export function DashboardPageContent() {
         </div>
       </div>
 
-      {selectedQuizId && !isInitializing && hasAdminAccess && (
+      {selectedQuizId && hasAdminAccess && (
         <div className="bg-card border border-border rounded-lg">
           <div className="p-3 sm:p-4 border-b border-border">
             <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
@@ -808,7 +809,7 @@ export function DashboardPageContent() {
         </div>
       )}
 
-      {selectedQuizId && !isInitializing && hasAdminAccess && selectedResponseId && (
+      {selectedQuizId && hasAdminAccess && selectedResponseId && (
         <div data-testid={TestId.DASHBOARD_RESPONSE_DETAIL} className="bg-card border border-border rounded-lg">
           <div className="p-3 sm:p-4 border-b border-border">
             <div>
@@ -984,7 +985,7 @@ export function DashboardPageContent() {
         </div>
       )}
 
-      {selectedQuizId && !isInitializing && !hasAdminAccess && (
+      {selectedQuizId && !hasAdminAccess && (
         <div data-testid={TestId.DASHBOARD_USER_RESPONSE} className="bg-card border border-border rounded-lg">
           <div className="p-3 sm:p-4 border-b border-border">
             <div>

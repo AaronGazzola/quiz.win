@@ -1,5 +1,6 @@
 import { auth } from "./auth";
 import { headers } from "next/headers";
+import { getAuthenticatedClient } from "./auth.utils";
 
 interface OrganizationWithRole {
   id: string;
@@ -11,13 +12,32 @@ interface OrganizationWithRole {
   metadata?: Record<string, unknown>;
 }
 
+const getUserRole = async (userId: string): Promise<string | null> => {
+  try {
+    const { db } = await getAuthenticatedClient();
+    const dbUser = await db.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+    return dbUser?.role ?? null;
+  } catch (error) {
+    console.error("Error fetching user role:", error);
+    return null;
+  }
+};
+
 export const isOrgAdmin = async (userId: string, organizationId: string): Promise<boolean> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 
@@ -35,7 +55,12 @@ export const isOrgOwner = async (userId: string, organizationId: string): Promis
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 
@@ -57,7 +82,13 @@ export const isSuperAdmin = async (): Promise<boolean> => {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
-    return session?.user?.role === "super-admin" || false;
+
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    return userRole === "super-admin";
   } catch (error) {
     console.error("Error checking super admin role:", error);
     return false;
@@ -73,7 +104,12 @@ export const canManageQuizzes = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 
@@ -93,7 +129,12 @@ export const canViewQuizzes = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 
@@ -114,7 +155,12 @@ export const canManageResponses = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 
@@ -134,7 +180,12 @@ export const canManageUsers = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 
@@ -168,7 +219,12 @@ export const getUserAdminOrganizations = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return [];
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return await auth.api.listOrganizations({
         headers: await headers(),
       });
@@ -210,7 +266,12 @@ export const canViewUsers = async (
       headers: await headers(),
     });
 
-    if (session?.user?.role === "super-admin") {
+    if (!session?.user) {
+      return false;
+    }
+
+    const userRole = await getUserRole(session.user.id);
+    if (userRole === "super-admin") {
       return true;
     }
 

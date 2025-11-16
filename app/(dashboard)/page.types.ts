@@ -5,6 +5,7 @@ export interface DashboardMetrics {
   completedToday: number;
   teamMembers: number;
   activeInvites: number;
+  hasAdminAccess: boolean;
 }
 
 export interface ProcessInvitationData {

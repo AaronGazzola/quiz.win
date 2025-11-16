@@ -22,6 +22,11 @@ export const getQuizForTakingAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const quiz = await db.quiz.findFirst({
       where: {
         id: quizId,
@@ -38,7 +43,7 @@ export const getQuizForTakingAction = async (
       return getActionResponse({ error: "Quiz not found or inactive" });
     }
 
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!isSuperAdmin) {
       const userOrganizations = await getUserOrganizations(session.user.id);

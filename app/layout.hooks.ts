@@ -153,24 +153,19 @@ export const useSignIn = () => {
 };
 
 export const useGetUserProfile = () => {
-  const { user } = useAppStore();
-
-  const enabled = !!user?.id;
   conditionalLog(
     {
       hook: "useGetUserProfile",
       status: "initialized",
-      enabled,
-      userId: user?.id,
     },
     { label: LOG_LABELS.DATA_FETCH }
   );
 
   return useQuery({
-    queryKey: ["user", "profile", user?.id],
+    queryKey: ["user", "profile"],
     queryFn: async () => {
       conditionalLog(
-        { hook: "useGetUserProfile", status: "fetching", userId: user?.id },
+        { hook: "useGetUserProfile", status: "fetching" },
         { label: LOG_LABELS.DATA_FETCH }
       );
       const { data, error } = await getUserProfileAction();
@@ -187,7 +182,6 @@ export const useGetUserProfile = () => {
       );
       return data ?? null;
     },
-    enabled,
     staleTime: 1000 * 60 * 10,
   });
 };
@@ -222,17 +216,12 @@ export const useCreateOrganization = () => {
 };
 
 export const useGetAllOrganizations = () => {
-  const { data: user } = useGetUser();
   const { setAllOrganizations } = useAppStore();
 
-  const enabled = !!user?.id && user?.role === "super-admin";
   conditionalLog(
     {
       hook: "useGetAllOrganizations",
       status: "initialized",
-      enabled,
-      userId: user?.id,
-      role: user?.role,
     },
     { label: LOG_LABELS.DATA_FETCH }
   );
@@ -264,7 +253,6 @@ export const useGetAllOrganizations = () => {
       setAllOrganizations(organizations);
       return organizations;
     },
-    enabled,
     staleTime: 1000 * 60 * 10,
   });
 };

@@ -61,6 +61,11 @@ export const sendInvitationsAction = async (data: {
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const userMembership = await db.member.findUnique({
       where: {
         userId_organizationId: {
@@ -71,7 +76,7 @@ export const sendInvitationsAction = async (data: {
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdminUser = session.user.role === "super-admin";
+    const isSuperAdminUser = dbUser?.role === "super-admin";
 
     conditionalLog({ action: "sendInvitationsAction", status: "permission-check", isAdmin, isSuperAdmin: isSuperAdminUser }, { label: LOG_LABELS.API });
 

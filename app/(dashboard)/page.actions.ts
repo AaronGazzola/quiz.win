@@ -63,6 +63,11 @@ export const getDashboardMetricsAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     // Get all organizations the user is a member of
     const userMemberships = await db.member.findMany({
       where: { userId: session.user.id },
@@ -73,7 +78,7 @@ export const getDashboardMetricsAction = async (
     });
 
     const userOrgIds = userMemberships.map(m => m.organizationId);
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!isSuperAdmin && userOrgIds.length === 0) {
       return getActionResponse({
@@ -82,6 +87,7 @@ export const getDashboardMetricsAction = async (
           completedToday: 0,
           teamMembers: 0,
           activeInvites: 0,
+          hasAdminAccess: false,
         }
       });
     }
@@ -92,6 +98,11 @@ export const getDashboardMetricsAction = async (
       targetOrgIds = isSuperAdmin
         ? organizationIds
         : organizationIds.filter(id => userOrgIds.includes(id));
+    } else if (isSuperAdmin) {
+      const allOrgs = await db.organization.findMany({
+        select: { id: true },
+      });
+      targetOrgIds = allOrgs.map(org => org.id);
     }
 
     // Check if user has admin access to any of the target organizations
@@ -152,6 +163,7 @@ export const getDashboardMetricsAction = async (
         completedToday,
         teamMembers,
         activeInvites,
+        hasAdminAccess,
       }
     });
   } catch (error) {
@@ -179,6 +191,11 @@ export const getQuizzesAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const {
       organizationIds,
       search = "",
@@ -195,7 +212,7 @@ export const getQuizzesAction = async (
     });
 
     const userOrgIds = userMemberships.map((m) => m.organizationId);
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!isSuperAdmin && userOrgIds.length === 0) {
       return getActionResponse({
@@ -203,9 +220,17 @@ export const getQuizzesAction = async (
       });
     }
 
-    const targetOrgIds = isSuperAdmin
-      ? organizationIds || []
-      : organizationIds?.filter((id) => userOrgIds.includes(id)) || [];
+    let targetOrgIds = userOrgIds;
+    if (organizationIds && organizationIds.length > 0) {
+      targetOrgIds = isSuperAdmin
+        ? organizationIds
+        : organizationIds.filter((id) => userOrgIds.includes(id));
+    } else if (isSuperAdmin) {
+      const allOrgs = await db.organization.findMany({
+        select: { id: true },
+      });
+      targetOrgIds = allOrgs.map(org => org.id);
+    }
 
     const where = {
       organizationId: { in: targetOrgIds },
@@ -437,6 +462,11 @@ export const getQuizResponsesAction = async (
       });
     }
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     // Check if user is admin of the quiz's organization
     const userMembership = await db.member.findFirst({
       where: {
@@ -446,7 +476,7 @@ export const getQuizResponsesAction = async (
       },
     });
 
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!userMembership && !isSuperAdmin) {
       return getActionResponse({
@@ -537,6 +567,11 @@ export const getResponseDetailAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const response = await db.response.findUnique({
       where: { id: responseId },
       include: {
@@ -572,7 +607,7 @@ export const getResponseDetailAction = async (
       },
     });
 
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
     const isOwnResponse = response.userId === session.user.id;
 
     if (!userMembership && !isSuperAdmin && !isOwnResponse) {
@@ -603,6 +638,11 @@ export const getUserResponseAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const quiz = await db.quiz.findUnique({
       where: { id: quizId },
       select: { organizationId: true },
@@ -619,7 +659,7 @@ export const getUserResponseAction = async (
       },
     });
 
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!userMembership && !isSuperAdmin) {
       return getActionResponse({

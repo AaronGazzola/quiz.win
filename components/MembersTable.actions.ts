@@ -30,6 +30,11 @@ export const getOrganizationMembersAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const userMembership = await db.member.findUnique({
       where: {
         userId_organizationId: {
@@ -40,7 +45,7 @@ export const getOrganizationMembersAction = async (
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!isAdmin && !isSuperAdmin) {
       return getActionResponse({ error: "Access denied" });
@@ -81,6 +86,11 @@ export const updateMemberRoleAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const member = await db.member.findUnique({
       where: { id: memberId },
       include: { organization: true },
@@ -100,7 +110,7 @@ export const updateMemberRoleAction = async (
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!isAdmin && !isSuperAdmin) {
       return getActionResponse({ error: "Access denied" });
@@ -140,6 +150,11 @@ export const removeMemberAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const member = await db.member.findUnique({
       where: { id: memberId },
     });
@@ -158,7 +173,7 @@ export const removeMemberAction = async (
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
     if (!isAdmin && !isSuperAdmin) {
       return getActionResponse({ error: "Access denied" });

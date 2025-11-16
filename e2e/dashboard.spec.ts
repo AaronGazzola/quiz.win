@@ -24,6 +24,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify all 4 dashboard metrics are visible', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_COMPLETED_TODAY)).toBeVisible({ timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS)).toBeVisible({ timeout: 20000 });
@@ -82,6 +83,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify admin metrics are visible', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_COMPLETED_TODAY)).toBeVisible({ timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS)).toBeVisible({ timeout: 20000 });
@@ -129,6 +131,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify all admin metrics are visible', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 10000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_COMPLETED_TODAY)).toBeVisible({ timeout: 10000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS)).toBeVisible({ timeout: 10000 });
@@ -176,6 +179,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify only basic metrics are visible (no Team Members or Active Invites)', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 10000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_COMPLETED_TODAY)).toBeVisible({ timeout: 10000 });
 

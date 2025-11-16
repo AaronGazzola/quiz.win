@@ -28,6 +28,11 @@ export const inviteUsersAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const userMembership = await db.member.findUnique({
       where: {
         userId_organizationId: {
@@ -38,7 +43,7 @@ export const inviteUsersAction = async (
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
 
     if (!isAdmin && !isSuperAdmin) {
@@ -144,6 +149,11 @@ export const getPendingInvitationsAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const userMembership = await db.member.findUnique({
       where: {
         userId_organizationId: {
@@ -154,7 +164,7 @@ export const getPendingInvitationsAction = async (
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
 
     if (!isAdmin && !isSuperAdmin) {
@@ -204,6 +214,11 @@ export const revokeInvitationAction = async (
 
     const { db } = await getAuthenticatedClient();
 
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
     const invitation = await db.invitation.findUnique({
       where: { id: invitationId },
     });
@@ -223,7 +238,7 @@ export const revokeInvitationAction = async (
     });
 
     const isAdmin = userMembership?.role === "admin" || userMembership?.role === "owner";
-    const isSuperAdmin = session.user.role === "super-admin";
+    const isSuperAdmin = dbUser?.role === "super-admin";
 
 
     if (!isAdmin && !isSuperAdmin) {

@@ -71,7 +71,12 @@ export const getUserMembersAction = async (): Promise<ActionResponse<ExtendedUse
       where: { userId: session.user.id },
     });
 
-    if (session.user.role === "super-admin") {
+    const dbUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true }
+    });
+
+    if (dbUser?.role === "super-admin") {
       const allOrganizations = await auth.api.listOrganizations({
         headers: await headers(),
       });
