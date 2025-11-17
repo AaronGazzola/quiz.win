@@ -13,7 +13,6 @@ import {
 import { useQuizPlayerStore } from "@/app/(dashboard)/take-quiz/[id]/page.stores";
 import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
 import { useAppStore, useRedirectStore } from "@/app/layout.stores";
-import { ExtendedUser } from "@/app/layout.types";
 import { InvitationToasts } from "@/components/InvitationToasts";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
@@ -28,8 +27,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user, isLoading } = useGetUser();
-  const { reset } = useAppStore();
+  useGetUser();
+  const { user, reset } = useAppStore();
   const { reset: resetRedirect } = useRedirectStore();
   const hasAdminAccess = useAdminAccess();
   const { reset: resetAuthLayout } = useAuthLayoutStore();
@@ -113,9 +112,7 @@ export default function DashboardLayout({
           <div className="flex items-center space-x-4">
             <OrganizationSelector />
             <UserAvatarMenu
-              user={user as ExtendedUser | null}
               onSignOut={handleSignOut}
-              isLoading={isLoading}
             />
           </div>
         </div>

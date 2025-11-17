@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetUser, useAdminAccess } from "@/app/layout.hooks";
+import { useGetUser as useGetCurrentUser, useAdminAccess } from "@/app/layout.hooks";
 import { useEffect, useRef, useState } from "react";
 import { Search, ChevronUp, ChevronDown, Ban } from "lucide-react";
 import { Checkbox } from "@radix-ui/react-checkbox";
@@ -14,7 +14,7 @@ import { UserRoleManagementDialog } from "./UserRoleManagementDialog";
 import { useAppStore } from "@/app/layout.stores";
 
 export function UsersPageContent() {
-  const { data: user } = useGetUser();
+  const { data: user } = useGetCurrentUser();
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
   const canManageUsers = useAdminAccess();
@@ -40,7 +40,7 @@ export function UsersPageContent() {
   const { openDialog: openConfirmation } = useConfirmationDialogStore();
 
   const { selectedOrganizationIds } = useAppStore();
-  const { data: usersData, isLoading } = useGetUsers(selectedOrganizationIds);
+  const { data: usersData, isLoading } = useGetUsers();
   const bulkToggleUserBanMutation = useBulkToggleUserBan();
 
   const users = usersData?.users || [];

@@ -74,17 +74,43 @@ export const acceptInvitationAction = async (
   invitationId: string
 ): Promise<ActionResponse<boolean>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    await auth.api.acceptInvitation({
-      body: { invitationId },
-      headers: await headers(),
+    const invitation = await db.invitation.findUnique({
+      where: { id: invitationId },
+    });
+
+    if (!invitation) {
+      return getActionResponse({ error: "Invitation not found" });
+    }
+
+    if (invitation.email !== user.email) {
+      return getActionResponse({ error: "Access denied" });
+    }
+
+    if (invitation.status !== "pending") {
+      return getActionResponse({ error: "Invitation already processed" });
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      return getActionResponse({ error: "Invitation expired" });
+    }
+
+    await db.member.create({
+      data: {
+        userId: user.id,
+        organizationId: invitation.organizationId,
+        role: invitation.role,
+      },
+    });
+
+    await db.invitation.update({
+      where: { id: invitationId },
+      data: { status: "accepted" },
     });
 
     return getActionResponse({ data: true });

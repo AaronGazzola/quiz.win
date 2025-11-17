@@ -4,7 +4,7 @@ import { signIn } from "@/lib/auth-client";
 import { DevUser, getDevUsers } from "@/lib/dev-users";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { getUserMembersAction, getAllOrganizationsAction } from "../../layout.actions";
+import { getUserMembersAction } from "../../layout.actions";
 import { useAppStore, useRedirectStore } from "../../layout.stores";
 import { TestId } from "@/test.types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export default function DevSignInButtons({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { setUser, setAllOrganizations, setPendingInvitations, setSelectedOrganizationIds } = useAppStore();
+  const { setUser, setPendingInvitations, setSelectedOrganizationIds } = useAppStore();
   const { setUserData } = useRedirectStore();
   const { setMetrics, setQuizzes } = useDashboardDataStore();
 
@@ -54,32 +54,18 @@ export default function DevSignInButtons({
       setUser(userData);
       setUserData(userData);
 
-      const pendingInvitationsPromise = getPendingInvitationsForUserAction().then(result => {
-        if (result.data) {
-          setPendingInvitations(result.data);
-        }
-        return result.data || [];
-      });
-
-      const organizationsPromise = userData.role === "super-admin"
-        ? getAllOrganizationsAction().then(result => {
-            if (result.data) {
-              setAllOrganizations(result.data);
-            }
-            return result.data || [];
-          })
-        : Promise.resolve([]);
-
-      await Promise.all([pendingInvitationsPromise, organizationsPromise]);
+      const pendingInvitationsResult = await getPendingInvitationsForUserAction();
+      if (pendingInvitationsResult.data) {
+        setPendingInvitations(pendingInvitationsResult.data);
+      }
 
       const organizationIds = userData.member?.map(m => m.organizationId) || [];
       if (organizationIds.length > 0) {
         setSelectedOrganizationIds(organizationIds);
 
         const [metricsResult, quizzesResult] = await Promise.all([
-          getDashboardMetricsAction(organizationIds),
+          getDashboardMetricsAction(),
           getQuizzesAction({
-            organizationIds,
             page: 0,
             itemsPerPage: 10,
           }),

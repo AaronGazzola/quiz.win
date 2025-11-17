@@ -1,6 +1,7 @@
 "use client";
 
-import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
+import { useAdminAccess } from "@/app/layout.hooks";
+import { useAppStore } from "@/app/layout.stores";
 import { cn } from "@/lib/shadcn.utils";
 import { CheckCircle, ChevronLeft, Clock, Trophy, XCircle } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -10,7 +11,7 @@ export function QuizResultPageContent() {
   const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: user } = useGetUser();
+  const { user } = useAppStore();
   const hasAdminAccess = useAdminAccess();
   const quizId = Array.isArray(id) ? id[0] : id;
   const userId = searchParams.get("userId") || undefined;

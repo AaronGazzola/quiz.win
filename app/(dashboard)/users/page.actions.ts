@@ -8,7 +8,6 @@ import { headers } from "next/headers";
 import { UsersData, UserWithDetails } from "./page.types";
 
 export const getUsersAction = async (
-  organizationIds?: string[],
   search?: string,
   sortColumn?: string,
   sortDirection?: "asc" | "desc",
@@ -26,17 +25,14 @@ export const getUsersAction = async (
 
     const { db } = await getAuthenticatedClient();
     const isSuper = await isSuperAdmin();
-    let targetOrgIds: string[] = [];
+
+    let targetOrgIds: string[];
 
     if (isSuper) {
-      if (organizationIds && organizationIds.length > 0) {
-        targetOrgIds = organizationIds;
-      } else {
-        const allOrgs = await auth.api.listOrganizations({
-          headers: await headers(),
-        });
-        targetOrgIds = allOrgs?.map(org => org.id) || [];
-      }
+      const allOrgs = await auth.api.listOrganizations({
+        headers: await headers(),
+      });
+      targetOrgIds = allOrgs?.map(org => org.id) || [];
     } else {
       const userAdminMemberships = await db.member.findMany({
         where: {
@@ -45,20 +41,7 @@ export const getUsersAction = async (
         },
         select: { organizationId: true }
       });
-
-      const userAdminOrgIds = userAdminMemberships.map(m => m.organizationId);
-
-      if (userAdminOrgIds.length === 0) {
-        return getActionResponse({
-          data: { users: [], totalPages: 0, totalCount: 0 }
-        });
-      }
-
-      if (organizationIds && organizationIds.length > 0) {
-        targetOrgIds = organizationIds.filter(orgId => userAdminOrgIds.includes(orgId));
-      } else {
-        targetOrgIds = userAdminOrgIds;
-      }
+      targetOrgIds = userAdminMemberships.map(m => m.organizationId);
     }
 
     if (targetOrgIds.length === 0) {
@@ -236,13 +219,9 @@ export const changeUserRoleAction = async (
       return getActionResponse({ error: "Member not found" });
     }
 
-    await auth.api.updateMemberRole({
-      body: {
-        memberId: targetMember.id,
-        organizationId,
-        role: newRole,
-      },
-      headers: await headers(),
+    await db.member.update({
+      where: { id: targetMember.id },
+      data: { role: newRole },
     });
 
     return getActionResponse({ data: true });
@@ -263,26 +242,9 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
 
     const isSuper = await isSuperAdmin();
 
-    if (isSuper) {
-      if (banned) {
-        await auth.api.banUser({
-          body: {
-            userId,
-            banReason,
-          },
-          headers: await headers(),
-        });
-      } else {
-        await auth.api.unbanUser({
-          body: {
-            userId,
-          },
-          headers: await headers(),
-        });
-      }
-    } else {
-      const { db } = await getAuthenticatedClient();
+    const { db } = await getAuthenticatedClient();
 
+    if (!isSuper) {
       const userAdminMemberships = await db.member.findMany({
         where: {
           userId: session.user.id,
@@ -307,23 +269,26 @@ export const toggleUserBanAction = async (userId: string, banned: boolean, banRe
       if (!targetUserMembership) {
         return getActionResponse({ error: "You can only manage users from your organizations" });
       }
+    }
 
-      if (banned) {
-        await auth.api.banUser({
-          body: {
-            userId,
-            banReason,
-          },
-          headers: await headers(),
-        });
-      } else {
-        await auth.api.unbanUser({
-          body: {
-            userId,
-          },
-          headers: await headers(),
-        });
-      }
+    if (banned) {
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          banned: true,
+          banReason: banReason || null,
+          banExpires: null,
+        },
+      });
+    } else {
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          banned: false,
+          banReason: null,
+          banExpires: null,
+        },
+      });
     }
 
     return getActionResponse({ data: banned });
@@ -381,21 +346,23 @@ export const bulkToggleUserBanAction = async (
 
     for (const userId of manageableUserIds) {
       try {
-
         if (banned) {
-          await auth.api.banUser({
-            body: {
-              userId,
-              banReason,
+          await db.user.update({
+            where: { id: userId },
+            data: {
+              banned: true,
+              banReason: banReason || null,
+              banExpires: null,
             },
-            headers: await headers(),
           });
         } else {
-          await auth.api.unbanUser({
-            body: {
-              userId,
+          await db.user.update({
+            where: { id: userId },
+            data: {
+              banned: false,
+              banReason: null,
+              banExpires: null,
             },
-            headers: await headers(),
           });
         }
 
@@ -457,13 +424,9 @@ export const updateMultipleUserRolesAction = async (
           continue;
         }
 
-        await auth.api.updateMemberRole({
-          body: {
-            memberId: targetMember.id,
-            organizationId: change.organizationId,
-            role: change.newRole,
-          },
-          headers: await headers(),
+        await db.member.update({
+          where: { id: targetMember.id },
+          data: { role: change.newRole },
         });
 
         successCount++;

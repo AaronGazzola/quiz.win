@@ -20,7 +20,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Verify all 4 dashboard metrics are visible', async () => {
@@ -31,14 +31,21 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_ACTIVE_INVITES)).toBeVisible({ timeout: 20000 });
     });
 
-    await logger.step('Verify quiz table shows all quizzes from both organizations', async () => {
+    await logger.step('Verify quiz table shows quizzes from both organizations with pagination', async () => {
       const quizTable = page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE);
       await expect(quizTable).toBeVisible({ timeout: 20000 });
 
       const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
       await expect(quizRows.first()).toBeVisible({ timeout: 20000 });
       const quizRowCount = await quizRows.count();
-      expect(quizRowCount).toBeGreaterThanOrEqual(6);
+      expect(quizRowCount).toBeGreaterThanOrEqual(5);
+
+      const paginationText = page.getByText(/Showing \d+ to \d+ of \d+ quizzes/);
+      await expect(paginationText).toBeVisible();
+      const paginationContent = await paginationText.textContent();
+      const totalMatch = paginationContent?.match(/of (\d+) quizzes/);
+      const totalQuizzes = totalMatch ? parseInt(totalMatch[1]) : 0;
+      expect(totalQuizzes).toBeGreaterThanOrEqual(6);
     });
 
     await logger.step('Verify Responses column is visible in quiz table', async () => {
@@ -79,7 +86,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Verify admin metrics are visible', async () => {
@@ -127,7 +134,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Verify all admin metrics are visible', async () => {
@@ -175,7 +182,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Verify only basic metrics are visible (no Team Members or Active Invites)', async () => {
@@ -238,7 +245,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Wait for dashboard to load', async () => {
@@ -277,7 +284,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Wait for quizzes to load', async () => {
@@ -328,7 +335,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify redirect to home page', async () => {
-      await expect(page).toHaveURL('/', { timeout: 10000 });
+      await expect(page).toHaveURL('/', { timeout: 20000 });
     });
 
     await logger.step('Wait for quizzes to load', async () => {

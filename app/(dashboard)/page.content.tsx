@@ -26,7 +26,8 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  useDashboardPageData,
+  useGetMetrics,
+  useGetQuizzes,
   useGetQuizResponses,
   useGetResponseDetail,
   useGetUserResponse,
@@ -45,9 +46,8 @@ import {
 import { QuizDialog } from "./QuizDialog";
 
 export function DashboardPageContent() {
-  const { data: user, isLoading: userLoading } = useGetUser();
-  console.log({ user });
-  const { selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
+  const { isLoading: userLoading } = useGetUser();
+  const { user, selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
   const isInitializing = userLoading;
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
@@ -67,16 +67,14 @@ export function DashboardPageContent() {
   const processInvitationMutation = useProcessInvitation();
   const router = useRouter();
 
-  const { isLoading: pageDataLoading, isFetching: pageDataFetching } = useDashboardPageData(selectedOrganizationIds.length > 0 ? selectedOrganizationIds : undefined);
+  const { isLoading: metricsLoading, isFetching: metricsFetching } = useGetMetrics();
+  const { isLoading: quizzesLoading, isFetching: quizzesFetching } = useGetQuizzes();
 
   const { metrics, quizzes: quizzesFromStore, quizzesTotalCount, quizzesTotalPages } = useDashboardDataStore();
 
   const hasAdminAccess = metrics?.hasAdminAccess ?? false;
 
-  const isLoading = pageDataLoading;
-  const quizzesFetching = pageDataFetching;
-  const metricsLoading = pageDataLoading;
-  const metricsFetching = pageDataFetching;
+  const isLoading = metricsLoading || quizzesLoading;
 
   const {
     search,
@@ -116,7 +114,7 @@ export function DashboardPageContent() {
     reset: resetResponseDetail,
   } = useResponseDetailStore();
 
-  const { isLoading: responsesLoading, isFetching: responsesFetching } = useGetQuizResponses(selectedQuizId, selectedOrganizationIds);
+  const { isLoading: responsesLoading, isFetching: responsesFetching } = useGetQuizResponses(selectedQuizId);
   const { isLoading: responseDetailLoading, isFetching: responseDetailFetching } = useGetResponseDetail(selectedResponseId);
   const { isLoading: userResponseLoading, isFetching: userResponseFetching } = useGetUserResponse(selectedQuizId);
 
@@ -268,7 +266,7 @@ export function DashboardPageContent() {
       </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
-        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
               <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
@@ -295,7 +293,7 @@ export function DashboardPageContent() {
           </div>
         </div>
 
-        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-green-500/10 rounded-lg">
               <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
@@ -324,7 +322,7 @@ export function DashboardPageContent() {
 
         {hasAdminAccess && (
           <>
-            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
                   <Users className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
@@ -353,7 +351,7 @@ export function DashboardPageContent() {
               </div>
             </div>
 
-            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={metricsLoading} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
                   <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />

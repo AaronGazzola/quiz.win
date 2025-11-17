@@ -15,6 +15,25 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
   },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await prisma.profile.create({
+            data: {
+              userId: user.id,
+              preferences: {
+                theme: "light",
+                notifications: true,
+                language: "en",
+              },
+              activeOrganizationIds: [],
+            },
+          });
+        },
+      },
+    },
+  },
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {

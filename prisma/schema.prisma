@@ -310,11 +310,12 @@ model Password {
 }
 
 model Profile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  preferences Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  preferences           Json?
+  activeOrganizationIds String[] @default([])
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@schema("public")
 }

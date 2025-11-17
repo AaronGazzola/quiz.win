@@ -7,16 +7,14 @@ import { useUserTableStore } from "./page.stores";
 import { useEffect } from "react";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 
-export const useGetUsers = (organizationIds?: string[]) => {
+export const useGetUsers = () => {
   const { search, sort, page, itemsPerPage } = useUserTableStore();
-  const orgIdsKey = organizationIds?.join(',') || '';
 
-  conditionalLog({hook:"useGetUsers",status:"initialized",hasOrgIds:!!organizationIds?.length,orgCount:organizationIds?.length,search},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog({hook:"useGetUsers",status:"initialized",search},{label:LOG_LABELS.DATA_FETCH});
 
   return useQuery({
     queryKey: [
       "users",
-      orgIdsKey,
       search,
       sort.column,
       sort.direction,
@@ -24,9 +22,8 @@ export const useGetUsers = (organizationIds?: string[]) => {
       itemsPerPage
     ],
     queryFn: async () => {
-      conditionalLog({hook:"useGetUsers",status:"fetching",orgIds:organizationIds,search,page},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog({hook:"useGetUsers",status:"fetching",search,page},{label:LOG_LABELS.DATA_FETCH});
       const { data, error } = await getUsersAction(
-        organizationIds,
         search || undefined,
         sort.column || undefined,
         sort.direction || undefined,
@@ -35,6 +32,7 @@ export const useGetUsers = (organizationIds?: string[]) => {
       );
       if (error) {
         conditionalLog({hook:"useGetUsers",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        console.error(JSON.stringify({hook:"useGetUsers",error}));
         throw new Error(error);
       }
       conditionalLog({hook:"useGetUsers",status:"success",userCount:data?.users?.length,totalCount:data?.totalCount},{label:LOG_LABELS.DATA_FETCH});
@@ -66,6 +64,7 @@ export const useToggleUserBan = () => {
       toast.success(`User ${banned ? 'banned' : 'unbanned'} successfully`);
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useToggleUserBan", error }));
       toast.error(error.message || "Failed to update user status");
     },
   });
@@ -93,6 +92,7 @@ export const useChangeUserRole = () => {
       toast.success("User role updated successfully");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useChangeUserRole", error }));
       toast.error(error.message || "Failed to update user role");
     },
   });
@@ -120,6 +120,7 @@ export const useBulkToggleUserBan = () => {
       toast.success(`${successCount} users ${variables.banned ? 'banned' : 'unbanned'} successfully`);
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useBulkToggleUserBan", error }));
       toast.error(error.message || "Failed to update users");
     },
   });
@@ -145,6 +146,7 @@ export const useUpdateMultipleUserRoles = () => {
       toast.success(`${successCount} role(s) updated successfully`);
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useUpdateMultipleUserRoles", error }));
       toast.error(error.message || "Failed to update user roles");
     },
   });

@@ -1,5 +1,7 @@
 "use client";
 
+import { useAppStore } from "@/app/layout.stores";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -7,24 +9,23 @@ import {
   bulkDeleteQuizzesAction,
   createQuizAction,
   deleteQuizAction,
+  getDashboardMetricsAction,
   getQuizResponsesAction,
   GetQuizResponsesParams,
   getQuizzesAction,
   GetQuizzesParams,
-  updateQuizAction,
-  processInvitationAction,
-  getDashboardMetricsAction,
   getResponseDetailAction,
   getUserResponseAction,
+  processInvitationAction,
+  updateQuizAction,
 } from "./page.actions";
 import {
   useBulkOperationStore,
-  useQuizTableStore,
-  useResponseTableStore,
   useDashboardDataStore,
+  useQuizTableStore,
   useResponseDataStore,
+  useResponseTableStore,
 } from "./page.stores";
-import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 
 export const useDebounce = <T>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -42,45 +43,117 @@ export const useDebounce = <T>(value: T, delay: number): T => {
   return debouncedValue;
 };
 
-export const useGetQuizzes = (organizationIds?: string[]) => {
+export const useGetMetrics = () => {
+  const { selectedOrganizationIds } = useAppStore();
+  const { setMetrics } = useDashboardDataStore();
+
+  conditionalLog(
+    { hook: "useGetMetrics", status: "initialized", selectedOrganizationIds },
+    { label: LOG_LABELS.DATA_FETCH }
+  );
+
+  const query = useQuery({
+    queryKey: ["metrics", selectedOrganizationIds],
+    queryFn: async () => {
+      conditionalLog(
+        { hook: "useGetMetrics", status: "fetching", selectedOrganizationIds },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
+      const { data, error } = await getDashboardMetricsAction(
+        selectedOrganizationIds
+      );
+      if (error) {
+        conditionalLog(
+          { hook: "useGetMetrics", status: "error", error },
+          { label: LOG_LABELS.DATA_FETCH }
+        );
+        console.error(JSON.stringify({ hook: "useGetMetrics", error }));
+        throw new Error(error);
+      }
+      conditionalLog(
+        { hook: "useGetMetrics", status: "success", metrics: data },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
+      return data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  useEffect(() => {
+    if (query.data) {
+      setMetrics(query.data);
+    }
+  }, [query.data, setMetrics]);
+
+  return query;
+};
+
+export const useGetQuizzes = () => {
   const { search, sort, page, itemsPerPage } = useQuizTableStore();
+  const { selectedOrganizationIds } = useAppStore();
   const { setQuizzes } = useDashboardDataStore();
   const debouncedSearch = useDebounce(search, 300);
-  const orgIdsKey = organizationIds?.join(",") || "";
 
   const queryParams: GetQuizzesParams = useMemo(
     () => ({
-      organizationIds,
       search: debouncedSearch,
       sortColumn: sort.column || undefined,
       sortDirection: sort.direction || undefined,
       page,
       itemsPerPage,
+      selectedOrganizationIds,
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      orgIdsKey,
       debouncedSearch,
       sort.column,
       sort.direction,
       page,
       itemsPerPage,
-      organizationIds,
+      selectedOrganizationIds,
     ]
   );
 
-  conditionalLog({hook:"useGetQuizzes",status:"initialized",hasOrgIds:!!organizationIds?.length,orgCount:organizationIds?.length,search:debouncedSearch},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog(
+    {
+      hook: "useGetQuizzes",
+      status: "initialized",
+      search: debouncedSearch,
+      selectedOrganizationIds,
+    },
+    { label: LOG_LABELS.DATA_FETCH }
+  );
 
   const query = useQuery({
     queryKey: ["quizzes", queryParams],
     queryFn: async () => {
-      conditionalLog({hook:"useGetQuizzes",status:"fetching",orgIds:organizationIds,search:debouncedSearch,page},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        {
+          hook: "useGetQuizzes",
+          status: "fetching",
+          search: debouncedSearch,
+          page,
+          selectedOrganizationIds,
+        },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       const { data, error } = await getQuizzesAction(queryParams);
       if (error) {
-        conditionalLog({hook:"useGetQuizzes",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        conditionalLog(
+          { hook: "useGetQuizzes", status: "error", error },
+          { label: LOG_LABELS.DATA_FETCH }
+        );
+        console.error(JSON.stringify({ hook: "useGetQuizzes", error }));
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetQuizzes",status:"success",quizCount:data?.quizzes?.length,totalCount:data?.totalCount},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        {
+          hook: "useGetQuizzes",
+          status: "success",
+          quizCount: data?.quizzes?.length,
+          totalCount: data?.totalCount,
+        },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       return data;
     },
     staleTime: 1000 * 60 * 5,
@@ -89,7 +162,11 @@ export const useGetQuizzes = (organizationIds?: string[]) => {
 
   useEffect(() => {
     if (query.data) {
-      setQuizzes(query.data.quizzes, query.data.totalCount, query.data.totalPages);
+      setQuizzes(
+        query.data.quizzes,
+        query.data.totalCount,
+        query.data.totalPages
+      );
     }
   }, [query.data, setQuizzes]);
 
@@ -102,10 +179,12 @@ export const useCreateQuiz = () => {
   return useMutation({
     mutationFn: createQuizAction,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["metrics"] });
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       toast.success("Quiz created successfully");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useCreateQuiz", error }));
       toast.error(error?.message || "Failed to create quiz");
     },
   });
@@ -127,6 +206,7 @@ export const useUpdateQuiz = () => {
       toast.success("Quiz updated successfully");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useUpdateQuiz", error }));
       toast.error(error?.message || "Failed to update quiz");
     },
   });
@@ -138,10 +218,12 @@ export const useDeleteQuiz = () => {
   return useMutation({
     mutationFn: deleteQuizAction,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["metrics"] });
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       toast.success("Quiz deleted successfully");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useDeleteQuiz", error }));
       toast.error(error?.message || "Failed to delete quiz");
     },
   });
@@ -158,11 +240,13 @@ export const useBulkDeleteQuizzes = () => {
       setLoading(true);
     },
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["metrics"] });
       queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       clearSelection();
       toast.success(`${data.data?.count || 0} quizzes deleted successfully`);
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useBulkDeleteQuizzes", error }));
       toast.error(error?.message || "Failed to delete quizzes");
     },
     onSettled: () => {
@@ -192,53 +276,63 @@ export const useViewportResize = (callback: (height: number) => void) => {
   }, [callback]);
 };
 
-export const useGetQuizResponses = (
-  quizId: string | null,
-  organizationIds?: string[]
-) => {
+export const useGetQuizResponses = (quizId: string | null) => {
   const { search, sort, page, itemsPerPage } = useResponseTableStore();
   const { setResponses } = useResponseDataStore();
   const debouncedSearch = useDebounce(search, 300);
-  const orgIdsKey = organizationIds?.join(",") || "";
 
   const queryParams: GetQuizResponsesParams | null = useMemo(() => {
     if (!quizId) return null;
 
     return {
       quizId,
-      organizationIds,
       search: debouncedSearch,
       sortColumn: sort.column || undefined,
       sortDirection: sort.direction || undefined,
       page,
       itemsPerPage,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     quizId,
-    orgIdsKey,
     debouncedSearch,
     sort.column,
     sort.direction,
     page,
     itemsPerPage,
-    organizationIds,
   ]);
 
   const enabled = !!queryParams;
-  conditionalLog({hook:"useGetQuizResponses",status:"initialized",enabled,quizId,hasOrgIds:!!organizationIds?.length},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog(
+    { hook: "useGetQuizResponses", status: "initialized", enabled, quizId },
+    { label: LOG_LABELS.DATA_FETCH }
+  );
 
   const query = useQuery({
     queryKey: ["quiz-responses", queryParams],
     queryFn: async () => {
       if (!queryParams) return null;
-      conditionalLog({hook:"useGetQuizResponses",status:"fetching",quizId,orgIds:organizationIds,page},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        { hook: "useGetQuizResponses", status: "fetching", quizId, page },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       const { data, error } = await getQuizResponsesAction(queryParams);
       if (error) {
-        conditionalLog({hook:"useGetQuizResponses",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        conditionalLog(
+          { hook: "useGetQuizResponses", status: "error", error },
+          { label: LOG_LABELS.DATA_FETCH }
+        );
+        console.error(JSON.stringify({ hook: "useGetQuizResponses", error }));
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetQuizResponses",status:"success",responseCount:data?.responses?.length,totalCount:data?.totalCount},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        {
+          hook: "useGetQuizResponses",
+          status: "success",
+          responseCount: data?.responses?.length,
+          totalCount: data?.totalCount,
+        },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       return data;
     },
     enabled,
@@ -248,7 +342,11 @@ export const useGetQuizResponses = (
 
   useEffect(() => {
     if (query.data) {
-      setResponses(query.data.responses, query.data.totalCount, query.data.totalPages);
+      setResponses(
+        query.data.responses,
+        query.data.totalCount,
+        query.data.totalPages
+      );
     }
   }, [query.data, setResponses]);
 
@@ -260,15 +358,12 @@ export const useExportResponses = () => {
     mutationFn: async ({
       quizId,
       quizTitle,
-      organizationIds,
     }: {
       quizId: string;
       quizTitle: string;
-      organizationIds?: string[];
     }) => {
       const params: GetQuizResponsesParams = {
         quizId,
-        organizationIds,
         page: 0,
         itemsPerPage: 10000,
       };
@@ -320,6 +415,7 @@ export const useExportResponses = () => {
       toast.success(`Exported ${count} responses successfully`);
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useExportResponses", error }));
       toast.error(error?.message || "Failed to export responses");
     },
   });
@@ -342,7 +438,12 @@ export const useViewportPagination = () => {
 
 export const useProcessInvitation = () => {
   return useMutation({
-    mutationFn: async ({ organizationId }: { organizationId: string, role: string }) => {
+    mutationFn: async ({
+      organizationId,
+    }: {
+      organizationId: string;
+      role: string;
+    }) => {
       const { data, error } = await processInvitationAction(organizationId);
       if (error) throw new Error(error);
       return data;
@@ -351,57 +452,46 @@ export const useProcessInvitation = () => {
       toast.success("Successfully joined the organization!");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useProcessInvitation", error }));
       toast.error(error.message || "Failed to join organization");
     },
   });
 };
 
-export const useGetDashboardMetrics = (organizationIds?: string[]) => {
-  const { setMetrics } = useDashboardDataStore();
-  const orgIdsKey = organizationIds?.join(',') || '';
-
-  conditionalLog({hook:"useGetDashboardMetrics",status:"initialized",hasOrgIds:!!organizationIds?.length},{label:LOG_LABELS.DATA_FETCH});
-
-  const query = useQuery({
-    queryKey: ["dashboard-metrics", orgIdsKey],
-    queryFn: async () => {
-      conditionalLog({hook:"useGetDashboardMetrics",status:"fetching",orgIds:organizationIds},{label:LOG_LABELS.DATA_FETCH});
-      const { data, error } = await getDashboardMetricsAction(organizationIds);
-      if (error) {
-        conditionalLog({hook:"useGetDashboardMetrics",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
-        throw new Error(error);
-      }
-      conditionalLog({hook:"useGetDashboardMetrics",status:"success",data},{label:LOG_LABELS.DATA_FETCH});
-      return data;
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-
-  useEffect(() => {
-    if (query.data) {
-      setMetrics(query.data);
-    }
-  }, [query.data, setMetrics]);
-
-  return query;
-};
-
 export const useGetResponseDetail = (responseId: string | null) => {
   const { setResponseDetail } = useResponseDataStore();
   const enabled = !!responseId;
-  conditionalLog({hook:"useGetResponseDetail",status:"initialized",enabled,responseId},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog(
+    {
+      hook: "useGetResponseDetail",
+      status: "initialized",
+      enabled,
+      responseId,
+    },
+    { label: LOG_LABELS.DATA_FETCH }
+  );
 
   const query = useQuery({
     queryKey: ["response-detail", responseId],
     queryFn: async () => {
       if (!responseId) return null;
-      conditionalLog({hook:"useGetResponseDetail",status:"fetching",responseId},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        { hook: "useGetResponseDetail", status: "fetching", responseId },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       const { data, error } = await getResponseDetailAction(responseId);
       if (error) {
-        conditionalLog({hook:"useGetResponseDetail",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        conditionalLog(
+          { hook: "useGetResponseDetail", status: "error", error },
+          { label: LOG_LABELS.DATA_FETCH }
+        );
+        console.error(JSON.stringify({ hook: "useGetResponseDetail", error }));
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetResponseDetail",status:"success",hasData:!!data},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        { hook: "useGetResponseDetail", status: "success", hasData: !!data },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       return data;
     },
     enabled,
@@ -418,19 +508,32 @@ export const useGetResponseDetail = (responseId: string | null) => {
 export const useGetUserResponse = (quizId: string | null) => {
   const { setUserResponse } = useResponseDataStore();
   const enabled = !!quizId;
-  conditionalLog({hook:"useGetUserResponse",status:"initialized",enabled,quizId},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog(
+    { hook: "useGetUserResponse", status: "initialized", enabled, quizId },
+    { label: LOG_LABELS.DATA_FETCH }
+  );
 
   const query = useQuery({
     queryKey: ["user-response", quizId],
     queryFn: async () => {
       if (!quizId) return null;
-      conditionalLog({hook:"useGetUserResponse",status:"fetching",quizId},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        { hook: "useGetUserResponse", status: "fetching", quizId },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       const { data, error } = await getUserResponseAction(quizId);
       if (error) {
-        conditionalLog({hook:"useGetUserResponse",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        conditionalLog(
+          { hook: "useGetUserResponse", status: "error", error },
+          { label: LOG_LABELS.DATA_FETCH }
+        );
+        console.error(JSON.stringify({ hook: "useGetUserResponse", error }));
         throw new Error(error);
       }
-      conditionalLog({hook:"useGetUserResponse",status:"success",hasData:!!data},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog(
+        { hook: "useGetUserResponse", status: "success", hasData: !!data },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
       return data;
     },
     enabled,
@@ -442,15 +545,4 @@ export const useGetUserResponse = (quizId: string | null) => {
   }, [query.data, setUserResponse]);
 
   return query;
-};
-
-export const useDashboardPageData = (organizationIds?: string[]) => {
-  const metrics = useGetDashboardMetrics(organizationIds);
-  const quizzes = useGetQuizzes(organizationIds);
-
-  return {
-    isLoading: metrics.isLoading || quizzes.isLoading,
-    isFetching: metrics.isFetching || quizzes.isFetching,
-    error: metrics.error || quizzes.error,
-  };
 };

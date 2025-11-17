@@ -12,7 +12,6 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx scripts/seed.ts",
     "test:e2e": "playwright test",
     "test:e2e:auth": "playwright test e2e/auth.spec.ts",
     "test:e2e:auth:headed": "playwright test e2e/auth.spec.ts --headed",
@@ -21,10 +20,11 @@
     "test:e2e:dashboard:headed": "playwright test e2e/dashboard.spec.ts --headed --workers=1",
     "test:e2e:dashboard:trace": "TEST_TRACE=true playwright test e2e/dashboard.spec.ts --workers=1",
     "test:report": "tsx scripts/generate-test-report.ts",
-    "test:report:cleanup": "tsx scripts/generate-test-report.ts --cleanup"
+    "test:report:cleanup": "tsx scripts/generate-test-report.ts --cleanup",
+    "seed": "prisma migrate reset"
   },
   "prisma": {
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

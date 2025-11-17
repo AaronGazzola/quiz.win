@@ -16,23 +16,29 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ExtendedUser } from "@/app/layout.types"
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util"
 import { TestId } from "@/test.types"
+import { useAppStore } from "@/app/layout.stores"
+import { useGetUser } from "@/app/layout.hooks"
 
 interface UserAvatarMenuProps {
-  user: ExtendedUser | null
   onSignOut: () => void
-  isLoading?: boolean
 }
 
-export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvatarMenuProps) {
+export function UserAvatarMenu({ onSignOut }: UserAvatarMenuProps) {
+  const { user } = useAppStore()
+  const { isLoading } = useGetUser()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   React.useEffect(() => {
     setMounted(true)
+    conditionalLog({ component: "UserAvatarMenu", status: "mounted" }, { label: LOG_LABELS.DATA_FETCH })
   }, [])
+
+  React.useEffect(() => {
+    conditionalLog({ component: "UserAvatarMenu", status: "state_update", isLoading, hasUser: !!user, userEmail: user?.email, mounted }, { label: LOG_LABELS.DATA_FETCH })
+  }, [isLoading, user, mounted])
 
   const getInitials = (email: string | undefined) => {
     if (!email) return "??"
@@ -56,6 +62,7 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
   }
 
   if (!mounted) {
+    conditionalLog({ component: "UserAvatarMenu", render: "skeleton_not_mounted" }, { label: LOG_LABELS.DATA_FETCH })
     return (
       <Avatar className="h-8 w-8 cursor-pointer">
         <AvatarFallback className="text-xs">
@@ -66,6 +73,7 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
   }
 
   if (isLoading || !user) {
+    conditionalLog({ component: "UserAvatarMenu", render: "skeleton_loading_or_no_user", isLoading, hasUser: !!user }, { label: LOG_LABELS.DATA_FETCH })
     return (
       <Avatar className="h-8 w-8 cursor-pointer">
         <AvatarFallback className="text-xs">
@@ -74,6 +82,8 @@ export function UserAvatarMenu({ user, onSignOut, isLoading = false }: UserAvata
       </Avatar>
     )
   }
+
+  conditionalLog({ component: "UserAvatarMenu", render: "full_menu", userEmail: user?.email }, { label: LOG_LABELS.DATA_FETCH })
 
   return (
     <DropdownMenu>

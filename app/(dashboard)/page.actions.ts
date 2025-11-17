@@ -1,46 +1,70 @@
 "use server";
 
 import { ActionResponse, getActionResponse } from "@/lib/action.utils";
-import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { quiz } from "@prisma/client";
-import { headers } from "next/headers";
 import { DashboardMetrics, QuizWithDetails, ResponseWithUser, ResponseWithDetails } from "./page.types";
 
 export interface GetQuizzesParams {
-  organizationIds?: string[];
   search?: string;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
   page?: number;
   itemsPerPage?: number;
+  selectedOrganizationIds?: string[];
 }
 
 export interface GetQuizResponsesParams {
   quizId: string;
-  organizationIds?: string[];
   search?: string;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
   page?: number;
   itemsPerPage?: number;
 }
+
 
 export const processInvitationAction = async (
   invitationId: string
 ): Promise<ActionResponse<boolean>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    await auth.api.acceptInvitation({
-      body: { invitationId },
-      headers: await headers(),
+    const invitation = await db.invitation.findUnique({
+      where: { id: invitationId },
+    });
+
+    if (!invitation) {
+      return getActionResponse({ error: "Invitation not found" });
+    }
+
+    if (invitation.email !== user.email) {
+      return getActionResponse({ error: "Access denied" });
+    }
+
+    if (invitation.status !== "pending") {
+      return getActionResponse({ error: "Invitation already processed" });
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      return getActionResponse({ error: "Invitation expired" });
+    }
+
+    await db.member.create({
+      data: {
+        userId: user.id,
+        organizationId: invitation.organizationId,
+        role: invitation.role,
+      },
+    });
+
+    await db.invitation.update({
+      where: { id: invitationId },
+      data: { status: "accepted" },
     });
 
     return getActionResponse({ data: true });
@@ -50,37 +74,52 @@ export const processInvitationAction = async (
 };
 
 export const getDashboardMetricsAction = async (
-  organizationIds?: string[]
+  selectedOrganizationIds?: string[]
 ): Promise<ActionResponse<DashboardMetrics>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Not authenticated" });
     }
 
-    const { db } = await getAuthenticatedClient();
+    const [dbUser, userMemberships] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { role: true }
+      }),
+      db.member.findMany({
+        where: { userId: user.id },
+        select: {
+          organizationId: true,
+          role: true,
+        }
+      })
+    ]);
 
-    const dbUser = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-
-    // Get all organizations the user is a member of
-    const userMemberships = await db.member.findMany({
-      where: { userId: session.user.id },
-      select: {
-        organizationId: true,
-        role: true,
-      }
-    });
-
-    const userOrgIds = userMemberships.map(m => m.organizationId);
     const isSuperAdmin = dbUser?.role === "super-admin";
+    const allMemberOrgIds = userMemberships.map(m => m.organizationId);
 
-    if (!isSuperAdmin && userOrgIds.length === 0) {
+    let targetOrgIds: string[];
+
+    if (selectedOrganizationIds && selectedOrganizationIds.length > 0) {
+      if (isSuperAdmin) {
+        targetOrgIds = selectedOrganizationIds;
+      } else {
+        targetOrgIds = selectedOrganizationIds.filter(id => allMemberOrgIds.includes(id));
+      }
+    } else {
+      if (isSuperAdmin) {
+        const allOrgs = await db.organization.findMany({
+          select: { id: true },
+        });
+        targetOrgIds = allOrgs.map(org => org.id);
+      } else {
+        targetOrgIds = allMemberOrgIds;
+      }
+    }
+
+    if (targetOrgIds.length === 0) {
       return getActionResponse({
         data: {
           totalQuizzes: 0,
@@ -92,22 +131,8 @@ export const getDashboardMetricsAction = async (
       });
     }
 
-    // Filter by user's organizations and optionally by specific organizationIds
-    let targetOrgIds = userOrgIds;
-    if (organizationIds && organizationIds.length > 0) {
-      targetOrgIds = isSuperAdmin
-        ? organizationIds
-        : organizationIds.filter(id => userOrgIds.includes(id));
-    } else if (isSuperAdmin) {
-      const allOrgs = await db.organization.findMany({
-        select: { id: true },
-      });
-      targetOrgIds = allOrgs.map(org => org.id);
-    }
-
-    // Check if user has admin access to any of the target organizations
     const hasAdminAccess = isSuperAdmin || userMemberships.some(
-      m => targetOrgIds.includes(m.organizationId) && (m.role === "admin" || m.role === "owner")
+      m => targetOrgIds!.includes(m.organizationId) && (m.role === "admin" || m.role === "owner")
     );
 
     // Calculate metrics
@@ -181,55 +206,58 @@ export const getQuizzesAction = async (
   }>
 > => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
 
-    const { db } = await getAuthenticatedClient();
-
-    const dbUser = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-
     const {
-      organizationIds,
       search = "",
       sortColumn = "createdAt",
       sortDirection = "desc",
       page = 0,
       itemsPerPage = 10,
+      selectedOrganizationIds,
     } = params;
 
-    // Get all organizations the user is a member of
-    const userMemberships = await db.member.findMany({
-      where: { userId: session.user.id },
-      select: { organizationId: true },
-    });
+    const [dbUser, userMemberships] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { role: true }
+      }),
+      db.member.findMany({
+        where: { userId: user.id },
+        select: { organizationId: true, role: true }
+      })
+    ]);
 
-    const userOrgIds = userMemberships.map((m) => m.organizationId);
     const isSuperAdmin = dbUser?.role === "super-admin";
+    const allMemberOrgIds = userMemberships.map(m => m.organizationId);
 
-    if (!isSuperAdmin && userOrgIds.length === 0) {
+    let targetOrgIds: string[];
+
+    if (selectedOrganizationIds && selectedOrganizationIds.length > 0) {
+      if (isSuperAdmin) {
+        targetOrgIds = selectedOrganizationIds;
+      } else {
+        targetOrgIds = selectedOrganizationIds.filter(id => allMemberOrgIds.includes(id));
+      }
+    } else {
+      if (isSuperAdmin) {
+        const allOrgs = await db.organization.findMany({
+          select: { id: true },
+        });
+        targetOrgIds = allOrgs.map(org => org.id);
+      } else {
+        targetOrgIds = allMemberOrgIds;
+      }
+    }
+
+    if (targetOrgIds.length === 0) {
       return getActionResponse({
         data: { quizzes: [], totalCount: 0, totalPages: 0 },
       });
-    }
-
-    let targetOrgIds = userOrgIds;
-    if (organizationIds && organizationIds.length > 0) {
-      targetOrgIds = isSuperAdmin
-        ? organizationIds
-        : organizationIds.filter((id) => userOrgIds.includes(id));
-    } else if (isSuperAdmin) {
-      const allOrgs = await db.organization.findMany({
-        select: { id: true },
-      });
-      targetOrgIds = allOrgs.map(org => org.id);
     }
 
     const where = {
@@ -290,15 +318,11 @@ export const createQuizAction = async (
   data: Pick<quiz, "title" | "description" | "organizationId">
 ): Promise<ActionResponse<quiz>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
-
-    const { db } = await getAuthenticatedClient();
 
     const { nanoid } = await import("nanoid");
     const quiz = await db.quiz.create({
@@ -307,7 +331,7 @@ export const createQuizAction = async (
         title: data.title,
         description: data.description,
         organizationId: data.organizationId,
-        createdBy: session.user.id,
+        createdBy: user.id,
         updatedAt: new Date(),
       },
     });
@@ -323,15 +347,11 @@ export const updateQuizAction = async (
   data: Partial<Pick<quiz, "title" | "description">>
 ): Promise<ActionResponse<quiz>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
-
-    const { db } = await getAuthenticatedClient();
 
     const quiz = await db.quiz.update({
       where: { id },
@@ -351,15 +371,11 @@ export const deleteQuizAction = async (
   id: string
 ): Promise<ActionResponse<quiz>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
-
-    const { db } = await getAuthenticatedClient();
 
     await db.question.deleteMany({
       where: { quizId: id },
@@ -383,15 +399,11 @@ export const bulkDeleteQuizzesAction = async (
   ids: string[]
 ): Promise<ActionResponse<{ count: number }>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
-
-    const { db } = await getAuthenticatedClient();
 
     await db.question.deleteMany({
       where: { quizId: { in: ids } },
@@ -421,19 +433,14 @@ export const getQuizResponsesAction = async (
   }>
 > => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
 
-    const { db } = await getAuthenticatedClient();
-
     const {
       quizId,
-      organizationIds,
       search = "",
       sortColumn = "completedAt",
       sortDirection = "desc",
@@ -441,44 +448,31 @@ export const getQuizResponsesAction = async (
       itemsPerPage = 10,
     } = params;
 
-    // First, verify the quiz exists and get its organization
-    const quiz = await db.quiz.findUnique({
-      where: { id: quizId },
-      select: { organizationId: true },
-    });
+    const [quiz, dbUser, userMembership] = await Promise.all([
+      db.quiz.findUnique({
+        where: { id: quizId },
+        select: { organizationId: true },
+      }),
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { role: true }
+      }),
+      db.member.findFirst({
+        where: {
+          userId: user.id,
+          role: { in: ["admin", "owner"] },
+        },
+      })
+    ]);
 
     if (!quiz) {
       return getActionResponse({ error: "quiz not found" });
     }
 
-    // If organizationIds are provided, verify the quiz belongs to one of them
-    if (
-      organizationIds &&
-      organizationIds.length > 0 &&
-      !organizationIds.includes(quiz.organizationId)
-    ) {
-      return getActionResponse({
-        data: { responses: [], totalCount: 0, totalPages: 0 },
-      });
-    }
-
-    const dbUser = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-
-    // Check if user is admin of the quiz's organization
-    const userMembership = await db.member.findFirst({
-      where: {
-        userId: session.user.id,
-        organizationId: quiz.organizationId,
-        role: { in: ["admin", "owner"] },
-      },
-    });
-
     const isSuperAdmin = dbUser?.role === "super-admin";
+    const isAdminOfQuizOrg = userMembership?.organizationId === quiz.organizationId;
 
-    if (!userMembership && !isSuperAdmin) {
+    if (!isAdminOfQuizOrg && !isSuperAdmin) {
       return getActionResponse({
         error: "Insufficient permissions to view responses",
       });
@@ -557,43 +551,40 @@ export const getResponseDetailAction = async (
   responseId: string
 ): Promise<ActionResponse<ResponseWithDetails>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
 
-    const { db } = await getAuthenticatedClient();
-
-    const dbUser = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-
-    const response = await db.response.findUnique({
-      where: { id: responseId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    const [dbUser, response] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { role: true }
+      }),
+      db.response.findUnique({
+        where: { id: responseId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
-        },
-        quiz: {
-          select: {
-            id: true,
-            title: true,
-            organizationId: true,
-            Question: {
-              orderBy: { order: "asc" },
+          quiz: {
+            select: {
+              id: true,
+              title: true,
+              organizationId: true,
+              Question: {
+                orderBy: { order: "asc" },
+              },
             },
           },
         },
-      },
-    });
+      })
+    ]);
 
     if (!response) {
       return getActionResponse({ error: "Response not found" });
@@ -601,14 +592,14 @@ export const getResponseDetailAction = async (
 
     const userMembership = await db.member.findFirst({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         organizationId: response.quiz.organizationId,
         role: { in: ["admin", "owner"] },
       },
     });
 
     const isSuperAdmin = dbUser?.role === "super-admin";
-    const isOwnResponse = response.userId === session.user.id;
+    const isOwnResponse = response.userId === user.id;
 
     if (!userMembership && !isSuperAdmin && !isOwnResponse) {
       return getActionResponse({
@@ -628,40 +619,36 @@ export const getUserResponseAction = async (
   quizId: string
 ): Promise<ActionResponse<ResponseWithDetails | null>> => {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    const { db, user } = await getAuthenticatedClient();
 
-    if (!session?.user) {
+    if (!user) {
       return getActionResponse({ error: "Unauthorized" });
     }
 
-    const { db } = await getAuthenticatedClient();
-
-    const dbUser = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true }
-    });
-
-    const quiz = await db.quiz.findUnique({
-      where: { id: quizId },
-      select: { organizationId: true },
-    });
+    const [dbUser, quiz, userMembership] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        select: { role: true }
+      }),
+      db.quiz.findUnique({
+        where: { id: quizId },
+        select: { organizationId: true },
+      }),
+      db.member.findFirst({
+        where: {
+          userId: user.id,
+        },
+      })
+    ]);
 
     if (!quiz) {
       return getActionResponse({ error: "quiz not found" });
     }
 
-    const userMembership = await db.member.findFirst({
-      where: {
-        userId: session.user.id,
-        organizationId: quiz.organizationId,
-      },
-    });
-
     const isSuperAdmin = dbUser?.role === "super-admin";
+    const isMemberOfQuizOrg = userMembership?.organizationId === quiz.organizationId;
 
-    if (!userMembership && !isSuperAdmin) {
+    if (!isMemberOfQuizOrg && !isSuperAdmin) {
       return getActionResponse({
         error: "You are not a member of this organization",
       });
@@ -670,7 +657,7 @@ export const getUserResponseAction = async (
     const response = await db.response.findFirst({
       where: {
         quizId,
-        userId: session.user.id,
+        userId: user.id,
       },
       include: {
         user: {

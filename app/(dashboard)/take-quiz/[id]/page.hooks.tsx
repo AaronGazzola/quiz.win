@@ -37,6 +37,7 @@ export const useSubmitResponse = () => {
       toast.success("Quiz completed successfully!");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useSubmitResponse", error }));
       toast.error(error.message || "Failed to submit quiz responses");
     },
   });

@@ -12,8 +12,8 @@ export default function InviteLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user, isLoading } = useGetUser();
-  const { selectedOrganizationIds } = useAppStore();
+  const { isLoading } = useGetUser();
+  const { user, selectedOrganizationIds } = useAppStore();
   const router = useRouter();
 
   const hasAccess = user && canAccessAdminUI(user, selectedOrganizationIds);

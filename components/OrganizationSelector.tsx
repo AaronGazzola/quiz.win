@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetUser, useAdminAccess, useCreateOrganization, useGetAllOrganizations } from "@/app/layout.hooks";
+import { useGetUser, useAdminAccess, useCreateOrganization } from "@/app/layout.hooks";
 import { useAppStore } from "@/app/layout.stores";
 import { queryClient } from "@/app/layout.providers";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,12 @@ import {
 import { Building2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { AddOrganizationDialog } from "./AddOrganizationDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function OrganizationSelector() {
-  const { data: user } = useGetUser();
-  const { data: allOrganizations } = useGetAllOrganizations();
-  const { selectedOrganizationIds, setSelectedOrganizationIds } =
+  const { user, selectedOrganizationIds, setSelectedOrganizationIds } =
     useAppStore();
+  const { isLoading } = useGetUser();
 
   const hasAdminAccess = useAdminAccess();
   const createOrgMutation = useCreateOrganization();
@@ -34,24 +34,16 @@ export function OrganizationSelector() {
   const isSuperAdminUser = isSuperAdmin(user || null);
 
   const organizations = useMemo(() => {
-    return isSuperAdminUser && allOrganizations
-      ? allOrganizations.map((org) => ({
-          id: org.id,
-          name: org.name,
-          role: "admin" as const,
-        }))
-      : user?.member?.map((memberItem) => ({
-          id: memberItem.organizationId,
-          name: memberItem.organization.name,
-          role: memberItem.role,
-        })) || [];
-  }, [isSuperAdminUser, allOrganizations, user?.member]);
+    return user?.member?.map((memberItem) => ({
+      id: memberItem.organizationId,
+      name: memberItem.organization.name,
+      role: memberItem.role,
+    })) || [];
+  }, [user?.member]);
 
   const adminStatusByOrg = useMemo(() => {
-    return isSuperAdminUser && allOrganizations
-      ? Object.fromEntries(allOrganizations.map(org => [org.id, true]))
-      : getAdminStatusByOrganization(user || null);
-  }, [isSuperAdminUser, allOrganizations, user]);
+    return getAdminStatusByOrganization(user || null);
+  }, [user]);
 
   const hasPartialAdmin = hasPartialAdminAccess(
     user || null,
@@ -77,7 +69,6 @@ export function OrganizationSelector() {
     try {
       await createOrgMutation.mutateAsync(name);
       setShowAddDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["organizations", "all"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
     } catch {
 
@@ -85,6 +76,12 @@ export function OrganizationSelector() {
   };
 
   const selectedCount = selectedOrganizationIds.length;
+
+  if (isLoading) {
+    return (
+      <Skeleton className="h-10 w-32 rounded-full" />
+    );
+  }
 
   return (
     <>

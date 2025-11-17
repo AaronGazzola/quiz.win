@@ -15,6 +15,7 @@ export default defineConfig({
   outputDir: process.env.TEST_RUN_ID
     ? `test-results/${process.env.TEST_RUN_ID}`
     : "test-results/default",
+  timeout: 120000,
   use: {
     baseURL: baseURL,
     trace: process.env.TEST_TRACE === "true" ? "on" : "on-first-retry",

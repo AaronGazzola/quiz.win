@@ -10,9 +10,7 @@ import { toast } from "sonner";
 import { useAuthLayoutStore } from "./(auth)/layout.stores";
 import {
   createOrganizationAction,
-  getAllOrganizationsAction,
   getUserMembersAction,
-  getUserProfileAction,
 } from "./layout.actions";
 import { useAppStore, useRedirectStore } from "./layout.stores";
 import { SignInData } from "./layout.types";
@@ -40,6 +38,7 @@ export const useGetUser = () => {
           { hook: "useGetUser", status: "error", error },
           { label: LOG_LABELS.DATA_FETCH }
         );
+        console.error(JSON.stringify({hook:"useGetUser",error}));
         reset();
         resetAuthLayout();
         throw error;
@@ -64,8 +63,7 @@ export const useGetUser = () => {
 };
 
 export const useSignIn = () => {
-  const { setUser, setTempEmail } = useAppStore();
-  const { setUserData } = useRedirectStore();
+  const { setTempEmail } = useAppStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -80,59 +78,33 @@ export const useSignIn = () => {
         { hook: "useSignIn", status: "mutating", email: signInData.email },
         { label: LOG_LABELS.DATA_FETCH }
       );
-      try {
-        const { error } = await signIn.email({
-          email: signInData.email,
-          password: signInData.password,
-        });
+      const { error } = await signIn.email({
+        email: signInData.email,
+        password: signInData.password,
+      });
 
-        if (error?.status === 403) {
-          conditionalLog(
-            { hook: "useSignIn", status: "403_verification_required" },
-            { label: LOG_LABELS.DATA_FETCH }
-          );
-          setTempEmail(signInData.email);
-        }
-
-        if (error) throw error;
-
+      if (error?.status === 403) {
         conditionalLog(
-          { hook: "useSignIn", status: "auth_success_fetching_user" },
+          { hook: "useSignIn", status: "403_verification_required" },
           { label: LOG_LABELS.DATA_FETCH }
         );
-        const { data: userData, error: userError } =
-          await getUserMembersAction();
-
-        if (userError) throw new Error(userError);
-
-        conditionalLog(
-          {
-            hook: "useSignIn",
-            status: "user_fetched",
-            userId: userData?.id,
-            memberCount: userData?.member?.length,
-          },
-          { label: LOG_LABELS.DATA_FETCH }
-        );
-        return userData;
-      } catch (err) {
-        conditionalLog(
-          { hook: "useSignIn", status: "error", error: err },
-          { label: LOG_LABELS.DATA_FETCH }
-        );
-        throw err;
+        setTempEmail(signInData.email);
       }
-    },
-    onSuccess: async (data) => {
+
+      if (error) throw error;
+
       conditionalLog(
-        { hook: "useSignIn", status: "success", userId: data?.id },
+        { hook: "useSignIn", status: "auth_success" },
         { label: LOG_LABELS.DATA_FETCH }
       );
-      if (!data) return;
+    },
+    onSuccess: async () => {
+      conditionalLog(
+        { hook: "useSignIn", status: "success" },
+        { label: LOG_LABELS.DATA_FETCH }
+      );
 
-      setUser(data);
-      setUserData(data);
-      queryClient.setQueryData(["user"], data);
+      queryClient.invalidateQueries({ queryKey: ["user"] });
 
       conditionalLog(
         { hook: "useSignIn", status: "navigating_to_dashboard" },
@@ -142,6 +114,7 @@ export const useSignIn = () => {
       router.push(configuration.paths.home);
     },
     onError: (error: { status?: number; message?: string }) => {
+      console.error(JSON.stringify({ hook: "useSignIn", error }));
       conditionalLog(
         { hook: "useSignIn", status: "mutation_error", error },
         { label: LOG_LABELS.DATA_FETCH }
@@ -152,43 +125,9 @@ export const useSignIn = () => {
   });
 };
 
-export const useGetUserProfile = () => {
-  conditionalLog(
-    {
-      hook: "useGetUserProfile",
-      status: "initialized",
-    },
-    { label: LOG_LABELS.DATA_FETCH }
-  );
-
-  return useQuery({
-    queryKey: ["user", "profile"],
-    queryFn: async () => {
-      conditionalLog(
-        { hook: "useGetUserProfile", status: "fetching" },
-        { label: LOG_LABELS.DATA_FETCH }
-      );
-      const { data, error } = await getUserProfileAction();
-      if (error) {
-        conditionalLog(
-          { hook: "useGetUserProfile", status: "error", error },
-          { label: LOG_LABELS.DATA_FETCH }
-        );
-        throw error;
-      }
-      conditionalLog(
-        { hook: "useGetUserProfile", status: "success", hasProfile: !!data },
-        { label: LOG_LABELS.DATA_FETCH }
-      );
-      return data ?? null;
-    },
-    staleTime: 1000 * 60 * 10,
-  });
-};
 
 export const useAdminAccess = () => {
-  const { data: user } = useGetUser();
-  const { selectedOrganizationIds } = useAppStore();
+  const { user, selectedOrganizationIds } = useAppStore();
 
   const isSuperAdminUser = isSuperAdmin(user || null);
   const hasAdminUI = canAccessAdminUI(
@@ -210,49 +149,8 @@ export const useCreateOrganization = () => {
       toast.success("Organization created successfully");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useCreateOrganization", error }));
       toast.error(error.message || "Failed to create organization");
     },
-  });
-};
-
-export const useGetAllOrganizations = () => {
-  const { setAllOrganizations } = useAppStore();
-
-  conditionalLog(
-    {
-      hook: "useGetAllOrganizations",
-      status: "initialized",
-    },
-    { label: LOG_LABELS.DATA_FETCH }
-  );
-
-  return useQuery({
-    queryKey: ["organizations", "all"],
-    queryFn: async () => {
-      conditionalLog(
-        { hook: "useGetAllOrganizations", status: "fetching" },
-        { label: LOG_LABELS.DATA_FETCH }
-      );
-      const { data, error } = await getAllOrganizationsAction();
-      if (error) {
-        conditionalLog(
-          { hook: "useGetAllOrganizations", status: "error", error },
-          { label: LOG_LABELS.DATA_FETCH }
-        );
-        throw error;
-      }
-      conditionalLog(
-        {
-          hook: "useGetAllOrganizations",
-          status: "success",
-          orgCount: data?.length,
-        },
-        { label: LOG_LABELS.DATA_FETCH }
-      );
-      const organizations = data ?? [];
-      setAllOrganizations(organizations);
-      return organizations;
-    },
-    staleTime: 1000 * 60 * 10,
   });
 };

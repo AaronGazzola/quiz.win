@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
 import "better-auth/node";
 import { auth } from "../lib/auth";
 
@@ -37,16 +36,6 @@ async function seed() {
     await prisma.session.deleteMany();
     await prisma.account.deleteMany();
     await prisma.user.deleteMany();
-
-    console.log("🔐 Creating password hash...");
-    const passwordHash = await bcrypt.hash(devPassword, 10);
-
-    await prisma.password.create({
-      data: {
-        length: devPassword.length,
-        hash: passwordHash,
-      },
-    });
 
     console.log("👥 Creating users...");
 
@@ -135,25 +124,15 @@ async function seed() {
     for (const userData of usersData) {
       console.log(`Creating user: ${userData.email}`);
 
-      const signupRequest = new Request(
-        `${process.env.BASE_URL}/api/auth/sign-up/email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: userData.email,
-            password: devPassword,
-            name: userData.name,
-          }),
-        }
-      );
+      const result = await auth.api.signUpEmail({
+        body: {
+          email: userData.email,
+          password: devPassword,
+          name: userData.name,
+        },
+      });
 
-      const response = await auth.handler(signupRequest);
-      const result = await response.json();
-
-      if (!result.user) {
+      if (!result?.user) {
         throw new Error(`Failed to create user: ${userData.email}`);
       }
 
@@ -202,22 +181,6 @@ async function seed() {
         },
       }),
     ]);
-
-    console.log("👤 Creating user profiles...");
-    await Promise.all(
-      users.map((user) =>
-        prisma.profile.create({
-          data: {
-            userId: user.id,
-            preferences: {
-              theme: "light",
-              notifications: true,
-              language: "en",
-            },
-          },
-        })
-      )
-    );
 
     console.log("🤝 Creating organization memberships...");
     const memberships = [

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useGetUser, useCreateOrganization } from "@/app/layout.hooks";
+import { useCreateOrganization } from "@/app/layout.hooks";
+import { useAppStore } from "@/app/layout.stores";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,7 +22,7 @@ import {
 } from "@/lib/client-role.utils";
 
 export function InvitePageContent() {
-  const { data: user } = useGetUser();
+  const { user } = useAppStore();
   const createOrgMutation = useCreateOrganization();
   const sendInvitationsMutation = useSendInvitations();
 

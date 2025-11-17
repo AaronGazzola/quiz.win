@@ -142,32 +142,21 @@ export const sendInvitationsAction = async (data: {
 
         conditionalLog({ action: "sendInvitationsAction", status: "creating-invitation", email }, { label: LOG_LABELS.API });
 
-        const invitationResult = await auth.api.createInvitation({
-          body: {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        const createdInvitation = await db.invitation.create({
+          data: {
             email,
             organizationId: data.organizationId,
             role: data.role,
-          },
-          headers: await headers(),
-        });
-
-        conditionalLog({ action: "sendInvitationsAction", status: "invitation-created", email, result: invitationResult }, { label: LOG_LABELS.API });
-
-        const verifyInvitation = await db.invitation.findUnique({
-          where: {
-            email_organizationId: {
-              email,
-              organizationId: data.organizationId,
-            },
+            inviterId: session.user.id,
+            expiresAt,
+            status: "pending",
           },
         });
 
-        if (!verifyInvitation) {
-          conditionalLog({ action: "sendInvitationsAction", status: "verification-failed", email }, { label: LOG_LABELS.API });
-          throw new Error("Invitation was not created in database");
-        }
-
-        conditionalLog({ action: "sendInvitationsAction", status: "invitation-verified", email, invitationId: verifyInvitation.id }, { label: LOG_LABELS.API });
+        conditionalLog({ action: "sendInvitationsAction", status: "invitation-created", email, invitationId: createdInvitation.id }, { label: LOG_LABELS.API });
         invited++;
 
       } catch (error) {

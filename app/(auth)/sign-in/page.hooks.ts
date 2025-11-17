@@ -17,6 +17,7 @@ export const useGetPasswordLength = () => {
       const { data, error } = await getPasswordLengthAction();
       if (error) {
         conditionalLog({hook:"useGetPasswordLength",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        console.error(JSON.stringify({hook:"useGetPasswordLength",error}));
         throw error;
       }
       conditionalLog({hook:"useGetPasswordLength",status:"success",passwordLength:data},{label:LOG_LABELS.DATA_FETCH});
@@ -39,7 +40,8 @@ export const useVerifyPassword = (onSuccess: (isValid: boolean) => void, onError
       conditionalLog({action:"verifyPasswordSuccess",isValid},{label:LOG_LABELS.AUTH});
       onSuccess(isValid);
     },
-    onError: () => {
+    onError: (error: unknown) => {
+      console.error(JSON.stringify({ hook: "useVerifyPassword", error }));
       conditionalLog({action:"verifyPasswordMutationError"},{label:LOG_LABELS.AUTH});
       toast.error("Incorrect password");
       onError();
@@ -57,6 +59,7 @@ export const useGetUsers = (enabled: boolean) => {
       const { data, error } = await getUsersWithOrganizationsAction();
       if (error) {
         conditionalLog({hook:"useGetUsers_signIn",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        console.error(JSON.stringify({hook:"useGetUsers_signIn",error}));
         throw error;
       }
       conditionalLog({hook:"useGetUsers_signIn",status:"success",userCount:data?.length},{label:LOG_LABELS.DATA_FETCH});
@@ -82,6 +85,7 @@ export const useSignInWithPassword = () => {
       router.push("/");
     },
     onError: (error: { message?: string }) => {
+      console.error(JSON.stringify({ hook: "useSignInWithPassword", error }));
       toast.error(error?.message || "Failed to sign in");
     },
   });

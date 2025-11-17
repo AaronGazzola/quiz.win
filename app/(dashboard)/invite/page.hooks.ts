@@ -15,6 +15,7 @@ export const useGetOrganizations = () => {
       const { data, error } = await getOrganizationsAction();
       if (error) {
         conditionalLog({hook:"useGetOrganizations",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        console.error(JSON.stringify({hook:"useGetOrganizations",error}));
         throw new Error(error);
       }
       conditionalLog({hook:"useGetOrganizations",status:"success",orgCount:data?.length},{label:LOG_LABELS.DATA_FETCH});
@@ -95,6 +96,7 @@ export const useSendInvitations = () => {
       }
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useSendInvitations", error }));
       conditionalLog({hook:"useSendInvitations",status:"on-error",error:error.message},{label:LOG_LABELS.API});
       toast.error(error.message || "Failed to send invitations");
     },

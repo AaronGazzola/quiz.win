@@ -21,6 +21,7 @@ export const useGetPendingInvitations = () => {
       const { data, error } = await getPendingInvitationsForUserAction();
       if (error) {
         conditionalLog({hook:"useGetPendingInvitations",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        console.error(JSON.stringify({hook:"useGetPendingInvitations",error}));
         throw new Error(error);
       }
       conditionalLog({hook:"useGetPendingInvitations",status:"success",invitationCount:data?.length},{label:LOG_LABELS.DATA_FETCH});
@@ -58,6 +59,7 @@ export const useAcceptInvitation = () => {
       toast.success("Successfully joined the organization!");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useAcceptInvitation", error }));
       conditionalLog({hook:"useAcceptInvitation",status:"on-error",error:error.message},{label:LOG_LABELS.API});
       toast.error(error.message || "Failed to accept invitation");
     },
@@ -85,6 +87,7 @@ export const useDeclineInvitation = () => {
       toast.info("Invitation declined");
     },
     onError: (error: Error) => {
+      console.error(JSON.stringify({ hook: "useDeclineInvitation", error }));
       conditionalLog({hook:"useDeclineInvitation",status:"on-error",error:error.message},{label:LOG_LABELS.API});
       toast.error(error.message || "Failed to decline invitation");
     },

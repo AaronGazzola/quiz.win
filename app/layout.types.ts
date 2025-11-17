@@ -22,14 +22,12 @@ export interface PendingInvitation {
 }
 
 export interface AppState {
-  user: user | null;
-  setUser: (user: user | null) => void;
+  user: ExtendedUser | null;
+  setUser: (user: ExtendedUser | null) => void;
   tempEmail?: string;
   setTempEmail: (tempEmail: string) => void;
   selectedOrganizationIds: string[];
   setSelectedOrganizationIds: (organizationIds: string[]) => void;
-  allOrganizations: organization[] | null;
-  setAllOrganizations: (organizations: organization[] | null) => void;
   pendingInvitations: PendingInvitation[] | null;
   setPendingInvitations: (invitations: PendingInvitation[] | null) => void;
   reset: () => void;

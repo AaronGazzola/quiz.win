@@ -1,6 +1,6 @@
 "use client";
 
-import { useGetUser } from "@/app/layout.hooks";
+import { useAppStore } from "@/app/layout.stores";
 import { queryClient } from "@/app/layout.providers";
 import { cn } from "@/lib/shadcn.utils";
 import {
@@ -22,7 +22,7 @@ import { useQuizPlayerStore } from "./page.stores";
 export function TakeQuizPageContent() {
   const { id } = useParams();
   const router = useRouter();
-  const { data: user } = useGetUser();
+  const { user } = useAppStore();
   const quizId = Array.isArray(id) ? id[0] : id;
 
   const { data: quiz, isLoading: quizLoading } = useGetQuizForTaking(
