@@ -3,6 +3,7 @@
 import { useAppStore } from "@/app/layout.stores";
 import { queryClient } from "@/app/layout.providers";
 import { cn } from "@/lib/shadcn.utils";
+import { TestId } from "@/test.types";
 import {
   CheckCircle,
   ChevronLeft,
@@ -54,7 +55,7 @@ export function TakeQuizPageContent() {
 
   if (quizLoading || responseLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6" data-testid={TestId.QUIZ_TAKE_LOADING}>
         <div className="animate-pulse">
           <div className="h-8 bg-muted rounded w-1/2 mb-6"></div>
           <div className="h-4 bg-muted rounded w-1/4 mb-8"></div>
@@ -88,13 +89,14 @@ export function TakeQuizPageContent() {
 
   if (!quiz) {
     return (
-      <div className="max-w-4xl mx-auto p-6 text-center">
+      <div className="max-w-4xl mx-auto p-6 text-center" data-testid={TestId.QUIZ_TAKE_NOT_FOUND}>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
           Quiz not found
         </h1>
         <button
           onClick={() => router.back()}
           className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          data-testid={TestId.QUIZ_TAKE_BACK_BUTTON}
         >
           Go back
         </button>
@@ -119,31 +121,32 @@ export function TakeQuizPageContent() {
     const progress = ((currentQuestionIndex + 1) / quiz.Question.length) * 100;
 
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6" data-testid={TestId.QUIZ_REVIEW_CONTAINER}>
         <div className="mb-6">
           <button
             onClick={() => router.push("/")}
             className="flex items-center text-muted-foreground hover:text-foreground mb-4"
+            data-testid={TestId.QUIZ_TAKE_BACK_TO_DASHBOARD}
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back to Dashboard
           </button>
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-6">
+          <div className="bg-card border border-border rounded-lg p-6 mb-6" data-testid={TestId.QUIZ_REVIEW_SCORE}>
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 flex items-center">
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 flex items-center" data-testid={TestId.QUIZ_TAKE_TITLE}>
                   <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400 mr-2" />
                   {quiz.title} - Review
                 </h1>
                 {quiz.description && (
-                  <p className="text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1" data-testid={TestId.QUIZ_TAKE_DESCRIPTION}>
                     {quiz.description}
                   </p>
                 )}
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid={TestId.QUIZ_REVIEW_SCORE_PERCENTAGE}>
                   {scorePercentage}%
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -153,17 +156,17 @@ export function TakeQuizPageContent() {
             </div>
 
             <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="flex items-center" data-testid={TestId.QUIZ_REVIEW_COMPLETION_DATE}>
                 <Clock className="w-4 h-4 mr-1" />
                 Completed on{" "}
                 {new Date(existingResponse.completedAt).toLocaleDateString()}
               </div>
-              <div>
+              <div data-testid={TestId.QUIZ_TAKE_QUESTION_COUNTER}>
                 Question {currentQuestionIndex + 1} of {quiz.Question.length}
               </div>
             </div>
 
-            <div className="w-full bg-muted rounded-full h-2 mt-4">
+            <div className="w-full bg-muted rounded-full h-2 mt-4" data-testid={TestId.QUIZ_TAKE_PROGRESS_BAR}>
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -175,7 +178,7 @@ export function TakeQuizPageContent() {
         {currentQuestion && (
           <div className="bg-card border border-border rounded-lg p-8">
             <div className="mb-6">
-              <h2 className="text-xl font-medium text-foreground mb-4">
+              <h2 className="text-xl font-medium text-foreground mb-4" data-testid={TestId.QUIZ_TAKE_QUESTION_TEXT}>
                 {currentQuestion.question}
               </h2>
 
@@ -202,6 +205,7 @@ export function TakeQuizPageContent() {
                               ? "border-green-300 bg-green-50/50 dark:bg-green-900/20 dark:border-green-500"
                               : "border-border bg-muted"
                       )}
+                      data-testid={`${TestId.QUIZ_REVIEW_ANSWER_OPTION}-${optionIndex}`}
                     >
                       <div
                         className={cn(
@@ -230,12 +234,12 @@ export function TakeQuizPageContent() {
                         {option}
                       </span>
                       {isUserSelected && (
-                        <span className="ml-2 text-sm font-medium text-muted-foreground">
+                        <span className="ml-2 text-sm font-medium text-muted-foreground" data-testid={TestId.QUIZ_REVIEW_YOUR_ANSWER_LABEL}>
                           Your answer
                         </span>
                       )}
                       {isCorrect && !isUserSelected && (
-                        <span className="ml-2 text-sm font-medium text-green-600 dark:text-green-400">
+                        <span className="ml-2 text-sm font-medium text-green-600 dark:text-green-400" data-testid={TestId.QUIZ_REVIEW_CORRECT_ANSWER_LABEL}>
                           Correct answer
                         </span>
                       )}
@@ -245,7 +249,7 @@ export function TakeQuizPageContent() {
               </div>
 
               {currentUserAnswer && (
-                <div className="mt-4 p-3 rounded-lg bg-muted border border-border">
+                <div className="mt-4 p-3 rounded-lg bg-muted border border-border" data-testid={TestId.QUIZ_REVIEW_RESULT_INDICATOR}>
                   <div className="flex items-center text-sm">
                     {currentUserAnswer.isCorrect ? (
                       <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
@@ -272,6 +276,7 @@ export function TakeQuizPageContent() {
                 onClick={handlePrevious}
                 disabled={currentQuestionIndex === 0}
                 className="flex items-center px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid={TestId.QUIZ_TAKE_PREVIOUS_BUTTON}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Previous
@@ -296,6 +301,7 @@ export function TakeQuizPageContent() {
                               ? "border-red-500 bg-red-500 text-white"
                               : "border-border text-muted-foreground hover:border-muted-foreground"
                       )}
+                      data-testid={`${TestId.QUIZ_TAKE_QUESTION_NAV_DOT}-${index}`}
                     >
                       {index + 1}
                     </button>
@@ -307,6 +313,7 @@ export function TakeQuizPageContent() {
                 onClick={handleNext}
                 disabled={currentQuestionIndex === quiz.Question.length - 1}
                 className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid={TestId.QUIZ_TAKE_NEXT_BUTTON}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />
@@ -354,11 +361,12 @@ export function TakeQuizPageContent() {
   const allAnswered = answeredCount === quiz.Question.length;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6" data-testid={TestId.QUIZ_TAKE_CONTAINER}>
       <div className="mb-6">
         <button
           onClick={() => router.back()}
           className="flex items-center text-muted-foreground hover:text-foreground mb-4"
+          data-testid={TestId.QUIZ_TAKE_BACK_BUTTON}
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
           Back
@@ -366,25 +374,25 @@ export function TakeQuizPageContent() {
 
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">
+            <h1 className="text-2xl font-semibold text-foreground" data-testid={TestId.QUIZ_TAKE_TITLE}>
               {quiz.title}
             </h1>
             {quiz.description && (
-              <p className="text-muted-foreground mt-1">{quiz.description}</p>
+              <p className="text-muted-foreground mt-1" data-testid={TestId.QUIZ_TAKE_DESCRIPTION}>{quiz.description}</p>
             )}
           </div>
           <div className="text-right text-sm text-muted-foreground">
-            <div className="flex items-center">
+            <div className="flex items-center" data-testid={TestId.QUIZ_TAKE_QUESTION_COUNTER}>
               <Clock className="w-4 h-4 mr-1" />
               Question {currentQuestionIndex + 1} of {quiz.Question.length}
             </div>
-            <div className="mt-1">
+            <div className="mt-1" data-testid={TestId.QUIZ_TAKE_ANSWERED_COUNTER}>
               {answeredCount} of {quiz.Question.length} answered
             </div>
           </div>
         </div>
 
-        <div className="w-full bg-muted rounded-full h-2 mb-8">
+        <div className="w-full bg-muted rounded-full h-2 mb-8" data-testid={TestId.QUIZ_TAKE_PROGRESS_BAR}>
           <div
             className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -395,7 +403,7 @@ export function TakeQuizPageContent() {
       {currentQuestion && (
         <div className="bg-card border border-border rounded-lg p-8">
           <div className="mb-6">
-            <h2 className="text-xl font-medium text-foreground mb-4">
+            <h2 className="text-xl font-medium text-foreground mb-4" data-testid={TestId.QUIZ_TAKE_QUESTION_TEXT}>
               {currentQuestion.question}
             </h2>
 
@@ -409,6 +417,7 @@ export function TakeQuizPageContent() {
                       ? "border-primary bg-primary/10"
                       : "border-border hover:border-muted-foreground"
                   )}
+                  data-testid={`${TestId.QUIZ_TAKE_ANSWER_LABEL}-${optionIndex}`}
                 >
                   <input
                     type="radio"
@@ -417,6 +426,7 @@ export function TakeQuizPageContent() {
                     checked={currentAnswer === option}
                     onChange={() => handleAnswerSelect(option)}
                     className="sr-only"
+                    data-testid={`${TestId.QUIZ_TAKE_ANSWER_OPTION}-${optionIndex}`}
                   />
                   <div
                     className={cn(
@@ -441,6 +451,7 @@ export function TakeQuizPageContent() {
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
               className="flex items-center px-4 py-2 text-muted-foreground border border-border rounded-md hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid={TestId.QUIZ_TAKE_PREVIOUS_BUTTON}
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
               Previous
@@ -459,6 +470,7 @@ export function TakeQuizPageContent() {
                         ? "border-green-500 bg-green-500 text-white"
                         : "border-border text-muted-foreground hover:border-muted-foreground"
                   )}
+                  data-testid={`${TestId.QUIZ_TAKE_QUESTION_NAV_DOT}-${index}`}
                 >
                   {index + 1}
                 </button>
@@ -470,6 +482,7 @@ export function TakeQuizPageContent() {
                 onClick={handleSubmitQuiz}
                 disabled={submitResponseMutation.isPending || isSubmitting}
                 className="flex items-center px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid={TestId.QUIZ_TAKE_SUBMIT_BUTTON}
               >
                 {submitResponseMutation.isPending || isSubmitting
                   ? "Submitting..."
@@ -480,6 +493,7 @@ export function TakeQuizPageContent() {
                 onClick={handleNext}
                 disabled={isLastQuestion}
                 className="flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid={TestId.QUIZ_TAKE_NEXT_BUTTON}
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />

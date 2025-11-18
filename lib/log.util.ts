@@ -8,6 +8,7 @@ export enum LOG_LABELS {
   IMAGE = "image",
   WIDGET = "widget",
   DATA_FETCH = "data-fetch",
+  QUIZ = "quiz",
 }
 
 interface ConditionalLogOptions {

@@ -4,6 +4,7 @@ import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { auth } from "@/lib/auth";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { getUserOrganizations } from "@/lib/role.utils";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import { Response } from "@prisma/client";
 import { headers } from "next/headers";
 import { QuizForTaking, SubmitResponseData, ResponseWithDetails } from "./page.types";
@@ -12,11 +13,14 @@ export const getQuizForTakingAction = async (
   quizId: string
 ): Promise<ActionResponse<QuizForTaking | null>> => {
   try {
+    conditionalLog({ action: "getQuizForTakingAction", quizId }, { label: LOG_LABELS.QUIZ });
+
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
     if (!session?.user) {
+      conditionalLog({ action: "getQuizForTakingAction", quizId, error: "Unauthorized" }, { label: LOG_LABELS.QUIZ });
       return getActionResponse({ error: "Unauthorized" });
     }
 
@@ -27,11 +31,11 @@ export const getQuizForTakingAction = async (
       select: { role: true }
     });
 
+    const queryParams = { id: quizId, isActive: true };
+    conditionalLog({ action: "getQuizForTakingAction", queryParams }, { label: LOG_LABELS.QUIZ });
+
     const quiz = await db.quiz.findFirst({
-      where: {
-        id: quizId,
-        isActive: true,
-      },
+      where: queryParams,
       include: {
         Question: {
           orderBy: { order: "asc" },
@@ -39,7 +43,10 @@ export const getQuizForTakingAction = async (
       },
     });
 
+    conditionalLog({ action: "getQuizForTakingAction", quizId, quizFound: !!quiz }, { label: LOG_LABELS.QUIZ });
+
     if (!quiz) {
+      conditionalLog({ action: "getQuizForTakingAction", quizId, error: "Quiz not found or inactive" }, { label: LOG_LABELS.QUIZ });
       return getActionResponse({ error: "Quiz not found or inactive" });
     }
 
@@ -56,8 +63,10 @@ export const getQuizForTakingAction = async (
       }
     }
 
+    conditionalLog({ action: "getQuizForTakingAction", quizId, success: true }, { label: LOG_LABELS.QUIZ });
     return getActionResponse({ data: quiz as QuizForTaking });
   } catch (error) {
+    conditionalLog({ action: "getQuizForTakingAction", quizId, error }, { label: LOG_LABELS.QUIZ });
     return getActionResponse({ error });
   }
 };

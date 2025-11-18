@@ -303,7 +303,7 @@ async function seed() {
             "Foundation of medical terminology for healthcare staff.",
           organizationId: organizations[0].id,
           createdBy: users[2].id,
-          isActive: false,
+          isActive: true,
         },
       }),
       prisma.quiz.create({
@@ -333,7 +333,7 @@ async function seed() {
             "Understanding SDLC phases and best practices for software development.",
           organizationId: organizations[1].id,
           createdBy: users[6].id,
-          isActive: false,
+          isActive: true,
         },
       }),
     ]);

@@ -9,17 +9,21 @@ import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 export const useGetQuizForTaking = (quizId: string) => {
   const enabled = !!quizId;
   conditionalLog({hook:"useGetQuizForTaking",status:"initialized",enabled,quizId},{label:LOG_LABELS.DATA_FETCH});
+  conditionalLog({hook:"useGetQuizForTaking",quizId,enabled},{label:LOG_LABELS.QUIZ});
 
   return useQuery({
     queryKey: ["quiz-taking", quizId],
     queryFn: async () => {
       conditionalLog({hook:"useGetQuizForTaking",status:"fetching",quizId},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog({hook:"useGetQuizForTaking",action:"callingAction",quizId},{label:LOG_LABELS.QUIZ});
       const { data, error } = await getQuizForTakingAction(quizId);
       if (error) {
         conditionalLog({hook:"useGetQuizForTaking",status:"error",error},{label:LOG_LABELS.DATA_FETCH});
+        conditionalLog({hook:"useGetQuizForTaking",quizId,error},{label:LOG_LABELS.QUIZ});
         throw new Error(error);
       }
       conditionalLog({hook:"useGetQuizForTaking",status:"success",hasData:!!data,title:data?.title},{label:LOG_LABELS.DATA_FETCH});
+      conditionalLog({hook:"useGetQuizForTaking",quizId,success:true,title:data?.title},{label:LOG_LABELS.QUIZ});
       return data;
     },
     enabled,

@@ -20,6 +20,7 @@ Generates report and removes old test result directories (keeps only latest per 
 
 1. [Authentication](#1-authentication-tests) - `npm run test:e2e:auth`
 2. [Dashboard Role-Based Access](#2-dashboard-role-based-access-tests) - `npm run test:e2e:dashboard`
+3. [Quiz Taking and Review](#3-quiz-taking-and-review-tests) - `npm run test:e2e:quiz-taking`
 
 ---
 
@@ -112,6 +113,127 @@ Based on `scripts/seed.ts`:
 
 **Multi-Organization Users:**
 - Alex Johnson (HC: Admin, TC: Member)
+
+---
+
+## 3. Quiz Taking and Review Tests
+
+**File:** `e2e/quiz-taking.spec.ts`
+
+**Commands:**
+- Standard: `npm run test:e2e:quiz-taking`
+- Headed mode: `npm run test:e2e:quiz-taking:headed`
+- Trace mode: `npm run test:e2e:quiz-taking:trace`
+
+### Test Cases
+
+- should complete quiz and verify submission with correct answers
+  ✓ User signs in as nurse.emily.davis@gazzola.dev
+  ✓ User navigates to dashboard and selects HIPAA Compliance quiz
+  ✓ User clicks "Take Quiz" button
+  ✓ Quiz taking page loads with all UI elements (title, progress bar, question counter)
+  ✓ User answers Question 1 correctly and counter updates to "1 of 3 answered"
+  ✓ User navigates to Question 2 using Next button
+  ✓ User answers Question 2 correctly
+  ✓ User navigates to Question 3 using question nav dots
+  ✓ User answers Question 3 correctly and counter shows "3 of 3 answered"
+  ✓ Previous button navigation works correctly
+  ✓ Submit button appears on last question when all questions answered
+  ✓ Submit button is enabled and clickable
+  ✓ Quiz submits successfully
+  ✓ User is redirected to review mode
+  ✓ Review mode displays 100% score
+
+- should display correct review mode with accurate answer indicators matching seed data
+  ✓ User signs in as nurse.emily.davis@gazzola.dev
+  ✓ User selects Patient Safety Protocols quiz (already completed)
+  ✓ Review mode loads automatically (existing response detected)
+  ✓ Title displays "Patient Safety Protocols - Review"
+  ✓ Score displays 100% (4 of 4 correct)
+  ✓ Completion date is displayed with timestamp
+  ✓ Question 1 shows correct answer indicator with green checkmark
+  ✓ Answer matches seed data: "Check the patient wristband with two identifiers"
+  ✓ "Your answer" label is visible on selected answer
+  ✓ Question 2 shows correct answer indicator
+  ✓ Answer matches seed data: "Before and after patient contact"
+  ✓ Question 3 navigation via nav dots works correctly
+  ✓ Answer matches seed data: "Report it immediately to the supervising physician"
+  ✓ Question 4 shows correct answer indicator
+  ✓ Answer matches seed data: "On admission and with any change in condition"
+  ✓ All question nav dots display green (indicating all correct)
+  ✓ Previous button works in review mode
+  ✓ Previous button is disabled on Question 1
+  ✓ Next button is disabled on Question 4 (last question)
+  ✓ Back to Dashboard button navigates correctly
+
+- should display incorrect answers correctly in review mode
+  ✓ User signs in as admin.michael.brown@gazzola.dev (has 75% score)
+  ✓ User selects Patient Safety Protocols quiz
+  ✓ Review mode shows 75% score (3 of 4 correct)
+  ✓ User navigates to Question 2 (the incorrect answer)
+  ✓ Question text matches seed data: "How often should hand hygiene be performed?"
+  ✓ Result indicator shows "Incorrect" with red X icon
+  ✓ "Your answer" label shows user's incorrect selection: "Once per hour"
+  ✓ "Correct answer" label shows the right answer: "Before and after patient contact"
+  ✓ Both user answer (red border) and correct answer (green border) are visually distinct
+  ✓ Other questions show correct indicators (Questions 1, 3, 4)
+  ✓ Nav dots reflect status: 3 green (correct), 1 red (incorrect)
+
+### Test Data References
+
+Based on `prisma/seed.ts`:
+
+**Patient Safety Protocols Quiz (HealthCare Partners):**
+- 4 questions (lines 346-390)
+- Question 1: "What is the first step in patient identification?"
+  - Correct: "Check the patient wristband with two identifiers"
+- Question 2: "How often should hand hygiene be performed?"
+  - Correct: "Before and after patient contact"
+- Question 3: "What should you do if you witness a medication error?"
+  - Correct: "Report it immediately to the supervising physician"
+- Question 4: "When should fall risk assessments be conducted?"
+  - Correct: "On admission and with any change in condition"
+
+**HIPAA Compliance Fundamentals Quiz (HealthCare Partners):**
+- 3 questions (lines 394-431)
+- Question 1: "What does HIPAA stand for?"
+  - Correct: "Health Insurance Portability and Accountability Act"
+- Question 2: "What is Protected Health Information (PHI)?"
+  - Correct: "Any health information that can identify an individual"
+- Question 3: "When can PHI be disclosed without patient authorization?"
+  - Correct: "For treatment, payment, and healthcare operations"
+
+**Test Users:**
+- nurse.emily.davis@gazzola.dev:
+  - Completed Patient Safety Protocols with 100% (4/4 correct) on 2024-01-15
+  - Completed HIPAA Compliance with 100% (3/3 correct) on 2024-01-20
+- admin.michael.brown@gazzola.dev:
+  - Completed Patient Safety Protocols with 75% (3/4 correct) on 2024-01-16
+  - Incorrect answer on Question 2 (answered "Once per hour" instead of "Before and after patient contact")
+
+### Navigation Testing
+
+**Quiz Taking Mode:**
+- Previous button: Disabled on first question, navigates backward on others
+- Next button: Enabled until last question, navigates forward
+- Question nav dots: Shows answered state (green), current question (primary color), unanswered (gray)
+- Submit button: Only appears on last question when all questions answered
+- Progress bar: Updates based on current question number
+
+**Review Mode:**
+- Previous button: Disabled on first question
+- Next button: Disabled on last question
+- Question nav dots: Green (correct), red (incorrect), primary (current)
+- Back to Dashboard button: Returns to home page
+
+### Answer Validation
+
+All answer indicators are validated against seed data:
+- Correct answers show green checkmark icon
+- Incorrect answers show red X icon
+- User's selected answer is marked with "Your answer" label
+- Correct answer (when different from user's) is marked with "Correct answer" label
+- Visual styling: Green border/background for correct, red border/background for incorrect
 
 ---
 

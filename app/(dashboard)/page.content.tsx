@@ -506,6 +506,7 @@ export function DashboardPageContent() {
                   <tr
                     key={quiz.id}
                     data-testid={`${TestId.DASHBOARD_QUIZ_TABLE_ROW}-${quiz.id}`}
+                    data-quiz-title={quiz.title}
                     className={cn(
                       "transition-colors cursor-pointer",
                       selectedQuizId === quiz.id
