@@ -21,6 +21,7 @@ import { Building2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { AddOrganizationDialog } from "./AddOrganizationDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TestId } from "@/test.types";
 
 export function OrganizationSelector() {
   const { user, selectedOrganizationIds, setSelectedOrganizationIds } =
@@ -90,6 +91,7 @@ export function OrganizationSelector() {
           <Button
             variant="outline"
             className="rounded-full"
+            data-testid={TestId.ORG_SELECTOR}
           >
             <Building2 className="h-4 w-4 mr-2" />
             Organization
@@ -106,6 +108,7 @@ export function OrganizationSelector() {
         <DropdownMenuContent
           className="w-64"
           align="end"
+          data-testid={TestId.ORG_SWITCHER}
         >
           {organizations.length === 0 ? (
             <div className="px-2 py-4 text-sm text-muted-foreground text-center">

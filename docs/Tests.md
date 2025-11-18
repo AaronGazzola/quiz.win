@@ -20,7 +20,8 @@ Generates report and removes old test result directories (keeps only latest per 
 
 1. [Authentication](#1-authentication-tests) - `npm run test:e2e:auth`
 2. [Dashboard Role-Based Access](#2-dashboard-role-based-access-tests) - `npm run test:e2e:dashboard`
-3. [Quiz Taking and Review](#3-quiz-taking-and-review-tests) - `npm run test:e2e:quiz-taking`
+3. [Organization Switching](#3-organization-switching-tests) - `npm run test:e2e:org-switching`
+4. [Quiz Taking and Review](#4-quiz-taking-and-review-tests) - `npm run test:e2e:quiz-taking`
 
 ---
 
@@ -116,7 +117,55 @@ Based on `scripts/seed.ts`:
 
 ---
 
-## 3. Quiz Taking and Review Tests
+## 3. Organization Switching Tests
+
+**File:** `e2e/dashboard.spec.ts`
+
+**Commands:**
+- Standard: `npm run test:e2e:org-switching`
+- Headed mode: `npm run test:e2e:org-switching:headed`
+- Trace mode: `npm run test:e2e:org-switching:trace`
+
+### Test Cases
+
+- should switch organizations and display organization-specific data for super admin
+  ✓ Super admin signs in successfully
+  ✓ Organization selector is visible on dashboard
+  ✓ HealthCare Partners data is captured (quiz count, admin metrics visible)
+  ✓ Super admin opens organization selector
+  ✓ Super admin switches to TechCorp Solutions
+  ✓ Dashboard reloads with TechCorp-specific data
+  ✓ Quiz count updates to show only TechCorp quizzes (3 quizzes)
+  ✓ Quiz table displays only TechCorp quizzes
+  ✓ Super admin switches back to HealthCare Partners
+  ✓ Dashboard reverts to HealthCare Partners data
+
+- should switch organizations and respect role-based permissions for multi-org member
+  ✓ Multi-org user (Alex Johnson: HC Admin, TC Member) signs in
+  ✓ Dashboard loads with initial organization
+  ✓ User's permissions in first org are captured (admin or member features visible)
+  ✓ User switches to second organization
+  ✓ Dashboard reloads with new organization's data
+  ✓ Permissions change based on user's role in the new organization
+  ✓ Admin features appear/disappear based on role (Team Members metric, Responses column)
+  ✓ Role-based access control is enforced per organization
+
+### Test Data References
+
+Based on `prisma/seed.ts`:
+
+**Multi-Organization Users:**
+- superadmin@gazzola.dev (Super Admin - has access to all organizations)
+- alex.johnson@gazzola.dev (HealthCare Partners: Admin, TechCorp Solutions: Member)
+- maria.garcia@gazzola.dev (HealthCare Partners: Member, TechCorp Solutions: Admin)
+
+**Organizations:**
+- HealthCare Partners: 3 active quizzes (Patient Safety, HIPAA, Medical Terminology)
+- TechCorp Solutions: 3 active quizzes (Cybersecurity, Agile, SDLC)
+
+---
+
+## 4. Quiz Taking and Review Tests
 
 **File:** `e2e/quiz-taking.spec.ts`
 

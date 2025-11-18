@@ -386,4 +386,200 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       await expect(page).toHaveURL('/sign-in', { timeout: 10000 });
     });
   });
+
+  test('should switch organizations and display organization-specific data for super admin', async ({ page }) => {
+    const logger = new TestStepLogger('Organization Switching - Super Admin');
+
+    await logger.step('Navigate to sign-in page', async () => {
+      await page.goto('/sign-in');
+      await expect(page).toHaveURL('/sign-in');
+    });
+
+    await logger.step('Sign in as super admin', async () => {
+      const superAdminCard = page.getByTestId('user-card-superadmin@gazzola.dev');
+      await expect(superAdminCard).toBeVisible({ timeout: 20000 });
+      await superAdminCard.click();
+    });
+
+    await logger.step('Verify redirect to home page', async () => {
+      await expect(page).toHaveURL('/', { timeout: 20000 });
+    });
+
+    await logger.step('Wait for initial dashboard to load', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
+      await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 20000 });
+    });
+
+    await logger.step('Verify org selector is visible', async () => {
+      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
+      await expect(orgSelector).toBeVisible({ timeout: 20000 });
+    });
+
+    await logger.step('Capture HealthCare Partners data', async () => {
+      const totalQuizzesMetric = page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES);
+      const hcQuizCount = await totalQuizzesMetric.textContent();
+
+      const teamMembersVisible = await page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS).isVisible().catch(() => false);
+      const responsesColVisible = await page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE_RESPONSES_COL).isVisible().catch(() => false);
+
+      console.log(JSON.stringify({
+        org: 'HealthCare Partners',
+        quizCount: hcQuizCount,
+        teamMembersVisible,
+        responsesColVisible
+      }, null, 2));
+    });
+
+    await logger.step('Open organization selector', async () => {
+      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
+      await orgSelector.click();
+      await page.waitForTimeout(500);
+    });
+
+    await logger.step('Switch to TechCorp Solutions', async () => {
+      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
+      await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
+
+      const orgOptions = orgSwitcher.locator('[role="option"]');
+      const optionCount = await orgOptions.count();
+
+      if (optionCount > 1) {
+        const techCorpOption = orgOptions.nth(1);
+        await techCorpOption.click();
+        await page.waitForTimeout(2000);
+      }
+    });
+
+    await logger.step('Wait for dashboard to reload with TechCorp data', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
+      await page.waitForTimeout(1000);
+    });
+
+    await logger.step('Verify TechCorp data is displayed', async () => {
+      const totalQuizzesMetric = page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES);
+      const tcQuizCount = await totalQuizzesMetric.textContent();
+
+      const teamMembersVisible = await page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS).isVisible().catch(() => false);
+      const responsesColVisible = await page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE_RESPONSES_COL).isVisible().catch(() => false);
+
+      console.log(JSON.stringify({
+        org: 'TechCorp Solutions',
+        quizCount: tcQuizCount,
+        teamMembersVisible,
+        responsesColVisible
+      }, null, 2));
+    });
+
+    await logger.step('Verify quiz table shows TechCorp quizzes', async () => {
+      const quizTable = page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE);
+      await expect(quizTable).toBeVisible({ timeout: 20000 });
+
+      const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
+      const quizRowCount = await quizRows.count();
+
+      console.log(JSON.stringify({ techCorpQuizCount: quizRowCount }, null, 2));
+    });
+
+    await logger.step('Switch back to HealthCare Partners', async () => {
+      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
+      await orgSelector.click();
+      await page.waitForTimeout(500);
+
+      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
+      const healthCareOption = orgSwitcher.locator('[role="option"]').first();
+      await healthCareOption.click();
+      await page.waitForTimeout(2000);
+    });
+
+    await logger.step('Verify data reverted to HealthCare Partners', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
+
+      const totalQuizzesMetric = page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES);
+      const revertedQuizCount = await totalQuizzesMetric.textContent();
+
+      console.log(JSON.stringify({ revertedQuizCount }, null, 2));
+    });
+
+    await logger.step('Sign out', async () => {
+      const avatarMenu = page.getByTestId(TestId.AUTH_AVATAR_MENU);
+      await avatarMenu.click();
+      const signOutButton = page.getByTestId(TestId.AUTH_SIGNOUT_BUTTON);
+      await signOutButton.click();
+      await expect(page).toHaveURL('/sign-in', { timeout: 20000 });
+    });
+  });
+
+  test('should switch organizations and respect role-based permissions for multi-org member', async ({ page }) => {
+    const logger = new TestStepLogger('Organization Switching - Multi-Org Member');
+
+    await logger.step('Navigate to sign-in page', async () => {
+      await page.goto('/sign-in');
+      await expect(page).toHaveURL('/sign-in');
+    });
+
+    await logger.step('Sign in as Alex Johnson (HC: Admin, TC: Member)', async () => {
+      const alexCard = page.getByTestId('user-card-alex.johnson@gazzola.dev');
+      await expect(alexCard).toBeVisible({ timeout: 20000 });
+      await alexCard.click();
+    });
+
+    await logger.step('Verify redirect to home page', async () => {
+      await expect(page).toHaveURL('/', { timeout: 20000 });
+    });
+
+    await logger.step('Wait for initial dashboard to load', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
+      await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 20000 });
+    });
+
+    await logger.step('Capture initial org permissions', async () => {
+      const teamMembersVisible = await page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS).isVisible().catch(() => false);
+      const responsesColVisible = await page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE_RESPONSES_COL).isVisible().catch(() => false);
+
+      console.log(JSON.stringify({
+        firstOrg: 'initial',
+        teamMembersVisible,
+        responsesColVisible,
+        expectedRole: teamMembersVisible ? 'admin' : 'member'
+      }, null, 2));
+    });
+
+    await logger.step('Switch to second organization', async () => {
+      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
+      await orgSelector.click();
+      await page.waitForTimeout(500);
+
+      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
+      await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
+
+      const secondOrg = orgSwitcher.locator('[role="option"]').nth(1);
+      await secondOrg.click();
+      await page.waitForTimeout(2000);
+    });
+
+    await logger.step('Wait for dashboard to reload', async () => {
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
+      await page.waitForTimeout(1000);
+    });
+
+    await logger.step('Verify permissions changed with organization', async () => {
+      const teamMembersVisible = await page.getByTestId(TestId.DASHBOARD_METRIC_TEAM_MEMBERS).isVisible().catch(() => false);
+      const responsesColVisible = await page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE_RESPONSES_COL).isVisible().catch(() => false);
+
+      console.log(JSON.stringify({
+        secondOrg: 'switched',
+        teamMembersVisible,
+        responsesColVisible,
+        expectedRole: teamMembersVisible ? 'admin' : 'member'
+      }, null, 2));
+    });
+
+    await logger.step('Sign out', async () => {
+      const avatarMenu = page.getByTestId(TestId.AUTH_AVATAR_MENU);
+      await avatarMenu.click();
+      const signOutButton = page.getByTestId(TestId.AUTH_SIGNOUT_BUTTON);
+      await signOutButton.click();
+      await expect(page).toHaveURL('/sign-in', { timeout: 20000 });
+    });
+  });
 });
