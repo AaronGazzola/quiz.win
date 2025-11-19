@@ -233,9 +233,6 @@
 - Role badges display correctly
   ✓ Validates role badge visual components
 
-- Organization switcher functionality
-  ✓ Validates multi-organization user experience
-
 - Breadcrumb navigation shows organization context
   ✓ Validates organization context in navigation
 

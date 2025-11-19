@@ -440,7 +440,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
       await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
 
-      const orgOptions = orgSwitcher.locator('[role="option"]');
+      const orgOptions = orgSwitcher.locator('[role="menuitemcheckbox"]');
       const optionCount = await orgOptions.count();
 
       if (optionCount > 1) {
@@ -486,7 +486,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       await page.waitForTimeout(500);
 
       const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
-      const healthCareOption = orgSwitcher.locator('[role="option"]').first();
+      const healthCareOption = orgSwitcher.locator('[role="menuitemcheckbox"]').first();
       await healthCareOption.click();
       await page.waitForTimeout(2000);
     });
@@ -552,7 +552,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
       await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
 
-      const secondOrg = orgSwitcher.locator('[role="option"]').nth(1);
+      const secondOrg = orgSwitcher.locator('[role="menuitemcheckbox"]').nth(1);
       await secondOrg.click();
       await page.waitForTimeout(2000);
     });
