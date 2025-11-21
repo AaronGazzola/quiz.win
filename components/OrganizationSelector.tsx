@@ -18,7 +18,7 @@ import {
   isSuperAdmin,
 } from "@/lib/client-role.utils";
 import { Building2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { AddOrganizationDialog } from "./AddOrganizationDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TestId } from "@/test.types";
@@ -51,18 +51,27 @@ export function OrganizationSelector() {
     selectedOrganizationIds
   );
 
-  useEffect(() => {
-    if (organizations.length > 0 && selectedOrganizationIds.length === 0) {
-      const allOrgIds = organizations.map(org => org.id);
-      setSelectedOrganizationIds(allOrgIds);
-    }
-  }, [organizations, selectedOrganizationIds.length, setSelectedOrganizationIds]);
+  const allOrgIds = useMemo(() => organizations.map(org => org.id), [organizations]);
+  const allSelected = useMemo(() =>
+    selectedOrganizationIds.length === 0 ||
+    (selectedOrganizationIds.length === allOrgIds.length &&
+     allOrgIds.every(id => selectedOrganizationIds.includes(id))),
+    [selectedOrganizationIds, allOrgIds]
+  );
 
   const handleOrganizationToggle = (orgId: string, checked: boolean) => {
+    let newIds: string[];
     if (checked) {
-      setSelectedOrganizationIds([...selectedOrganizationIds, orgId]);
+      const currentIds = selectedOrganizationIds.length === 0 ? allOrgIds : selectedOrganizationIds;
+      newIds = [...currentIds, orgId];
     } else {
-      setSelectedOrganizationIds(selectedOrganizationIds.filter((id) => id !== orgId));
+      const currentIds = selectedOrganizationIds.length === 0 ? allOrgIds : selectedOrganizationIds;
+      newIds = currentIds.filter((id) => id !== orgId);
+    }
+    if (newIds.length === allOrgIds.length && allOrgIds.every(id => newIds.includes(id))) {
+      setSelectedOrganizationIds([]);
+    } else {
+      setSelectedOrganizationIds(newIds);
     }
   };
 
@@ -76,7 +85,7 @@ export function OrganizationSelector() {
     }
   };
 
-  const selectedCount = selectedOrganizationIds.length;
+  const selectedCount = selectedOrganizationIds.length === 0 ? organizations.length : selectedOrganizationIds.length;
 
   if (isLoading) {
     return (
@@ -117,7 +126,7 @@ export function OrganizationSelector() {
           ) : (
             <>
               {organizations.map((org) => {
-                const isSelected = selectedOrganizationIds.includes(org.id);
+                const isSelected = selectedOrganizationIds.length === 0 || selectedOrganizationIds.includes(org.id);
                 const isAdmin = adminStatusByOrg[org.id];
 
                 return (

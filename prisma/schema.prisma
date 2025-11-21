@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
   schemas  = ["auth", "public"]
+  url      = env("DATABASE_URL")
 }
 
 model MagicLink {
@@ -96,17 +96,16 @@ model organization {
 }
 
 model session {
-  id                   String   @id @default(cuid())
-  userId               String
-  expiresAt            DateTime
-  token                String   @unique
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  ipAddress            String?
-  userAgent            String?
-  impersonatedBy       String?
-  activeOrganizationId String?
-  user                 user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  userId         String
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+  user           user     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@schema("auth")
 }
@@ -310,12 +309,11 @@ model Password {
 }
 
 model Profile {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
-  preferences           Json?
-  activeOrganizationIds String[] @default([])
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  preferences Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@schema("public")
 }

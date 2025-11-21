@@ -27,7 +27,6 @@ export const auth = betterAuth({
                 notifications: true,
                 language: "en",
               },
-              activeOrganizationIds: [],
             },
           });
         },
@@ -37,13 +36,11 @@ export const auth = betterAuth({
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-
         const urlParams = new URLSearchParams(url.split("?")[1]);
         const callbackUrl = urlParams.get("callbackURL") || "";
         const invitationParam = new URLSearchParams(
           callbackUrl.split("?")[1]
         )?.get("invitation");
-
 
         let isInvitation = false;
         let invitationData = null;
@@ -52,8 +49,7 @@ export const auth = betterAuth({
           try {
             invitationData = JSON.parse(decodeURIComponent(invitationParam));
             isInvitation = true;
-          } catch {
-          }
+          } catch {}
         }
 
         if (isInvitation && invitationData) {
@@ -104,7 +100,6 @@ export const auth = betterAuth({
         const { email, organization, inviter, invitation } = data;
         const invitationId = invitation.id;
 
-
         await resend.emails.send({
           from: process.env.FROM_EMAIL || "noreply@example.com",
           to: email,
@@ -123,7 +118,6 @@ export const auth = betterAuth({
             </div>
           `,
         });
-
       },
     }),
   ],
