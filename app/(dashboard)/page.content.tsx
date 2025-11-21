@@ -266,7 +266,7 @@ export function DashboardPageContent() {
       </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
-        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
               <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
@@ -293,7 +293,7 @@ export function DashboardPageContent() {
           </div>
         </div>
 
-        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-green-500/10 rounded-lg">
               <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
@@ -322,7 +322,7 @@ export function DashboardPageContent() {
 
         {hasAdminAccess && (
           <>
-            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
                   <Users className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
@@ -351,7 +351,7 @@ export function DashboardPageContent() {
               </div>
             </div>
 
-            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={String(metricsLoading)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
                   <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
@@ -407,7 +407,7 @@ export function DashboardPageContent() {
           </div>
         </div>
         <div className="overflow-x-auto relative">
-          <table data-testid={TestId.DASHBOARD_QUIZ_TABLE} className="min-w-full divide-y divide-border">
+          <table data-testid={TestId.DASHBOARD_QUIZ_TABLE} data-loading={String(quizzesLoading || quizzesFetching || !quizzesFromStore)} className="min-w-full divide-y divide-border">
             <thead className="bg-muted/50">
               <tr>
                 <th className="w-8 sm:w-12 px-2 sm:px-6 py-2 sm:py-3">
@@ -507,6 +507,8 @@ export function DashboardPageContent() {
                     key={quiz.id}
                     data-testid={`${TestId.DASHBOARD_QUIZ_TABLE_ROW}-${quiz.id}`}
                     data-quiz-title={quiz.title}
+                    data-organization-id={quiz.organizationId}
+                    data-organization-name={quiz.organization.name}
                     className={cn(
                       "transition-colors cursor-pointer",
                       selectedQuizId === quiz.id
@@ -616,7 +618,7 @@ export function DashboardPageContent() {
             </div>
           </div>
           <div className="overflow-x-auto relative">
-            <table data-testid={TestId.DASHBOARD_RESPONSES_TABLE} className="min-w-full divide-y divide-border">
+            <table data-testid={TestId.DASHBOARD_RESPONSES_TABLE} data-loading={String(responsesLoading || responsesFetching || !responses)} className="min-w-full divide-y divide-border">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="w-8 sm:w-12 px-2 sm:px-6 py-2 sm:py-3">
@@ -693,6 +695,7 @@ export function DashboardPageContent() {
                     <tr
                       key={response.id}
                       data-testid={`${TestId.DASHBOARD_RESPONSES_TABLE_ROW}-${response.id}`}
+                      data-user-id={response.userId}
                       className={cn(
                         "transition-colors cursor-pointer",
                         selectedResponseIdFromTable === response.id
