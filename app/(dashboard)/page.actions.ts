@@ -4,6 +4,7 @@ import { ActionResponse, getActionResponse } from "@/lib/action.utils";
 import { getAuthenticatedClient } from "@/lib/auth.utils";
 import { quiz } from "@prisma/client";
 import { DashboardMetrics, QuizWithDetails, ResponseWithUser, ResponseWithDetails } from "./page.types";
+import { conditionalLog } from "@/lib/log.util";
 
 export interface GetQuizzesParams {
   search?: string;
@@ -448,7 +449,7 @@ export const getQuizResponsesAction = async (
       itemsPerPage = 10,
     } = params;
 
-    const [quiz, dbUser, userMembership] = await Promise.all([
+    const [quiz, dbUser] = await Promise.all([
       db.quiz.findUnique({
         where: { id: quizId },
         select: { organizationId: true },
@@ -457,20 +458,22 @@ export const getQuizResponsesAction = async (
         where: { id: user.id },
         select: { role: true }
       }),
-      db.member.findFirst({
-        where: {
-          userId: user.id,
-          role: { in: ["admin", "owner"] },
-        },
-      })
     ]);
 
     if (!quiz) {
       return getActionResponse({ error: "quiz not found" });
     }
 
+    const userMembership = await db.member.findFirst({
+      where: {
+        userId: user.id,
+        organizationId: quiz.organizationId,
+        role: { in: ["admin", "owner"] },
+      },
+    });
+
     const isSuperAdmin = dbUser?.role === "super-admin";
-    const isAdminOfQuizOrg = userMembership?.organizationId === quiz.organizationId;
+    const isAdminOfQuizOrg = !!userMembership;
 
     if (!isAdminOfQuizOrg && !isSuperAdmin) {
       return getActionResponse({
@@ -534,6 +537,8 @@ export const getQuizResponsesAction = async (
     ]);
 
     const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    conditionalLog({quizId,userId:user.id,isSuperAdmin,isAdminOfQuizOrg,userMembership:!!userMembership,responsesCount:responses.length,totalCount}, {label:"quiz-responses"});
 
     return getActionResponse({
       data: {
