@@ -1,109 +1,42 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import { cn } from "@/lib/shadcn.utils";
-import { Check, Crown, Loader2, User, X } from "lucide-react";
+import { Crown, Loader2, User } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  useGetPasswordLength,
   useGetUsers,
   useSignInWithPassword,
-  useVerifyPassword,
 } from "./page.hooks";
 import { UserWithOrganization } from "./page.types";
 
 export default function SignInPage() {
-  const [password, setPassword] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
-  const [showError, setShowError] = useState(false);
 
-  const { data: passwordLength } = useGetPasswordLength();
-  const verifyPasswordMutation = useVerifyPassword(
-    (isValid) => {
-      conditionalLog({ isValid }, { label: LOG_LABELS.AUTH });
-      if (isValid) {
-        conditionalLog(
-          { action: "setIsVerified", value: true },
-          { label: LOG_LABELS.AUTH }
-        );
-        setIsVerified(true);
-      } else {
-        conditionalLog(
-          { action: "passwordInvalid", showError: true },
-          { label: LOG_LABELS.AUTH }
-        );
-        setShowError(true);
-        setPassword("");
-        setTimeout(() => setShowError(false), 2000);
-      }
-    },
-    () => {
-      conditionalLog(
-        { action: "verifyPasswordError" },
-        { label: LOG_LABELS.AUTH }
-      );
-      setShowError(true);
-      setPassword("");
-      setTimeout(() => setShowError(false), 2000);
-    }
-  );
-  const { data: users, isPending: isUsersPending } = useGetUsers(isVerified);
+  const { data: users, isPending: isUsersPending } = useGetUsers(true);
   const signInMutation = useSignInWithPassword();
 
   const devPassword = process.env.NEXT_PUBLIC_DEV_PASSWORD;
 
-  useEffect(() => {
-    if (devPassword) {
-      setPassword(devPassword);
-      setIsVerified(true);
-    }
-  }, [devPassword]);
-
-  useEffect(() => {
-    if (
-      password.length === passwordLength &&
-      !isVerified &&
-      !verifyPasswordMutation.isPending
-    ) {
-      conditionalLog(
-        { action: "autoSubmitPassword", passwordLength },
-        { label: LOG_LABELS.AUTH }
-      );
-      verifyPasswordMutation.mutate(password);
-    }
-  }, [password, passwordLength, isVerified, verifyPasswordMutation]);
-
   const handleUserClick = (user: UserWithOrganization) => {
+    if (!devPassword) {
+      console.error(JSON.stringify({error:"DEV_PASSWORD not configured"}));
+      return;
+    }
     setLoadingUserId(user.id);
     signInMutation.mutate(
-      { email: user.email, password },
+      { email: user.email, password: devPassword },
       {
         onError: () => setLoadingUserId(null),
       }
     );
-  };
-
-  const getVerificationIcon = () => {
-    if (verifyPasswordMutation.isPending) {
-      return <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />;
-    }
-    if (isVerified) {
-      return <Check className="h-5 w-5 text-green-500" />;
-    }
-    if (showError) {
-      return <X className="h-5 w-5 text-red-500" />;
-    }
-    return null;
   };
 
   const superAdmins = users?.filter((u) => u.role === "super-admin") || [];
@@ -123,12 +56,7 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card
-        className={cn(
-          "w-full max-w-2xl transition-all duration-500 border !border-secondary",
-          isVerified && "max-w-4xl"
-        )}
-      >
+      <Card className="w-full max-w-4xl transition-all duration-500 border !border-secondary">
         <CardContent className="pt-6">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold">Welcome to Quiz.Win</h2>
@@ -146,27 +74,13 @@ export default function SignInPage() {
             </p>
           </div>
 
-          {devPassword && isUsersPending ? (
+          {isUsersPending ? (
             <div className="flex items-center justify-center mb-6 h-10">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
-          ) : !devPassword && !isVerified ? (
-            <div className="relative mb-6">
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                disabled={isVerified || verifyPasswordMutation.isPending}
-                className={cn("pr-12", isVerified && "bg-muted")}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {getVerificationIcon()}
-              </div>
-            </div>
           ) : null}
 
-          {isVerified && users && (
+          {users && (
             <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 flex flex-col items-center">
               {superAdmins.length > 0 && (
                 <div className="space-y-3 w-1/2 p-2 rounded-xl">
