@@ -38,6 +38,78 @@ async function getResponseUserIds(page: Page): Promise<string[]> {
   return userIds;
 }
 
+async function selectOnlyOrganization(page: Page, orgName: string) {
+  const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
+  await orgSelector.click();
+
+  const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
+  await expect(orgSwitcher).toBeVisible({ timeout: 10000 });
+
+  const allOrgOptions = orgSwitcher.locator('[data-organization-name]');
+  const count = await allOrgOptions.count();
+
+  const initialStates: Record<string, boolean> = {};
+  for (let i = 0; i < count; i++) {
+    const option = allOrgOptions.nth(i);
+    const name = await option.getAttribute('data-organization-name');
+    const dataState = await option.getAttribute('data-state');
+    const isChecked = dataState === 'checked';
+    if (name) {
+      initialStates[name] = isChecked;
+    }
+  }
+
+  for (let i = 0; i < count; i++) {
+    const option = allOrgOptions.nth(i);
+    const name = await option.getAttribute('data-organization-name');
+    const shouldBeChecked = name === orgName;
+    const isCurrentlyChecked = name ? initialStates[name] : false;
+
+    if (shouldBeChecked && !isCurrentlyChecked) {
+      await option.click();
+      await expect(option).toHaveAttribute(
+        'data-state',
+        'checked',
+        { timeout: 2000 }
+      );
+    }
+  }
+
+  for (let i = 0; i < count; i++) {
+    const option = allOrgOptions.nth(i);
+    const name = await option.getAttribute('data-organization-name');
+    const shouldBeChecked = name === orgName;
+    const isCurrentlyChecked = name ? initialStates[name] : false;
+
+    if (!shouldBeChecked && isCurrentlyChecked) {
+      await option.click();
+      await expect(option).toHaveAttribute(
+        'data-state',
+        'unchecked',
+        { timeout: 2000 }
+      );
+    }
+  }
+
+  for (let i = 0; i < count; i++) {
+    const option = allOrgOptions.nth(i);
+    const name = await option.getAttribute('data-organization-name');
+    const dataState = await option.getAttribute('data-state');
+    const isChecked = dataState === 'checked';
+
+    if (name === orgName) {
+      expect(isChecked, `${orgName} should be checked after toggle`).toBe(true);
+    } else {
+      expect(isChecked, `${name} should not be checked after toggle`).toBe(false);
+    }
+  }
+
+  await page.keyboard.press('Escape');
+
+  await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+  await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+}
+
 function assertAllMatch(values: string[], expected: string, label: string) {
   values.forEach((value) => {
     expect(value, `${label} should be ${expected}, got ${value}`).toBe(expected);
@@ -101,11 +173,14 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     await logger.step('Select a quiz with responses', async () => {
       const firstQuizRow = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`).first();
       await firstQuizRow.click();
-      await page.waitForTimeout(1000);
     });
 
     await logger.step('Verify responses table is visible', async () => {
       await expect(page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE)).toBeVisible({ timeout: 10000 });
+
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="false"]`, { timeout: 20000 });
     });
 
     await logger.step('Sign out', async () => {
@@ -209,9 +284,12 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
       const firstRow = quizRows.first();
       await firstRow.click();
-      await page.waitForTimeout(1000);
 
       await expect(page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE)).toBeVisible({ timeout: 10000 });
+
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="false"]`, { timeout: 20000 });
 
       const userIds = await getResponseUserIds(page);
       expect(userIds.length).toBeGreaterThan(0);
@@ -270,7 +348,6 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
       const firstRow = quizRows.first();
       await firstRow.click();
-      await page.waitForTimeout(1000);
     });
 
     await logger.step('Verify user response section is visible (not admin responses table)', async () => {
@@ -308,7 +385,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Wait for dashboard to load', async () => {
-      await page.waitForTimeout(2000);
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 10000 });
     });
 
@@ -349,7 +426,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     await logger.step('Wait for quizzes to load', async () => {
       const quizTable = page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE);
       await expect(quizTable).toBeVisible({ timeout: 10000 });
-      await page.waitForTimeout(2000);
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
     });
 
     await logger.step('Check if Patient Safety quiz row exists', async () => {
@@ -361,7 +438,6 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       if (rowCount > 0) {
         const firstRow = quizRows.first();
         await firstRow.click();
-        await page.waitForTimeout(1000);
 
         const userResponse = page.getByTestId(TestId.DASHBOARD_USER_RESPONSE);
         const isVisible = await userResponse.isVisible().catch(() => false);
@@ -400,7 +476,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     await logger.step('Wait for quizzes to load', async () => {
       const quizTable = page.getByTestId(TestId.DASHBOARD_QUIZ_TABLE);
       await expect(quizTable).toBeVisible({ timeout: 10000 });
-      await page.waitForTimeout(2000);
+      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
     });
 
     await logger.step('Select first quiz with responses', async () => {
@@ -410,7 +486,6 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       if (rowCount > 0) {
         const firstRow = quizRows.first();
         await firstRow.click();
-        await page.waitForTimeout(1000);
       }
     });
 
@@ -418,6 +493,10 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       const responsesTableVisible = await page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE).isVisible().catch(() => false);
 
       if (responsesTableVisible) {
+        await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+
+        await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+
         const searchInput = page.getByTestId(TestId.DASHBOARD_RESPONSES_SEARCH);
         await expect(searchInput).toBeVisible({ timeout: 10000 });
 
@@ -430,7 +509,6 @@ test.describe('Dashboard Role-Based Access Tests', () => {
         if (responseCount > 0) {
           const firstResponse = responseRows.first();
           await firstResponse.click();
-          await page.waitForTimeout(1000);
 
           await page.getByTestId(TestId.DASHBOARD_RESPONSE_DETAIL).isVisible().catch(() => false);
         }
@@ -474,41 +552,16 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       await expect(orgSelector).toBeVisible({ timeout: 20000 });
     });
 
-    await logger.step('Verify HealthCare Partners quizzes are displayed', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Select only HealthCare Partners organization and verify data', async () => {
+      await selectOnlyOrganization(page, 'HealthCare Partners');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
       assertAllMatch(orgNames, 'HealthCare Partners', 'Quiz organization');
     });
 
-    await logger.step('Open organization selector', async () => {
-      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
-      await orgSelector.click();
-      await page.waitForTimeout(500);
-    });
-
-    await logger.step('Switch to TechCorp Solutions', async () => {
-      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
-      await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
-
-      const orgOptions = orgSwitcher.locator('[role="menuitemcheckbox"]');
-      const optionCount = await orgOptions.count();
-
-      if (optionCount > 1) {
-        const techCorpOption = orgOptions.nth(1);
-        await techCorpOption.click();
-        await page.waitForTimeout(2000);
-      }
-    });
-
-    await logger.step('Wait for dashboard to reload with TechCorp data', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
-      await page.waitForTimeout(1000);
-    });
-
-    await logger.step('Verify TechCorp quizzes are displayed', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Switch to TechCorp Solutions only and verify data', async () => {
+      await selectOnlyOrganization(page, 'TechCorp Solutions');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
@@ -516,20 +569,8 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       assertNoneMatch(orgNames, 'HealthCare Partners', 'Quiz organization');
     });
 
-    await logger.step('Switch back to HealthCare Partners', async () => {
-      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
-      await orgSelector.click();
-      await page.waitForTimeout(500);
-
-      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
-      const healthCareOption = orgSwitcher.locator('[role="menuitemcheckbox"]').first();
-      await healthCareOption.click();
-      await page.waitForTimeout(2000);
-    });
-
-    await logger.step('Verify data reverted to HealthCare Partners', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Switch back to HealthCare Partners only and verify data', async () => {
+      await selectOnlyOrganization(page, 'HealthCare Partners');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
@@ -569,40 +610,21 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 20000 });
     });
 
-    await logger.step('Verify first org quizzes are displayed', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Select only HealthCare Partners organization and verify data', async () => {
+      await selectOnlyOrganization(page, 'HealthCare Partners');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
-      const firstOrgName = orgNames[0];
-      assertAllMatch(orgNames, firstOrgName, 'Quiz organization');
+      assertAllMatch(orgNames, 'HealthCare Partners', 'Quiz organization');
     });
 
-    await logger.step('Switch to second organization', async () => {
-      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
-      await orgSelector.click();
-      await page.waitForTimeout(500);
-
-      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
-      await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
-
-      const secondOrg = orgSwitcher.locator('[role="menuitemcheckbox"]').nth(1);
-      await secondOrg.click();
-      await page.waitForTimeout(2000);
-    });
-
-    await logger.step('Wait for dashboard to reload', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
-      await page.waitForTimeout(1000);
-    });
-
-    await logger.step('Verify second org quizzes are displayed', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Switch to TechCorp Solutions only and verify data', async () => {
+      await selectOnlyOrganization(page, 'TechCorp Solutions');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
-      const secondOrgName = orgNames[0];
-      assertAllMatch(orgNames, secondOrgName, 'Quiz organization');
+      assertAllMatch(orgNames, 'TechCorp Solutions', 'Quiz organization');
+      assertNoneMatch(orgNames, 'HealthCare Partners', 'Quiz organization');
     });
 
     await logger.step('Sign out', async () => {
@@ -637,22 +659,8 @@ test.describe('Dashboard Role-Based Access Tests', () => {
       await expect(page.getByTestId(TestId.DASHBOARD_METRIC_TOTAL_QUIZZES)).toBeVisible({ timeout: 20000 });
     });
 
-    await logger.step('Switch to HealthCare Partners', async () => {
-      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
-      await orgSelector.click();
-      await page.waitForTimeout(500);
-
-      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
-      await expect(orgSwitcher).toBeVisible({ timeout: 20000 });
-
-      const healthCareOption = orgSwitcher.locator('[role="menuitemcheckbox"]').first();
-      await healthCareOption.click();
-      await page.waitForTimeout(2000);
-    });
-
-    await logger.step('Verify all HealthCare Partners quizzes displayed', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Switch to HealthCare Partners only and verify data', async () => {
+      await selectOnlyOrganization(page, 'HealthCare Partners');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
@@ -662,31 +670,21 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     await logger.step('Verify HC quiz responses show only HC members', async () => {
       const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
       await quizRows.first().click();
-      await page.waitForTimeout(1000);
 
       const responsesTable = page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE);
       const responsesVisible = await responsesTable.isVisible().catch(() => false);
 
       if (responsesVisible) {
+        await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+        await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+
         const userIds = await getResponseUserIds(page);
         expect(userIds.length).toBeGreaterThan(0);
       }
     });
 
-    await logger.step('Switch to TechCorp Solutions', async () => {
-      const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
-      await orgSelector.click();
-      await page.waitForTimeout(500);
-
-      const orgSwitcher = page.getByTestId(TestId.ORG_SWITCHER);
-      const techCorpOption = orgSwitcher.locator('[role="menuitemcheckbox"]').nth(1);
-      await techCorpOption.click();
-      await page.waitForTimeout(2000);
-    });
-
-    await logger.step('Verify all TechCorp Solutions quizzes displayed', async () => {
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_METRIC_TOTAL_QUIZZES}"][data-loading="false"]`, { timeout: 20000 });
-      await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+    await logger.step('Switch to TechCorp Solutions only and verify data', async () => {
+      await selectOnlyOrganization(page, 'TechCorp Solutions');
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);
@@ -697,12 +695,14 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     await logger.step('Verify TC quiz responses show only TC members', async () => {
       const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
       await quizRows.first().click();
-      await page.waitForTimeout(1000);
 
       const responsesTable = page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE);
       const responsesVisible = await responsesTable.isVisible().catch(() => false);
 
       if (responsesVisible) {
+        await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+        await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_RESPONSES_TABLE}"][data-loading="false"]`, { timeout: 20000 });
+
         const userIds = await getResponseUserIds(page);
         expect(userIds.length).toBeGreaterThan(0);
       }

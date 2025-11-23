@@ -4,29 +4,25 @@ import { useGetUser, useAdminAccess, useCreateOrganization } from "@/app/layout.
 import { useAppStore } from "@/app/layout.stores";
 import { queryClient } from "@/app/layout.providers";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import {
   getAdminStatusByOrganization,
   hasPartialAdminAccess,
   isSuperAdmin,
 } from "@/lib/client-role.utils";
-import { Building2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Building2, Plus, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { AddOrganizationDialog } from "./AddOrganizationDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TestId } from "@/test.types";
+import { cn } from "@/lib/shadcn.utils";
+import * as Checkbox from "@radix-ui/react-checkbox";
 
 export function OrganizationSelector() {
   const { user, selectedOrganizationIds, setSelectedOrganizationIds } =
     useAppStore();
   const { isLoading } = useGetUser();
+  const [open, setOpen] = useState(false);
 
   const hasAdminAccess = useAdminAccess();
   const createOrgMutation = useCreateOrganization();
@@ -68,7 +64,9 @@ export function OrganizationSelector() {
       const currentIds = selectedOrganizationIds.length === 0 ? allOrgIds : selectedOrganizationIds;
       newIds = currentIds.filter((id) => id !== orgId);
     }
-    if (newIds.length === allOrgIds.length && allOrgIds.every(id => newIds.includes(id))) {
+    if (newIds.length === 0) {
+      setSelectedOrganizationIds([]);
+    } else if (newIds.length === allOrgIds.length && allOrgIds.every(id => newIds.includes(id))) {
       setSelectedOrganizationIds([]);
     } else {
       setSelectedOrganizationIds(newIds);
@@ -95,8 +93,8 @@ export function OrganizationSelector() {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
           <Button
             variant="outline"
             className="rounded-full"
@@ -113,9 +111,9 @@ export function OrganizationSelector() {
               <ShieldAlert className="h-3 w-3 ml-1 text-amber-500" />
             )}
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="w-64"
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-64 p-0"
           align="end"
           data-testid={TestId.ORG_SWITCHER}
         >
@@ -125,43 +123,72 @@ export function OrganizationSelector() {
             </div>
           ) : (
             <>
-              {organizations.map((org) => {
-                const isSelected = selectedOrganizationIds.length === 0 || selectedOrganizationIds.includes(org.id);
-                const isAdmin = adminStatusByOrg[org.id];
+              <div className="p-2 space-y-1">
+                {organizations.map((org) => {
+                  const isSelected = selectedOrganizationIds.length === 0 || selectedOrganizationIds.includes(org.id);
+                  const isAdmin = adminStatusByOrg[org.id];
 
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={org.id}
-                    checked={isSelected}
-                    onCheckedChange={(checked) =>
-                      handleOrganizationToggle(org.id, checked)
-                    }
-                    className="flex items-center justify-between"
-                  >
-                    <span className="flex-1">{org.name}</span>
-                    {isAdmin && (
-                      <ShieldCheck
-                        className="h-3 w-3 text-green-600 ml-2"
-                      />
-                    )}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-              <DropdownMenuSeparator />
+                  return (
+                    <div
+                      key={org.id}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-1.5 rounded-sm cursor-pointer hover:bg-accent",
+                        isSelected && "bg-accent/50"
+                      )}
+                      onClick={() => handleOrganizationToggle(org.id, !isSelected)}
+                      data-organization-id={org.id}
+                      data-organization-name={org.name}
+                      data-state={isSelected ? "checked" : "unchecked"}
+                    >
+                      <Checkbox.Root
+                        checked={isSelected}
+                        className="h-4 w-4 border border-primary rounded flex items-center justify-center data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                      >
+                        <Checkbox.Indicator>
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M11.4669 3.72684C11.7558 3.91574 11.8369 4.30308 11.648 4.59198L7.39799 11.092C7.29783 11.2452 7.13556 11.3467 6.95402 11.3699C6.77247 11.3931 6.58989 11.3355 6.45446 11.2124L3.70446 8.71241C3.44905 8.48022 3.43023 8.08494 3.66242 7.82953C3.89461 7.57412 4.28989 7.55529 4.5453 7.78749L6.75292 9.79441L10.6018 3.90792C10.7907 3.61902 11.178 3.53795 11.4669 3.72684Z"
+                              fill="currentColor"
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </Checkbox.Indicator>
+                      </Checkbox.Root>
+                      <span className="flex-1 text-sm">{org.name}</span>
+                      {isAdmin && (
+                        <ShieldCheck
+                          className="h-3 w-3 text-green-600"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="border-t" />
             </>
           )}
 
           {hasAdminAccess && (
-            <DropdownMenuItem
-              onClick={() => setShowAddDialog(true)}
-              className="cursor-pointer"
+            <div
+              onClick={() => {
+                setShowAddDialog(true);
+                setOpen(false);
+              }}
+              className="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer hover:bg-accent"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Add Organization
-            </DropdownMenuItem>
+            </div>
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </PopoverContent>
+      </Popover>
 
       <AddOrganizationDialog
         open={showAddDialog}
