@@ -8,9 +8,8 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import {
   getAdminStatusByOrganization,
   hasPartialAdminAccess,
-  isSuperAdmin,
 } from "@/lib/client-role.utils";
-import { Building2, Plus, ShieldAlert, ShieldCheck, X } from "lucide-react";
+import { Building2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState, useMemo } from "react";
 import { AddOrganizationDialog } from "./AddOrganizationDialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,8 +26,6 @@ export function OrganizationSelector() {
   const hasAdminAccess = useAdminAccess();
   const createOrgMutation = useCreateOrganization();
   const [showAddDialog, setShowAddDialog] = useState(false);
-
-  const isSuperAdminUser = isSuperAdmin(user || null);
 
   const organizations = useMemo(() => {
     return user?.member?.map((memberItem) => ({
@@ -48,12 +45,6 @@ export function OrganizationSelector() {
   );
 
   const allOrgIds = useMemo(() => organizations.map(org => org.id), [organizations]);
-  const allSelected = useMemo(() =>
-    selectedOrganizationIds.length === 0 ||
-    (selectedOrganizationIds.length === allOrgIds.length &&
-     allOrgIds.every(id => selectedOrganizationIds.includes(id))),
-    [selectedOrganizationIds, allOrgIds]
-  );
 
   const handleOrganizationToggle = (orgId: string, checked: boolean) => {
     let newIds: string[];

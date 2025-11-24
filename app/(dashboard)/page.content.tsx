@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useAdminAccess,
   useGetUser,
 } from "@/app/layout.hooks";
 import { queryClient } from "@/app/layout.providers";
@@ -25,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useGetMetrics,
   useGetQuizzes,
@@ -47,23 +46,11 @@ import {
 import { QuizDialog } from "./QuizDialog";
 
 export function DashboardPageContent() {
-  const { isLoading: userLoading } = useGetUser();
-  const { user, selectedOrganizationIds, setSelectedOrganizationIds } = useAppStore();
-  const isInitializing = userLoading;
+  useGetUser();
+  const { user, selectedOrganizationIds } = useAppStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [immediateSearch, setImmediateSearch] = useState("");
   const [selectedQuizId, setSelectedQuizId] = useState<string | null>(null);
-
-  const organizations = useMemo(
-    () =>
-      user?.member?.map((memberItem) => ({
-        id: memberItem.organizationId,
-        name: memberItem.organization.name,
-        slug: memberItem.organization.slug || "",
-        role: memberItem.role,
-      })) || [],
-    [user?.member]
-  );
 
   const processInvitationMutation = useProcessInvitation();
   const router = useRouter();
