@@ -38,7 +38,7 @@ async function getResponseUserIds(page: Page): Promise<string[]> {
   return userIds;
 }
 
-async function selectOnlyOrganization(page: Page, orgName: string) {
+async function selectOnlyOrganization(page: Page, orgName: string, skipLoadingCheck = false) {
   const orgSelector = page.getByTestId(TestId.ORG_SELECTOR);
   await orgSelector.click();
 
@@ -106,7 +106,9 @@ async function selectOnlyOrganization(page: Page, orgName: string) {
 
   await page.keyboard.press('Escape');
 
-  await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+  if (!skipLoadingCheck) {
+    await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="true"]`, { timeout: 10000 });
+  }
   await page.waitForSelector(`[data-testid="${TestId.DASHBOARD_QUIZ_TABLE}"][data-loading="false"]`, { timeout: 20000 });
 }
 
@@ -570,7 +572,7 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Switch back to HealthCare Partners only and verify data', async () => {
-      await selectOnlyOrganization(page, 'HealthCare Partners');
+      await selectOnlyOrganization(page, 'HealthCare Partners', true);
 
       const orgNames = await getQuizOrganizationNames(page);
       expect(orgNames.length).toBe(3);

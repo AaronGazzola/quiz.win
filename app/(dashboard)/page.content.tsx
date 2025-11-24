@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp,
   Edit,
+  Plus,
   Search,
   Settings,
   Trash2,
@@ -104,7 +105,6 @@ export function DashboardPageContent() {
   const {
     isOpen: dialogOpen,
     editingQuiz,
-    openEdit,
     close,
   } = useQuizDialogStore();
 
@@ -394,15 +394,26 @@ export function DashboardPageContent() {
                 Select a quiz to view its responses
               </p>
             </div>
-            <div className="relative">
-              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <input
-                type="text"
-                placeholder="Search quizzes..."
-                value={immediateSearch}
-                onChange={(e) => setImmediateSearch(e.target.value)}
-                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => router.push("/take-quiz/new")}
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 text-sm font-medium"
+                data-testid={TestId.DASHBOARD_ADD_QUIZ_BUTTON}
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Add Quiz</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+              <div className="relative">
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <input
+                  type="text"
+                  placeholder="Search quizzes..."
+                  value={immediateSearch}
+                  onChange={(e) => setImmediateSearch(e.target.value)}
+                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 text-sm border border-border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -569,7 +580,7 @@ export function DashboardPageContent() {
                         </button>
                         <div className="flex space-x-1 sm:space-x-2">
                           <button
-                            onClick={() => openEdit(quiz)}
+                            onClick={() => router.push(`/take-quiz/${quiz.id}/edit`)}
                             className="text-indigo-600 hover:text-indigo-900"
                             title="Edit Quiz"
                           >

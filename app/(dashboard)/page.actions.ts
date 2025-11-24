@@ -315,6 +315,68 @@ export const getQuizzesAction = async (
   }
 };
 
+export interface QuizQuestionInput {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  order: number;
+}
+
+export interface CreateQuizWithQuestionsInput {
+  title: string;
+  description?: string;
+  organizationId: string;
+  questions: QuizQuestionInput[];
+}
+
+export const createQuizWithQuestionsAction = async (
+  data: CreateQuizWithQuestionsInput
+): Promise<ActionResponse<quiz>> => {
+  try {
+    const { db, user } = await getAuthenticatedClient();
+
+    if (!user) {
+      return getActionResponse({ error: "Unauthorized" });
+    }
+
+    if (!data.questions || data.questions.length === 0) {
+      return getActionResponse({ error: "Quiz must have at least one question" });
+    }
+
+    const { nanoid } = await import("nanoid");
+    const quizId = nanoid();
+
+    const quiz = await db.quiz.create({
+      data: {
+        id: quizId,
+        title: data.title,
+        description: data.description,
+        organizationId: data.organizationId,
+        createdBy: user.id,
+        updatedAt: new Date(),
+      },
+    });
+
+    await Promise.all(
+      data.questions.map((question) =>
+        db.question.create({
+          data: {
+            question: question.question,
+            options: question.options,
+            correctAnswer: question.correctAnswer,
+            order: question.order,
+            quizId: quiz.id,
+          },
+        })
+      )
+    );
+
+    return getActionResponse({ data: quiz });
+  } catch (error) {
+    return getActionResponse({ error });
+  }
+};
+
 export const createQuizAction = async (
   data: Pick<quiz, "title" | "description" | "organizationId">
 ): Promise<ActionResponse<quiz>> => {
@@ -343,7 +405,7 @@ export const createQuizAction = async (
   }
 };
 
-export const updateQuizAction = async (
+export const updateQuizMetadataAction = async (
   id: string,
   data: Partial<Pick<quiz, "title" | "description">>
 ): Promise<ActionResponse<quiz>> => {
@@ -366,6 +428,13 @@ export const updateQuizAction = async (
   } catch (error) {
     return getActionResponse({ error });
   }
+};
+
+export const updateQuizAction = async (
+  id: string,
+  data: Partial<Pick<quiz, "title" | "description">>
+): Promise<ActionResponse<quiz>> => {
+  return updateQuizMetadataAction(id, data);
 };
 
 export const deleteQuizAction = async (

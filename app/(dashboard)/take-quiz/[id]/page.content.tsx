@@ -11,7 +11,7 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   useGetExistingResponse,
@@ -19,18 +19,36 @@ import {
   useSubmitResponse,
 } from "./page.hooks";
 import { useQuizPlayerStore } from "./page.stores";
+import { QuizCreationContent } from "./QuizCreationContent";
+import { QuizMode } from "./page.types";
+import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 
 export function TakeQuizPageContent() {
   const { id } = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAppStore();
+
+  const mode: QuizMode = pathname?.endsWith("/new") ? "create" : pathname?.endsWith("/edit") ? "edit" : "take";
+
   const quizId = Array.isArray(id) ? id[0] : id;
+  const shouldFetchQuiz = mode !== "create" && quizId;
+
+  conditionalLog({
+    component: "TakeQuizPageContent",
+    pathname,
+    id,
+    quizId,
+    mode,
+    shouldFetchQuiz,
+    hasUser: !!user
+  }, { label: LOG_LABELS.QUIZ });
 
   const { data: quiz, isLoading: quizLoading } = useGetQuizForTaking(
-    quizId || ""
+    shouldFetchQuiz ? quizId : ""
   );
   const { data: existingResponse, isLoading: responseLoading } =
-    useGetExistingResponse(quizId || "");
+    useGetExistingResponse(shouldFetchQuiz ? quizId : "");
   const submitResponseMutation = useSubmitResponse();
 
   const {
@@ -51,7 +69,20 @@ export function TakeQuizPageContent() {
     }
   }, [quiz, answers.length, initializeAnswers]);
 
-  if (!user) return null;
+  if (!user) {
+    conditionalLog({ component: "TakeQuizPageContent", returning: "null - no user" }, { label: LOG_LABELS.QUIZ });
+    return null;
+  }
+
+  if (mode === "create") {
+    conditionalLog({ component: "TakeQuizPageContent", returning: "QuizCreationContent create mode" }, { label: LOG_LABELS.QUIZ });
+    return <QuizCreationContent mode="create" />;
+  }
+
+  if (mode === "edit" && quiz) {
+    conditionalLog({ component: "TakeQuizPageContent", returning: "QuizCreationContent edit mode" }, { label: LOG_LABELS.QUIZ });
+    return <QuizCreationContent mode="edit" quiz={quiz} />;
+  }
 
   if (quizLoading || responseLoading) {
     return (

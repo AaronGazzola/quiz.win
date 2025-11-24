@@ -1,5 +1,7 @@
 import { quiz, Question, Response } from "@prisma/client";
 
+export type QuizMode = "create" | "edit" | "take" | "review";
+
 export interface QuizForTaking extends quiz {
   Question: Question[];
 }
@@ -31,4 +33,32 @@ export interface SubmitResponseData {
 
 export interface ResponseWithDetails extends Response {
   quiz?: quiz;
+}
+
+export interface DraftQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  order: number;
+}
+
+export interface QuizCreationState {
+  mode: QuizMode;
+  currentQuestionIndex: number;
+  title: string;
+  description: string;
+  questions: DraftQuestion[];
+  isSaving: boolean;
+  setMode: (mode: QuizMode) => void;
+  setCurrentQuestion: (index: number) => void;
+  setTitle: (title: string) => void;
+  setDescription: (description: string) => void;
+  updateQuestion: (index: number, question: Partial<DraftQuestion>) => void;
+  addQuestion: () => void;
+  removeQuestion: (index: number) => void;
+  reorderQuestions: () => void;
+  initializeForCreate: () => void;
+  initializeForEdit: (quiz: QuizForTaking) => void;
+  reset: () => void;
 }

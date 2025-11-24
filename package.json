@@ -23,6 +23,9 @@
     "test:e2e:quiz-taking": "playwright test e2e/quiz-taking.spec.ts --workers=1",
     "test:e2e:quiz-taking:headed": "playwright test e2e/quiz-taking.spec.ts --headed --workers=1",
     "test:e2e:quiz-taking:trace": "TEST_TRACE=true playwright test e2e/quiz-taking.spec.ts --workers=1",
+    "test:e2e:quiz-workflow": "playwright test e2e/quiz-workflow.spec.ts --workers=1",
+    "test:e2e:quiz-workflow:headed": "playwright test e2e/quiz-workflow.spec.ts --headed --workers=1",
+    "test:e2e:quiz-workflow:trace": "TEST_TRACE=true playwright test e2e/quiz-workflow.spec.ts --workers=1",
     "test:report": "tsx scripts/generate-test-report.ts",
     "test:report:cleanup": "tsx scripts/generate-test-report.ts --cleanup",
     "seed": "prisma migrate reset"
