@@ -24,6 +24,11 @@ async function seed() {
 
   try {
     console.log("🧹 Cleaning existing data...");
+    await prisma.userAchievement.deleteMany();
+    await prisma.pointTransaction.deleteMany();
+    await prisma.leaderboardEntry.deleteMany();
+    await prisma.userGamificationProfile.deleteMany();
+    await prisma.achievement.deleteMany();
     await prisma.response.deleteMany();
     await prisma.question.deleteMany();
     await prisma.quiz.deleteMany();
@@ -707,6 +712,190 @@ async function seed() {
       )
     );
 
+    console.log("🏆 Creating achievements...");
+    const achievements = await Promise.all([
+      prisma.achievement.create({
+        data: {
+          key: "first_steps",
+          name: "First Steps",
+          description: "Complete your first quiz",
+          category: "COMPLETION",
+          pointValue: 50,
+          iconName: "trophy",
+          requirement: { type: "quiz_count", value: 1 },
+          tier: "BRONZE",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "quiz_novice",
+          name: "Quiz Novice",
+          description: "Complete 5 quizzes",
+          category: "COMPLETION",
+          pointValue: 100,
+          iconName: "award",
+          requirement: { type: "quiz_count", value: 5 },
+          tier: "BRONZE",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "quiz_master",
+          name: "Quiz Master",
+          description: "Complete 10 quizzes",
+          category: "COMPLETION",
+          pointValue: 200,
+          iconName: "medal",
+          requirement: { type: "quiz_count", value: 10 },
+          tier: "SILVER",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "quiz_legend",
+          name: "Quiz Legend",
+          description: "Complete 25 quizzes",
+          category: "COMPLETION",
+          pointValue: 500,
+          iconName: "crown",
+          requirement: { type: "quiz_count", value: 25 },
+          tier: "GOLD",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "perfect_score",
+          name: "Perfect Score",
+          description: "Achieve 100% on any quiz",
+          category: "ACCURACY",
+          pointValue: 100,
+          iconName: "star",
+          requirement: { type: "perfect_scores", value: 1 },
+          tier: "SILVER",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "perfectionist",
+          name: "Perfectionist",
+          description: "Achieve 100% on 5 quizzes",
+          category: "ACCURACY",
+          pointValue: 300,
+          iconName: "sparkles",
+          requirement: { type: "perfect_scores", value: 5 },
+          tier: "GOLD",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "flawless",
+          name: "Flawless",
+          description: "Achieve 100% on 10 quizzes",
+          category: "ACCURACY",
+          pointValue: 750,
+          iconName: "gem",
+          requirement: { type: "perfect_scores", value: 10 },
+          tier: "PLATINUM",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "sharp_shooter",
+          name: "Sharp Shooter",
+          description: "Maintain 90%+ average over 10 quizzes",
+          category: "ACCURACY",
+          pointValue: 250,
+          iconName: "target",
+          requirement: { type: "average_score", value: 0.9, count: 10 },
+          tier: "SILVER",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "dedicated_learner",
+          name: "Dedicated Learner",
+          description: "Reach level 5",
+          category: "SPECIAL",
+          pointValue: 150,
+          iconName: "trending-up",
+          requirement: { type: "level", value: 5 },
+          tier: "BRONZE",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "advanced_scholar",
+          name: "Advanced Scholar",
+          description: "Reach level 10",
+          category: "SPECIAL",
+          pointValue: 300,
+          iconName: "graduation-cap",
+          requirement: { type: "level", value: 10 },
+          tier: "SILVER",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "expert_scholar",
+          name: "Expert Scholar",
+          description: "Reach level 25",
+          category: "SPECIAL",
+          pointValue: 1000,
+          iconName: "book-open",
+          requirement: { type: "level", value: 25 },
+          tier: "GOLD",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "rising_star",
+          name: "Rising Star",
+          description: "Reach top 10 on the leaderboard",
+          category: "SOCIAL",
+          pointValue: 200,
+          iconName: "star-half",
+          requirement: { type: "leaderboard_rank", value: 10 },
+          tier: "SILVER",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "top_performer",
+          name: "Top Performer",
+          description: "Reach top 5 on the leaderboard",
+          category: "SOCIAL",
+          pointValue: 400,
+          iconName: "flame",
+          requirement: { type: "leaderboard_rank", value: 5 },
+          tier: "GOLD",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "champion",
+          name: "Champion",
+          description: "Reach #1 on the leaderboard",
+          category: "SOCIAL",
+          pointValue: 1000,
+          iconName: "trophy",
+          requirement: { type: "leaderboard_rank", value: 1 },
+          tier: "DIAMOND",
+        },
+      }),
+      prisma.achievement.create({
+        data: {
+          key: "organization_hero",
+          name: "Organization Hero",
+          description: "Complete all quizzes in your organization",
+          category: "SPECIAL",
+          pointValue: 500,
+          iconName: "briefcase",
+          requirement: { type: "org_completion", value: 100 },
+          tier: "GOLD",
+        },
+      }),
+    ]);
+
     console.log("✅ Database seeded successfully!");
     console.log("\n📈 Summary:");
     console.log(`- ${users.length} users created`);
@@ -717,6 +906,7 @@ async function seed() {
       `- ${questionSets.reduce((acc, set) => acc + set.questions.length, 0)} questions created`
     );
     console.log(`- ${responses.length} responses created`);
+    console.log(`- ${achievements.length} achievements created`);
     console.log(
       `\n🔑 System Admin: superadmin@${fromEmailDomain} (role: super-admin)`
     );

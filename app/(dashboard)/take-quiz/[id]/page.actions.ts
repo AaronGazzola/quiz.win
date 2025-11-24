@@ -8,6 +8,8 @@ import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
 import { Response } from "@prisma/client";
 import { headers } from "next/headers";
 import { QuizForTaking, SubmitResponseData, ResponseWithDetails } from "./page.types";
+import { processQuizCompletionAction } from "@/app/(dashboard)/gamification/gamification.actions";
+import { GamificationRewards } from "@/lib/gamification/types";
 
 export const getQuizForTakingAction = async (
   quizId: string
@@ -73,7 +75,7 @@ export const getQuizForTakingAction = async (
 
 export const submitResponseAction = async (
   data: SubmitResponseData
-): Promise<ActionResponse<Response>> => {
+): Promise<ActionResponse<Response & { gamification?: GamificationRewards }>> => {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -96,6 +98,26 @@ export const submitResponseAction = async (
       return getActionResponse({ error: "Quiz already completed" });
     }
 
+    const quiz = await db.quiz.findUnique({
+      where: { id: data.quizId },
+      select: { organizationId: true },
+    });
+
+    if (!quiz) {
+      return getActionResponse({ error: "Quiz not found" });
+    }
+
+    const isPerfectScore = data.score === 1.0;
+
+    const gamificationResult = await processQuizCompletionAction({
+      userId: session.user.id,
+      organizationId: quiz.organizationId,
+      quizId: data.quizId,
+      score: data.score,
+      timeSpentMinutes: data.timeSpent,
+      isPerfectScore,
+    });
+
     const response = await db.response.create({
       data: {
         quizId: data.quizId,
@@ -103,10 +125,19 @@ export const submitResponseAction = async (
         answers: JSON.parse(JSON.stringify(data.answers)),
         score: data.score,
         completedAt: new Date(),
+        pointsEarned: gamificationResult.data?.pointsEarned || 0,
+        achievementsUnlocked:
+          gamificationResult.data?.achievementsUnlocked.map((a) => a.key) || [],
+        bonusMultiplier: 1.0,
       },
     });
 
-    return getActionResponse({ data: response });
+    return getActionResponse({
+      data: {
+        ...response,
+        gamification: gamificationResult.data || undefined,
+      },
+    });
   } catch (error) {
     return getActionResponse({ error });
   }

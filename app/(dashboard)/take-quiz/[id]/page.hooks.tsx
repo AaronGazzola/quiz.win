@@ -34,6 +34,8 @@ export const useGetQuizForTaking = (quizId: string) => {
 };
 
 export const useSubmitResponse = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (data: SubmitResponseData) => {
       const { data: response, error } = await submitResponseAction(data);
@@ -42,6 +44,9 @@ export const useSubmitResponse = () => {
     },
     onSuccess: () => {
       toast.success("Quiz completed successfully!");
+      queryClient.invalidateQueries({ queryKey: ["gamification-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+      queryClient.invalidateQueries({ queryKey: ["user-achievements"] });
     },
     onError: (error: Error) => {
       console.error(JSON.stringify({ hook: "useSubmitResponse", error }));

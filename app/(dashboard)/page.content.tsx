@@ -22,6 +22,11 @@ import {
   TrendingUp,
   Users,
   X,
+  Trophy,
+  Award,
+  Target,
+  Star,
+  Medal,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -44,6 +49,8 @@ import {
   useResponseDataStore,
 } from "./page.stores";
 import { QuizDialog } from "./QuizDialog";
+import { useGetGamificationProfile, useGetLeaderboard } from "./gamification/gamification.hooks";
+import { PointsDisplay } from "@/components/gamification/PointsDisplay";
 
 export function DashboardPageContent() {
   useGetUser();
@@ -57,6 +64,10 @@ export function DashboardPageContent() {
 
   const { isLoading: metricsLoading, isFetching: metricsFetching } = useGetMetrics();
   const { isLoading: quizzesLoading, isFetching: quizzesFetching } = useGetQuizzes();
+
+  const organizationId = selectedOrganizationIds.length > 0 ? selectedOrganizationIds[0] : undefined;
+  const { data: gamificationProfile, isLoading: profileLoading } = useGetGamificationProfile(organizationId);
+  const { data: leaderboardData, isLoading: leaderboardLoading } = useGetLeaderboard(organizationId, "ALL_TIME", 5);
 
   const { metrics, quizzes: quizzesFromStore, quizzesTotalCount, quizzesTotalPages } = useDashboardDataStore();
 
@@ -238,6 +249,113 @@ export function DashboardPageContent() {
       ref={containerRef}
       className="max-w-7xl mx-auto space-y-8"
     >
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+          {profileLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          ) : gamificationProfile ? (
+            <PointsDisplay profile={gamificationProfile} />
+          ) : (
+            <div className="text-center py-4 text-muted-foreground text-sm">
+              Complete your first quiz to start earning points!
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Your Stats</h3>
+            </div>
+            {profileLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ) : gamificationProfile ? (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Quizzes Completed</span>
+                  <span className="font-semibold">{gamificationProfile.quizzesCompleted}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Perfect Scores</span>
+                  <span className="font-semibold flex items-center gap-1">
+                    <Star className="w-4 h-4 text-yellow-500" />
+                    {gamificationProfile.perfectScores}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Average Score</span>
+                  <span className="font-semibold">
+                    {Math.round(gamificationProfile.averageScore * 100)}%
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                No stats yet
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold">Top 5 Leaderboard</h3>
+            </div>
+            {leaderboardLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ) : leaderboardData && leaderboardData.length > 0 ? (
+              <div className="space-y-2">
+                {leaderboardData.slice(0, 5).map((entry) => {
+                  const isCurrentUser = user?.id === entry.userId;
+                  const getRankIcon = (rank: number) => {
+                    if (rank === 1) return <Trophy className="w-4 h-4 text-yellow-500" />;
+                    if (rank === 2) return <Medal className="w-4 h-4 text-gray-400" />;
+                    if (rank === 3) return <Award className="w-4 h-4 text-amber-700" />;
+                    return <span className="w-4 text-xs text-muted-foreground">{rank}</span>;
+                  };
+                  return (
+                    <div
+                      key={entry.id}
+                      className={`flex items-center justify-between text-sm ${
+                        isCurrentUser ? "bg-primary/5 -mx-2 px-2 py-1 rounded" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {getRankIcon(entry.rank)}
+                        <span className="font-medium">
+                          {isCurrentUser ? "You" : `User #${entry.rank}`}
+                        </span>
+                      </div>
+                      <span className="text-primary font-semibold">
+                        {entry.totalPoints}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                No leaderboard data yet
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
