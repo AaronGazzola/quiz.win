@@ -13,6 +13,7 @@ import {
 import { useQuizPlayerStore } from "@/app/(dashboard)/take-quiz/[id]/page.stores";
 import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
 import { useAppStore, useRedirectStore } from "@/app/layout.stores";
+import { configuration } from "@/configuration";
 import { InvitationToasts } from "@/components/InvitationToasts";
 import { OrganizationSelector } from "@/components/OrganizationSelector";
 import { UserAvatarMenu } from "@/components/user-avatar-menu";
@@ -70,7 +71,7 @@ export default function DashboardLayout({
       conditionalLog({ location: "handleSignOut", status: "stores_reset" }, { label: LOG_LABELS.AUTH });
 
       conditionalLog({ location: "handleSignOut", status: "navigating_to_sign_in" }, { label: LOG_LABELS.AUTH });
-      router.push("/sign-in");
+      router.push(configuration.paths.signIn);
       conditionalLog({ location: "handleSignOut", status: "complete" }, { label: LOG_LABELS.AUTH });
     } catch (error) {
       conditionalLog({ location: "handleSignOut", status: "error", error }, { label: LOG_LABELS.AUTH });

@@ -1,16 +1,10 @@
 import { test, expect } from './utils/test-fixtures';
 import { TestId } from '../test.types';
+import { signInWithDevUser } from './utils/auth-helper';
 
 test.describe('Organization Switcher In Layout Tests', () => {
   test('should work when in dashboard layout header', async ({ page }) => {
-    await page.goto('/sign-in');
-    await expect(page).toHaveURL('/sign-in');
-
-    const superAdminCard = page.getByTestId('user-card-superadmin@gazzola.dev');
-    await expect(superAdminCard).toBeVisible({ timeout: 10000 });
-    await superAdminCard.click();
-
-    await expect(page).toHaveURL('/', { timeout: 20000 });
+    await signInWithDevUser(page, 'superadmin@gazzola.dev');
 
     await page.goto('/org-switcher-test-layout');
     await expect(page).toHaveURL('/org-switcher-test-layout');

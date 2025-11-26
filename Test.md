@@ -611,19 +611,27 @@ For each combination of **[User Role] × [Table] × [CRUD Operation]**:
 
 ### Authentication Flow
 
-- should complete full authentication flow: sign in -> sign out
-  ✓ Validates user authentication lifecycle using dev sign-in flow
+- should complete full authentication flow: sign up -> sign in -> sign out
+  ✓ Validates complete user authentication lifecycle including account creation
 
 **Pass Conditions:**
-- Sign-in page loads successfully at /sign-in
-- Dev user cards are visible on the page
-- User can click on a dev user card to sign in
-- User is redirected to dashboard (/) after sign in
+- Auth page loads successfully at /auth
+- User can toggle between sign in and sign up forms
+- Sign up form accepts name, email, and password
+- New account is created successfully
+- User is redirected to dashboard (/) after sign up
 - User avatar menu is visible in the navigation
 - User can open the avatar menu dropdown
 - Sign out button is visible in the dropdown menu
 - User can click sign out button
-- User is redirected to /sign-in after sign out
+- User is redirected to /auth after sign out
+- User can sign in again with the same credentials
+- User is redirected to dashboard (/) after sign in
+
+**Dev Mode:**
+- In development mode, /sign-in route displays seeded test users
+- Users can click on seeded user cards for quick authentication
+- Production mode automatically redirects /sign-in to /auth
 
 ## Test Commands
 

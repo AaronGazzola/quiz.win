@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy } from "lucide-react";
 
 export function LeaderboardPageContent() {
-  const { userWithMembers, selectedOrganizationIds } = useAppStore();
+  const { user, selectedOrganizationIds } = useAppStore();
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>("ALL_TIME");
 
   const organizationId = selectedOrganizationIds[0] || "";
@@ -61,7 +61,7 @@ export function LeaderboardPageContent() {
           ) : (
             <LeaderboardTable
               entries={leaderboardData || []}
-              currentUserId={userWithMembers?.id}
+              currentUserId={user?.id}
             />
           )}
         </TabsContent>

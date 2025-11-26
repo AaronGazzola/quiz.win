@@ -16,7 +16,7 @@ export function checkAchievementEligibility(
     return false;
   }
 
-  const requirement = achievement.requirement as AchievementRequirement;
+  const requirement = achievement.requirement as unknown as AchievementRequirement;
 
   switch (requirement.type) {
     case "quiz_count":

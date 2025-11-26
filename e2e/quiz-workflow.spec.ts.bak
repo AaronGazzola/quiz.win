@@ -307,7 +307,7 @@ test.describe('Quiz Workflow Tests', () => {
       await avatarMenu.click();
       const signOutButton = page.getByTestId(TestId.AUTH_SIGNOUT_BUTTON);
       await signOutButton.click();
-      await expect(page).toHaveURL('/auth', { timeout: 20000 });
+      await expect(page).toHaveURL('/sign-in', { timeout: 20000 });
     });
   });
 
@@ -431,7 +431,7 @@ test.describe('Quiz Workflow Tests', () => {
       await avatarMenu.click();
       const signOutButton = page.getByTestId(TestId.AUTH_SIGNOUT_BUTTON);
       await signOutButton.click();
-      await expect(page).toHaveURL('/auth', { timeout: 20000 });
+      await expect(page).toHaveURL('/sign-in', { timeout: 20000 });
     });
   });
 });

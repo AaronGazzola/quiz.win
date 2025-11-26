@@ -10,14 +10,23 @@ import {
 import { cn } from "@/lib/shadcn.utils";
 import { Crown, Loader2, User } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useGetUsers,
   useSignInWithPassword,
 } from "./page.hooks";
 import { UserWithOrganization } from "./page.types";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
+  const router = useRouter();
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  useEffect(() => {
+    if (!isDevelopment) {
+      router.push("/auth");
+    }
+  }, [isDevelopment, router]);
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null);
 
   const { data: users, isPending: isUsersPending } = useGetUsers(true);
@@ -54,11 +63,20 @@ export default function SignInPage() {
     ) || [];
   const multiOrgUsers = users?.filter((u) => u.organizations.length > 1) || [];
 
+  if (!isDevelopment) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl transition-all duration-500 border !border-secondary">
+      <Card className="w-full max-w-4xl transition-all duration-500 border !border-amber-500">
         <CardContent className="pt-6">
           <div className="text-center mb-8">
+            <div className="bg-amber-500/10 border border-amber-500 rounded-lg p-3 mb-4">
+              <p className="text-amber-700 dark:text-amber-400 font-semibold text-sm">
+                🚧 Development Mode - Seeded Test Users
+              </p>
+            </div>
             <h2 className="text-3xl font-bold">Welcome to Quiz.Win</h2>
             <p className="text-muted-foreground mt-2">
               This is a portfolio project by
