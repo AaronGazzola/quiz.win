@@ -23,8 +23,39 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, cleanupOrphanedOrgs, quizTitlePrefix, cleanupSeededOrgQuizzes } =
+    const { email, cleanupOrphanedOrgs, quizTitlePrefix, cleanupSeededOrgQuizzes, cleanupGamification, userEmails } =
       await request.json();
+
+    if (cleanupGamification && userEmails && Array.isArray(userEmails)) {
+      const users = await prisma.user.findMany({
+        where: { email: { in: userEmails } },
+        select: { id: true },
+      });
+      const userIds = users.map((u) => u.id);
+
+      if (userIds.length > 0) {
+        await prisma.userAchievement.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+        await prisma.pointTransaction.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+        await prisma.leaderboardEntry.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+        await prisma.userGamificationProfile.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+        await prisma.response.deleteMany({
+          where: { userId: { in: userIds } },
+        });
+      }
+
+      return NextResponse.json({
+        message: "Gamification cleanup successful",
+        usersCleared: userIds.length,
+      });
+    }
 
     if (cleanupSeededOrgQuizzes) {
       const seededOrgs = await prisma.organization.findMany({

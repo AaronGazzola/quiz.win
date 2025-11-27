@@ -1,6 +1,7 @@
 import { Star, TrendingUp } from "lucide-react";
 import { UserGamificationProfile } from "@prisma/client";
 import { getProgressToNextLevel } from "@/lib/gamification/levels.utils";
+import { TestId } from "@/test.types";
 
 interface PointsDisplayProps {
   profile: UserGamificationProfile;
@@ -21,18 +22,18 @@ export function PointsDisplay({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Star className="w-5 h-5 text-primary" />
-          <span className="text-2xl font-bold text-primary">
+          <span data-testid={TestId.GAMIFICATION_TOTAL_POINTS} className="text-2xl font-bold text-primary">
             {profile.totalPoints}
           </span>
           <span className="text-sm text-muted-foreground">points</span>
         </div>
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-muted-foreground" />
-          <span className="text-lg font-semibold">Level {profile.level}</span>
+          <span data-testid={TestId.GAMIFICATION_LEVEL} className="text-lg font-semibold">Level {profile.level}</span>
         </div>
       </div>
       {showProgress && (
-        <div className="space-y-1">
+        <div data-testid={TestId.GAMIFICATION_XP_PROGRESS} className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>
               {progress.current} / {progress.required} XP

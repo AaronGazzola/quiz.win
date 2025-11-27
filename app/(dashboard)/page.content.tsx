@@ -250,7 +250,7 @@ export function DashboardPageContent() {
       className="max-w-7xl mx-auto space-y-8"
     >
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+        <div data-testid={TestId.GAMIFICATION_POINTS_DISPLAY} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
           {profileLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-4 w-20" />
@@ -260,12 +260,14 @@ export function DashboardPageContent() {
             <PointsDisplay profile={gamificationProfile} />
           ) : (
             <div className="text-center py-4 text-muted-foreground text-sm">
-              Complete your first quiz to start earning points!
+              <span data-testid={TestId.GAMIFICATION_TOTAL_POINTS}>0</span>
+              <span className="sr-only"> points</span>
+              <p>Complete your first quiz to start earning points!</p>
             </div>
           )}
         </div>
 
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+        <div data-testid={TestId.GAMIFICATION_STATS_CARD} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2 mb-3">
               <Target className="w-5 h-5 text-primary" />
@@ -281,31 +283,34 @@ export function DashboardPageContent() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Quizzes Completed</span>
-                  <span className="font-semibold">{gamificationProfile.quizzesCompleted}</span>
+                  <span data-testid={TestId.GAMIFICATION_QUIZZES_COMPLETED} className="font-semibold">{gamificationProfile.quizzesCompleted}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Perfect Scores</span>
-                  <span className="font-semibold flex items-center gap-1">
+                  <span data-testid={TestId.GAMIFICATION_PERFECT_SCORES} className="font-semibold flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-500" />
                     {gamificationProfile.perfectScores}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Average Score</span>
-                  <span className="font-semibold">
+                  <span data-testid={TestId.GAMIFICATION_AVERAGE_SCORE} className="font-semibold">
                     {Math.round(gamificationProfile.averageScore * 100)}%
                   </span>
                 </div>
               </div>
             ) : (
               <div className="text-center py-4 text-muted-foreground text-sm">
-                No stats yet
+                <span data-testid={TestId.GAMIFICATION_QUIZZES_COMPLETED}>0</span>
+                <span data-testid={TestId.GAMIFICATION_PERFECT_SCORES} className="hidden">0</span>
+                <span data-testid={TestId.GAMIFICATION_AVERAGE_SCORE} className="hidden">0%</span>
+                <p>No stats yet</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
+        <div data-testid={TestId.GAMIFICATION_LEADERBOARD_CARD} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2 mb-3">
               <Trophy className="w-5 h-5 text-primary" />
@@ -330,6 +335,10 @@ export function DashboardPageContent() {
                   return (
                     <div
                       key={entry.id}
+                      data-testid={`${TestId.GAMIFICATION_LEADERBOARD_ENTRY}-${entry.rank}`}
+                      data-user-id={entry.userId}
+                      data-rank={entry.rank}
+                      data-points={entry.totalPoints}
                       className={`flex items-center justify-between text-sm ${
                         isCurrentUser ? "bg-primary/5 -mx-2 px-2 py-1 rounded" : ""
                       }`}

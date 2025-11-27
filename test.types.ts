@@ -164,4 +164,17 @@ export enum TestId {
   QUIZ_CREATE_NEXT_BUTTON = "quiz-create-next-button",
   QUIZ_CREATE_CANCEL_BUTTON = "quiz-create-cancel-button",
   QUIZ_CREATE_SAVE_BUTTON = "quiz-create-save-button",
+
+  GAMIFICATION_POINTS_DISPLAY = "gamification-points-display",
+  GAMIFICATION_TOTAL_POINTS = "gamification-total-points",
+  GAMIFICATION_LEVEL = "gamification-level",
+  GAMIFICATION_XP_PROGRESS = "gamification-xp-progress",
+  GAMIFICATION_STATS_CARD = "gamification-stats-card",
+  GAMIFICATION_QUIZZES_COMPLETED = "gamification-quizzes-completed",
+  GAMIFICATION_PERFECT_SCORES = "gamification-perfect-scores",
+  GAMIFICATION_AVERAGE_SCORE = "gamification-average-score",
+  GAMIFICATION_LEADERBOARD_CARD = "gamification-leaderboard-card",
+  GAMIFICATION_LEADERBOARD_ENTRY = "gamification-leaderboard-entry",
+  GAMIFICATION_TOAST = "gamification-toast",
+  GAMIFICATION_TOAST_POINTS = "gamification-toast-points",
 }
