@@ -28,8 +28,8 @@ function parseTestsFromDocsFile(): TestSuite[] {
   const lines = indexSection.split("\n");
 
   for (const line of lines) {
-    const matchSpec = line.match(/\[([^\]]+)\].*\]\(([^\)]+\.spec\.ts)\)/);
-    const matchTest = line.match(/\[([^\]]+)\].*\]\(([^\)]+\.test\.ts)\)/);
+    const matchSpec = line.match(/\[([^\]]+)\]\(([^\)]+\.spec\.ts)\)/);
+    const matchTest = line.match(/\[([^\]]+)\]\(([^\)]+\.test\.ts)\)/);
     const match = matchSpec || matchTest;
 
     if (match) {
@@ -54,7 +54,7 @@ function findLatestTestResultDir(fileName: string): string | null {
   }
 
   const pattern = fileName.replace(/\.(spec|test)\.ts$/, "");
-  const timestampedDirPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-\d{3}_/;
+  const timestampedDirPattern = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-\d{3}(-\d{3})?_/;
 
   const dirs = fs
     .readdirSync(testResultsDir)
@@ -205,7 +205,7 @@ function cleanupOldTestResults(): CleanupStats {
     return stats;
   }
 
-  const timestampedDirPattern = /^(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-\d{3})_(.+)$/;
+  const timestampedDirPattern = /^(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}-\d{3}(?:-\d{3})?)_(.+)$/;
   const allEntries = fs.readdirSync(testResultsDir);
 
   const testGroups = new Map<string, Array<{ fullName: string; timestamp: string }>>();
@@ -362,9 +362,16 @@ function generateConsolidatedReport(): void {
       const readmeContent = extractReadmeContent(latestDir);
 
       if (readmeContent) {
-        const summaryMatch = readmeContent.match(
+        let summaryMatch = readmeContent.match(
           /- \*\*Total:\*\* (\d+)\n- \*\*Passed:\*\* (\d+) ✅\n- \*\*Failed:\*\* (\d+) ❌\n- \*\*Skipped:\*\* (\d+) ⏭️/
         );
+
+        if (!summaryMatch) {
+          const legacyMatch = readmeContent.match(/(\d+)✅\s*(\d+)❌\s*(\d+)⏭️\s*\/\s*(\d+)/);
+          if (legacyMatch) {
+            summaryMatch = [legacyMatch[0], legacyMatch[4], legacyMatch[1], legacyMatch[2], legacyMatch[3]];
+          }
+        }
 
         if (summaryMatch) {
           const total = parseInt(summaryMatch[1]);

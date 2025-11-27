@@ -126,6 +126,16 @@ function assertNoneMatch(values: string[], forbidden: string, label: string) {
 }
 
 test.describe('Dashboard Role-Based Access Tests', () => {
+  test.beforeEach(async ({ request }) => {
+    try {
+      await request.post('/api/test-cleanup', {
+        data: { cleanupSeededOrgQuizzes: true },
+      });
+    } catch (error) {
+      console.log('Pre-cleanup skipped:', error);
+    }
+  });
+
   test('should show admin dashboard for super admin with all metrics and responses', async ({ page }) => {
     const logger = new TestStepLogger('Super Admin Dashboard Access');
 

@@ -2,6 +2,161 @@ import { Reporter, TestCase, TestResult, FullResult, Suite, FullConfig, TestStep
 import * as path from 'path';
 import * as fs from 'fs';
 
+const MAX_CHARS = 25000;
+const BASE_PATH = process.cwd();
+
+const KEY_MAP: Record<string, string> = {
+  summary: 'sum', total: 'tot', passed: 'p', failed: 'f', skipped: 'sk',
+  duration: 'd', timestamp: 'ts', outputDirectory: 'out', tests: 'tst',
+  title: 't', file: 'fl', status: 's', error: 'e', errorStack: 'es',
+  screenshots: 'ss', traces: 'tr', videos: 'v', stdout: 'so', stderr: 'se',
+  steps: 'st', consoleLogs: 'cl', pageErrors: 'pe', networkFailures: 'nf',
+  testContext: 'tc', domSnapshot: 'dom', category: 'cat', startTime: 'start',
+  message: 'msg', stack: 'stk', location: 'loc', text: 'txt', type: 'typ',
+  url: 'u', method: 'm', statusText: 'stxt', responseBody: 'rb',
+  user: 'usr', conditions: 'cond', expectation: 'exp', observed: 'obs'
+};
+
+function truncStr(str: string, max: number, suffix = '…'): string {
+  if (!str || str.length <= max) return str;
+  return str.slice(0, max - suffix.length) + suffix;
+}
+
+function minifyPath(p: string): string {
+  return p.replace(BASE_PATH + '/', '').replace(/^\/Users\/[^/]+\/[^/]+\/[^/]+\//, '');
+}
+
+function minifyStack(stack: string | undefined, maxLines = 5): string {
+  if (!stack) return '';
+  const lines = stack.split('\n').slice(0, maxLines);
+  return lines.map(l => minifyPath(l)).join('\n');
+}
+
+function minifySteps(steps: TestStepData[], maxTotal = 15): TestStepData[] {
+  if (steps.length <= maxTotal) return steps;
+  const failed = steps.filter(s => s.status === 'failed');
+  const passed = steps.filter(s => s.status === 'passed');
+  const keep = Math.max(5, maxTotal - failed.length);
+  const first = passed.slice(0, Math.floor(keep / 2));
+  const last = passed.slice(-Math.ceil(keep / 2));
+  const kept = [...first, ...failed, ...last];
+  const unique = kept.filter((s, i) => kept.findIndex(x => x.title === s.title && x.startTime === s.startTime) === i);
+  return unique.sort((a, b) => a.startTime - b.startTime);
+}
+
+function minifyConsoleLogs(logs: ConsoleLog[], maxPerType = 5): ConsoleLog[] {
+  const byType: Record<string, ConsoleLog[]> = {};
+  logs.forEach(log => {
+    if (!byType[log.type]) byType[log.type] = [];
+    byType[log.type].push(log);
+  });
+  const result: ConsoleLog[] = [];
+  Object.values(byType).forEach(typeLogs => {
+    result.push(...typeLogs.slice(0, maxPerType).map(log => ({
+      ...log,
+      text: truncStr(log.text, 200),
+      location: log.location ? minifyPath(log.location) : undefined
+    })));
+  });
+  return result;
+}
+
+function minifyNetworkFailures(failures: NetworkFailure[], maxBody = 300): NetworkFailure[] {
+  return failures.slice(0, 5).map(f => ({
+    ...f,
+    responseBody: f.responseBody ? truncStr(f.responseBody, maxBody) : undefined
+  }));
+}
+
+function minifyDomSnapshot(dom: string | undefined, maxChars = 2000): string {
+  if (!dom) return '';
+  const lines = dom.split('\n');
+  const important = lines.filter(l =>
+    l.includes('data-testid') || l.includes('button') || l.includes('input') ||
+    l.includes('link') || l.includes('textbox') || l.includes('heading') ||
+    l.includes('[ref=') || l.includes('error') || l.includes('Error')
+  );
+  let result = important.join('\n');
+  if (result.length > maxChars) {
+    result = result.slice(0, maxChars - 20) + '\n…[truncated]';
+  }
+  return result || truncStr(dom, maxChars);
+}
+
+function compactKeys(obj: any): any {
+  if (Array.isArray(obj)) return obj.map(compactKeys);
+  if (obj && typeof obj === 'object') {
+    const result: any = {};
+    for (const [k, v] of Object.entries(obj)) {
+      const newKey = KEY_MAP[k] || k;
+      result[newKey] = compactKeys(v);
+    }
+    return result;
+  }
+  return obj;
+}
+
+function minifyTestData(test: any, isFailed: boolean): any {
+  const minified = {
+    title: test.title,
+    file: minifyPath(test.file),
+    status: test.status,
+    duration: test.duration,
+    ...(test.error ? { error: truncStr(test.error, 300) } : {}),
+    ...(test.errorStack ? { errorStack: minifyStack(test.errorStack) } : {}),
+    ...(test.screenshots?.length ? { screenshots: test.screenshots } : {}),
+    ...(test.traces?.length ? { traces: test.traces } : {}),
+    ...(test.steps?.length ? { steps: minifySteps(test.steps, isFailed ? 20 : 10) } : {}),
+    ...(test.consoleLogs?.length && isFailed ? { consoleLogs: minifyConsoleLogs(test.consoleLogs) } : {}),
+    ...(test.pageErrors?.length && isFailed ? { pageErrors: test.pageErrors.slice(0, 3).map((e: PageError) => ({
+      message: truncStr(e.message, 200),
+      stack: minifyStack(e.stack, 3),
+      timestamp: e.timestamp
+    })) } : {}),
+    ...(test.networkFailures?.length && isFailed ? { networkFailures: minifyNetworkFailures(test.networkFailures) } : {}),
+    ...(test.testContext ? { testContext: test.testContext } : {}),
+    ...(test.domSnapshot && isFailed ? { domSnapshot: minifyDomSnapshot(test.domSnapshot) } : {})
+  };
+  return minified;
+}
+
+function enforceJsonLimit(data: any, maxChars: number): string {
+  let json = JSON.stringify(compactKeys(data));
+  if (json.length <= maxChars) return json;
+  const stripped = { ...data };
+  if (stripped.tests) {
+    stripped.tests = stripped.tests.map((t: any) => {
+      const m = { ...t };
+      delete m.domSnapshot;
+      delete m.stdout;
+      delete m.stderr;
+      if (m.steps) m.steps = minifySteps(m.steps, 10);
+      return m;
+    });
+  }
+  json = JSON.stringify(compactKeys(stripped));
+  if (json.length <= maxChars) return json;
+  if (stripped.tests) {
+    stripped.tests = stripped.tests.map((t: any) => {
+      const m = { ...t };
+      delete m.consoleLogs;
+      delete m.networkFailures;
+      delete m.pageErrors;
+      if (m.steps) m.steps = minifySteps(m.steps, 5);
+      return m;
+    });
+  }
+  json = JSON.stringify(compactKeys(stripped));
+  if (json.length <= maxChars) return json;
+  if (stripped.tests) {
+    stripped.tests = stripped.tests.filter((t: any) => t.status === 'failed').map((t: any) => ({
+      t: t.title, s: t.status, d: t.duration,
+      ...(t.error ? { e: truncStr(t.error, 150) } : {})
+    }));
+  }
+  return JSON.stringify(compactKeys(stripped)).slice(0, maxChars);
+}
+
 interface ConsoleLog {
   type: string;
   text: string;
@@ -102,8 +257,7 @@ if (!process.env.TEST_RUN_ID) {
     .replace(/[:.]/g, '-')
     .replace(/T/, '_')
     .split('Z')[0];
-  const milliseconds = new Date().getMilliseconds().toString().padStart(3, '0');
-  process.env.TEST_RUN_ID = `${timestamp}-${milliseconds}_test`;
+  process.env.TEST_RUN_ID = `${timestamp}_test`;
 }
 
 export default class SummaryReporter implements Reporter {
@@ -225,26 +379,25 @@ export default class SummaryReporter implements Reporter {
       observed: observedValue,
     };
 
+    const isFailed = status === 'failed';
     const testResultData = {
       title: test.title,
-      file: path.relative(process.cwd(), test.location.file),
+      file: minifyPath(path.relative(process.cwd(), test.location.file)),
       status,
       duration: result.duration,
       ...(result.error ? {
-        error: result.error.message,
-        errorStack: result.error.stack
+        error: truncStr(result.error.message || '', 300),
+        errorStack: minifyStack(result.error.stack, 5)
       } : {}),
       ...(screenshots.length > 0 ? { screenshots } : {}),
       ...(traces.length > 0 ? { traces } : {}),
       ...(videos.length > 0 ? { videos } : {}),
-      ...(stdout.length > 0 ? { stdout } : {}),
-      ...(stderr.length > 0 ? { stderr } : {}),
-      ...(steps.length > 0 ? { steps } : {}),
-      ...(diagnosticData?.consoleLogs && diagnosticData.consoleLogs.length > 0 ? { consoleLogs: diagnosticData.consoleLogs } : {}),
-      ...(diagnosticData?.pageErrors && diagnosticData.pageErrors.length > 0 ? { pageErrors: diagnosticData.pageErrors } : {}),
-      ...(diagnosticData?.networkFailures && diagnosticData.networkFailures.length > 0 ? { networkFailures: diagnosticData.networkFailures } : {}),
+      ...(steps.length > 0 ? { steps: minifySteps(steps, isFailed ? 20 : 10) } : {}),
+      ...(diagnosticData?.consoleLogs && diagnosticData.consoleLogs.length > 0 && isFailed ? { consoleLogs: minifyConsoleLogs(diagnosticData.consoleLogs) } : {}),
+      ...(diagnosticData?.pageErrors && diagnosticData.pageErrors.length > 0 && isFailed ? { pageErrors: diagnosticData.pageErrors.slice(0, 3) } : {}),
+      ...(diagnosticData?.networkFailures && diagnosticData.networkFailures.length > 0 && isFailed ? { networkFailures: minifyNetworkFailures(diagnosticData.networkFailures) } : {}),
       testContext,
-      ...(domSnapshot ? { domSnapshot } : {})
+      ...(domSnapshot && isFailed ? { domSnapshot: minifyDomSnapshot(domSnapshot) } : {})
     };
 
     this.testResults.push(testResultData);
@@ -301,7 +454,8 @@ export default class SummaryReporter implements Reporter {
         : null;
 
       const jsonPath = path.join(this.outputDir, 'test-report.json');
-      fs.writeFileSync(jsonPath, JSON.stringify(reportData, null, 2));
+      const minifiedJson = enforceJsonLimit(reportData, MAX_CHARS);
+      fs.writeFileSync(jsonPath, minifiedJson);
 
       const readmePath = path.join(this.outputDir, 'README.md');
       const readmeContent = this.generateReadme(reportData, afterallData);
@@ -369,203 +523,103 @@ export default class SummaryReporter implements Reporter {
 
   private generateReadme(data: TestReportData, afterallData?: any): string {
     const timestamp = new Date(data.summary.timestamp).toLocaleString();
-    const durationSeconds = (data.summary.duration / 1000).toFixed(2);
+    const durationSeconds = (data.summary.duration / 1000).toFixed(1);
+    const outDir = path.basename(data.summary.outputDirectory);
 
-    let readme = `# Test Report\n\n`;
-    readme += `**Timestamp:** ${timestamp}\n`;
-    readme += `**Duration:** ${durationSeconds}s\n\n`;
-
-    readme += `## Summary\n\n`;
-    readme += `- **Total:** ${data.summary.total}\n`;
-    readme += `- **Passed:** ${data.summary.passed} ✅\n`;
-    readme += `- **Failed:** ${data.summary.failed} ❌\n`;
-    readme += `- **Skipped:** ${data.summary.skipped} ⏭️\n\n`;
+    let md = `# Test Report\n\n`;
+    md += `**Timestamp:** ${timestamp}\n`;
+    md += `**Duration:** ${durationSeconds}s\n\n`;
+    md += `## Summary\n\n`;
+    md += `- **Total:** ${data.summary.total}\n`;
+    md += `- **Passed:** ${data.summary.passed} ✅\n`;
+    md += `- **Failed:** ${data.summary.failed} ❌\n`;
+    md += `- **Skipped:** ${data.summary.skipped} ⏭️\n\n`;
 
     const failedTests = data.tests.filter(t => t.status === 'failed');
     if (failedTests.length > 0) {
-      readme += `## Failed Tests\n\n`;
-      readme += `> **Note:** For trace files, view them interactively using:\n`;
-      readme += `> \`\`\`bash\n`;
-      readme += `> npx playwright show-trace test-results/${path.basename(data.summary.outputDirectory)}/{trace-file}.zip\n`;
-      readme += `> \`\`\`\n\n`;
+      md += `## Failed Tests\n`;
+      md += `> View traces: \`npx playwright show-trace test-results/${outDir}/{file}.zip\`\n\n`;
+
+      const budgetPerTest = Math.floor((MAX_CHARS - 2000) / failedTests.length);
 
       failedTests.forEach(test => {
-        readme += `### ${test.title}\n\n`;
-        readme += `**File:** ${test.file}\n`;
-        readme += `**Duration:** ${test.duration}ms\n`;
-        readme += `**Status:** ${test.error?.includes('timeout') || test.error?.includes('exceeded') ? 'TIMEOUT' : 'FAILED'}\n\n`;
+        let testMd = `### ${truncStr(test.title, 80)}\n`;
+        testMd += `📁 ${test.file} | ⏱ ${test.duration}ms\n`;
 
         if (test.testContext) {
-          readme += `**Test Setup:**\n`;
-          if (test.testContext.user) {
-            readme += `- **User:** ${test.testContext.user}\n`;
+          const tc = test.testContext;
+          if (tc.expectation || tc.observed) {
+            testMd += `**Expected:** ${truncStr(tc.expectation || 'N/A', 100)} | **Got:** ${truncStr(tc.observed || 'N/A', 100)}\n`;
           }
-          if (test.testContext.conditions) {
-            readme += `- **Conditions:** ${test.testContext.conditions}\n`;
-          }
-          if (test.testContext.expectation) {
-            readme += `- **Expected:** ${test.testContext.expectation}\n`;
-          }
-          if (test.testContext.observed) {
-            readme += `- **Observed:** ${test.testContext.observed}\n`;
-          }
-          readme += `\n`;
-        }
-
-        if (test.steps && test.steps.length > 0) {
-          readme += `**Execution Timeline:**\n\n`;
-          test.steps.forEach((step, index) => {
-            const icon = step.status === 'passed' ? '✓' : '✗';
-            const duration = step.duration >= 0 ? `${step.duration}ms` : 'N/A';
-            readme += `${index + 1}. ${icon} ${step.title} (${duration})${step.error ? ` - ${step.error}` : ''}\n`;
-          });
-          readme += `\n`;
         }
 
         if (test.error) {
-          readme += `**Error Message:**\n\`\`\`\n${test.error}\n\`\`\`\n\n`;
+          testMd += `\n**Error:** \`${truncStr(test.error.replace(/\n/g, ' '), 200)}\`\n`;
         }
 
-        if (test.errorStack) {
-          readme += `**Stack Trace:**\n\`\`\`\n${test.errorStack}\n\`\`\`\n\n`;
+        if (test.steps && test.steps.length > 0) {
+          const failedSteps = test.steps.filter(s => s.status === 'failed');
+          const contextSteps = test.steps.slice(-5);
+          const combined = [...failedSteps, ...contextSteps];
+          const stepsToShow = failedSteps.length > 0 ? combined.filter((s, i) => combined.findIndex(x => x.title === s.title) === i) : contextSteps;
+          testMd += `\n**Steps** (${test.steps.length} total):\n`;
+          stepsToShow.slice(0, 8).forEach(step => {
+            const icon = step.status === 'passed' ? '✓' : '✗';
+            testMd += `${icon} ${truncStr(step.title, 60)} (${step.duration}ms)${step.error ? ` - ${truncStr(step.error, 50)}` : ''}\n`;
+          });
         }
 
         if (test.consoleLogs && test.consoleLogs.length > 0) {
-          const errors = test.consoleLogs.filter(log => log.type === 'error');
-          const warnings = test.consoleLogs.filter(log => log.type === 'warning');
-
+          const errors = test.consoleLogs.filter(l => l.type === 'error').slice(0, 3);
           if (errors.length > 0) {
-            readme += `**Browser Console Errors:**\n\`\`\`\n`;
-            errors.forEach(log => {
-              readme += `[${log.type.toUpperCase()}] ${log.text}\n`;
-              if (log.location) {
-                readme += `  Location: ${log.location}\n`;
-              }
-            });
-            readme += `\`\`\`\n\n`;
+            testMd += `\n**Console Errors:**\n`;
+            errors.forEach(e => { testMd += `- ${truncStr(e.text, 150)}\n`; });
           }
-
-          if (warnings.length > 0) {
-            readme += `**Browser Console Warnings:**\n\`\`\`\n`;
-            warnings.forEach(log => {
-              readme += `[${log.type.toUpperCase()}] ${log.text}\n`;
-              if (log.location) {
-                readme += `  Location: ${log.location}\n`;
-              }
-            });
-            readme += `\`\`\`\n\n`;
-          }
-        }
-
-        if (test.pageErrors && test.pageErrors.length > 0) {
-          readme += `**JavaScript Page Errors:**\n\`\`\`\n`;
-          test.pageErrors.forEach(error => {
-            readme += `${error.message}\n`;
-            if (error.stack) {
-              readme += `${error.stack}\n`;
-            }
-            readme += `\n`;
-          });
-          readme += `\`\`\`\n\n`;
         }
 
         if (test.networkFailures && test.networkFailures.length > 0) {
-          readme += `**Network Failures:**\n\n`;
-          test.networkFailures.forEach(failure => {
-            readme += `- **${failure.method}** ${failure.url}\n`;
-            readme += `  - Status: ${failure.status} ${failure.statusText}\n`;
-            if (failure.responseBody) {
-              readme += `  - Response:\n\`\`\`\n${failure.responseBody}\n\`\`\`\n`;
-            }
+          testMd += `\n**Network Failures:**\n`;
+          test.networkFailures.slice(0, 3).forEach(f => {
+            testMd += `- ${f.method} ${truncStr(f.url, 60)} → ${f.status}\n`;
           });
-          readme += `\n`;
         }
 
         if (test.domSnapshot) {
-          readme += `**DOM State at Failure:**\n\n`;
-          const snapshotLines = test.domSnapshot.split('\n');
-          const contentStart = snapshotLines.findIndex(line => line.includes('```'));
-          if (contentStart >= 0) {
-            readme += snapshotLines.slice(contentStart).join('\n');
-          } else {
-            readme += `\`\`\`\n${test.domSnapshot}\n\`\`\`\n`;
-          }
-          readme += `\n`;
+          const snapshot = truncStr(test.domSnapshot, 800);
+          testMd += `\n**DOM:**\n\`\`\`\n${snapshot}\n\`\`\`\n`;
         }
 
-        if (test.stdout && test.stdout.length > 0) {
-          readme += `**Console Output:**\n\`\`\`\n${test.stdout.join('')}\`\`\`\n\n`;
+        if (test.screenshots?.length || test.traces?.length) {
+          testMd += `\n**Artifacts:** `;
+          if (test.screenshots?.length) testMd += `📸 ${test.screenshots.join(', ')} `;
+          if (test.traces?.length) testMd += `📼 ${test.traces.join(', ')}`;
+          testMd += `\n`;
         }
 
-        if (test.stderr && test.stderr.length > 0) {
-          readme += `**Error Output:**\n\`\`\`\n${test.stderr.join('')}\`\`\`\n\n`;
-        }
-
-        readme += `**Artifacts:**\n\n`;
-
-        if (test.screenshots && test.screenshots.length > 0) {
-          readme += `**Screenshots:**\n`;
-          test.screenshots.forEach(s => readme += `- ![${s}](${s})\n`);
-          readme += `\n`;
-        }
-
-        if (test.videos && test.videos.length > 0) {
-          readme += `**Videos:**\n`;
-          test.videos.forEach(v => readme += `- ${v}\n`);
-          readme += `\n`;
-        }
-
-        if (test.traces && test.traces.length > 0) {
-          readme += `**Trace Files:**\n`;
-          test.traces.forEach(t => {
-            readme += `- ${t}\n`;
-            readme += `  \`\`\`bash\n`;
-            readme += `  npx playwright show-trace test-results/${path.basename(data.summary.outputDirectory)}/${t}\n`;
-            readme += `  \`\`\`\n`;
-          });
-          readme += `\n`;
-        }
-
-        readme += `---\n\n`;
+        testMd += `\n---\n`;
+        md += truncStr(testMd, budgetPerTest);
       });
     }
 
-    if (afterallData && afterallData.tests && afterallData.tests.length > 0) {
-      const failedTest = afterallData.tests[0];
-      readme += `## Failed Sub-Test\n\n`;
-
-      const icon = failedTest.passed ? '✓' : '✗';
-      readme += `${failedTest.testNumber}. ${icon} **${failedTest.testName}**\n`;
-
-      if (failedTest.conditions) {
-        readme += `   - **Conditions:** ${failedTest.conditions}\n`;
-      }
-      if (failedTest.expectation) {
-        readme += `   - **Expected:** ${failedTest.expectation}\n`;
-      }
-      if (failedTest.observed) {
-        readme += `   - **Observed:** ${failedTest.observed}\n`;
-      }
-      if (failedTest.screenshotPath) {
-        readme += `   - **Screenshot:** ${failedTest.screenshotPath}\n`;
-      }
-      if (failedTest.errorToast) {
-        readme += `   - **Error Toast:** ${failedTest.errorToast}\n`;
-      }
-      readme += `\n`;
-
-      const stats = afterallData.stats;
-      readme += `**Summary:** ${stats.total} test | ${stats.passed} passed | ${stats.failed} failed\n\n`;
-      readme += `---\n\n`;
+    if (afterallData?.tests?.length > 0) {
+      const ft = afterallData.tests[0];
+      md += `\n## Sub-Test: ${ft.passed ? '✓' : '✗'} ${ft.testName}\n`;
+      if (ft.expectation) md += `Expected: ${ft.expectation}\n`;
+      if (ft.observed) md += `Observed: ${ft.observed}\n`;
     }
 
-    readme += `## All Tests\n\n`;
-    data.tests.forEach(test => {
-      const icon = test.status === 'passed' ? '✅' : test.status === 'failed' ? '❌' : '⏭️';
-      readme += `- ${icon} **${test.title}** (${test.duration}ms)\n`;
+    md += `\n## All Tests\n`;
+    data.tests.forEach(t => {
+      const icon = t.status === 'passed' ? '✅' : t.status === 'failed' ? '❌' : '⏭️';
+      md += `${icon} ${truncStr(t.title, 60)} (${t.duration}ms)\n`;
     });
 
-    return readme;
+    if (md.length > MAX_CHARS) {
+      const overflow = md.length - MAX_CHARS + 50;
+      md = md.slice(0, -overflow) + `\n\n…[${overflow} chars truncated]`;
+    }
+
+    return md;
   }
 
   private getSuiteTitle(test: TestCase): string {

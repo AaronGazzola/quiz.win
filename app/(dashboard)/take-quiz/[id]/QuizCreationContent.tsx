@@ -117,10 +117,15 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
   const handleRemoveOption = (optionIndex: number) => {
     if (currentQuestion && currentQuestion.options.length > 2) {
       const newOptions = currentQuestion.options.filter((_, i) => i !== optionIndex);
-      const wasCorrectAnswer = currentQuestion.correctAnswer === currentQuestion.options[optionIndex];
+      let newCorrectAnswer = currentQuestion.correctAnswer;
+      if (currentQuestion.correctAnswer === optionIndex) {
+        newCorrectAnswer = -1;
+      } else if (currentQuestion.correctAnswer > optionIndex) {
+        newCorrectAnswer = currentQuestion.correctAnswer - 1;
+      }
       updateQuestion(currentQuestionIndex, {
         options: newOptions,
-        correctAnswer: wasCorrectAnswer ? "" : currentQuestion.correctAnswer,
+        correctAnswer: newCorrectAnswer,
       });
     }
   };
@@ -128,20 +133,17 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
   const handleUpdateOption = (optionIndex: number, value: string) => {
     if (currentQuestion) {
       const newOptions = [...currentQuestion.options];
-      const oldValue = newOptions[optionIndex];
       newOptions[optionIndex] = value;
-      const wasCorrectAnswer = currentQuestion.correctAnswer === oldValue;
       updateQuestion(currentQuestionIndex, {
         options: newOptions,
-        correctAnswer: wasCorrectAnswer ? value : currentQuestion.correctAnswer,
       });
     }
   };
 
-  const handleSetCorrectAnswer = (option: string) => {
+  const handleSetCorrectAnswer = (optionIndex: number) => {
     if (currentQuestion) {
       updateQuestion(currentQuestionIndex, {
-        correctAnswer: option,
+        correctAnswer: optionIndex,
       });
     }
   };
@@ -156,7 +158,7 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
       if (!q.question.trim()) return `Question ${i + 1} text is required`;
       if (q.options.length < 2) return `Question ${i + 1} must have at least 2 options`;
       if (q.options.some(opt => !opt.trim())) return `Question ${i + 1} has empty options`;
-      if (!q.correctAnswer || !q.options.includes(q.correctAnswer)) {
+      if (q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
         return `Question ${i + 1} must have a correct answer selected`;
       }
     }
@@ -179,7 +181,7 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
         questions: questions.map((q, index) => ({
           question: q.question,
           options: q.options,
-          correctAnswer: q.correctAnswer,
+          correctAnswer: q.options[q.correctAnswer],
           order: index,
         })),
       });
@@ -330,16 +332,16 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
                 {currentQuestion.options.map((option, optionIndex) => (
                   <div key={optionIndex} className="flex items-center gap-3">
                     <button
-                      onClick={() => handleSetCorrectAnswer(option)}
+                      onClick={() => handleSetCorrectAnswer(optionIndex)}
                       className={cn(
                         "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentQuestion.correctAnswer === option
+                        currentQuestion.correctAnswer === optionIndex
                           ? "border-green-500 bg-green-500"
                           : "border-border hover:border-muted-foreground"
                       )}
                       data-testid={`${TestId.QUIZ_CREATE_CORRECT_ANSWER_RADIO}-${optionIndex}`}
                     >
-                      {currentQuestion.correctAnswer === option && (
+                      {currentQuestion.correctAnswer === optionIndex && (
                         <div className="w-2 h-2 rounded-full bg-white" />
                       )}
                     </button>

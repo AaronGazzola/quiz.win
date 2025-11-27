@@ -38,7 +38,7 @@ const createEmptyQuestion = (): DraftQuestion => {
     id: nanoid(),
     question: "",
     options: ["", ""],
-    correctAnswer: "",
+    correctAnswer: -1,
     order: 0,
   };
 };
@@ -122,7 +122,7 @@ export const useQuizCreationStore = create<QuizCreationState>()((set) => ({
         id: q.id,
         question: q.question,
         options: q.options,
-        correctAnswer: q.correctAnswer,
+        correctAnswer: q.options.indexOf(q.correctAnswer),
         order: q.order,
       })),
       isSaving: false,

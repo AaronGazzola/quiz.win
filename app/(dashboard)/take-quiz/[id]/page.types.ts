@@ -39,7 +39,7 @@ export interface DraftQuestion {
   id: string;
   question: string;
   options: string[];
-  correctAnswer: string;
+  correctAnswer: number;
   order: number;
 }
 

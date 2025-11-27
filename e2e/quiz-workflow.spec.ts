@@ -6,6 +6,26 @@ import { signInWithDevUser } from './utils/auth-helper';
 test.describe.configure({ workers: 1 });
 
 test.describe('Quiz Workflow Tests', () => {
+  test.beforeEach(async ({ request }) => {
+    try {
+      await request.post('/api/test-cleanup', {
+        data: { quizTitlePrefix: 'E2E' },
+      });
+    } catch (error) {
+      console.log('Pre-cleanup skipped:', error);
+    }
+  });
+
+  test.afterEach(async ({ request }) => {
+    try {
+      await request.post('/api/test-cleanup', {
+        data: { quizTitlePrefix: 'E2E' },
+      });
+    } catch (error) {
+      console.log('Cleanup skipped:', error);
+    }
+  });
+
   test('should complete full quiz workflow: creation → taking → viewing results', async ({ page }) => {
     const logger = new TestStepLogger('Complete Quiz Workflow: Create, Take, and Review');
     const timestamp = Date.now();

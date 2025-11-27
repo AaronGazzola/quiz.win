@@ -3,6 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
+const SEEDED_QUIZ_TITLES = [
+  "Patient Safety Protocols",
+  "HIPAA Compliance Fundamentals",
+  "Medical Terminology Basics",
+  "Cybersecurity Best Practices",
+  "Agile Project Management",
+  "Software Development Lifecycle",
+];
+
+const SEEDED_ORG_SLUGS = ["healthcare-partners", "techcorp-solutions"];
+
 export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
@@ -12,7 +23,41 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, cleanupOrphanedOrgs } = await request.json();
+    const { email, cleanupOrphanedOrgs, quizTitlePrefix, cleanupSeededOrgQuizzes } =
+      await request.json();
+
+    if (cleanupSeededOrgQuizzes) {
+      const seededOrgs = await prisma.organization.findMany({
+        where: { slug: { in: SEEDED_ORG_SLUGS } },
+        select: { id: true },
+      });
+
+      const seededOrgIds = seededOrgs.map((org) => org.id);
+
+      const deletedQuizzes = await prisma.quiz.deleteMany({
+        where: {
+          organizationId: { in: seededOrgIds },
+          title: { notIn: SEEDED_QUIZ_TITLES },
+        },
+      });
+
+      return NextResponse.json({
+        message: "Seeded org quiz cleanup successful",
+        deletedQuizzes: deletedQuizzes.count,
+      });
+    }
+
+    if (quizTitlePrefix) {
+      const deletedQuizzes = await prisma.quiz.deleteMany({
+        where: {
+          title: { startsWith: quizTitlePrefix },
+        },
+      });
+      return NextResponse.json({
+        message: "Quiz cleanup successful",
+        deletedQuizzes: deletedQuizzes.count,
+      });
+    }
 
     if (cleanupOrphanedOrgs) {
       const orphanedOrgs = await prisma.organization.deleteMany({
