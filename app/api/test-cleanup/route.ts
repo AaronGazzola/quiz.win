@@ -14,6 +14,27 @@ const SEEDED_QUIZ_TITLES = [
 
 const SEEDED_ORG_SLUGS = ["healthcare-partners", "techcorp-solutions"];
 
+const SEEDED_RESPONSES = [
+  {
+    userEmail: "nurse.emily.davis@gazzola.dev",
+    quizTitle: "Patient Safety Protocols",
+    score: 1.0,
+    completedAt: new Date("2024-01-15T10:30:00Z"),
+  },
+  {
+    userEmail: "nurse.emily.davis@gazzola.dev",
+    quizTitle: "HIPAA Compliance Fundamentals",
+    score: 1.0,
+    completedAt: new Date("2024-01-20T09:15:00Z"),
+  },
+  {
+    userEmail: "admin.michael.brown@gazzola.dev",
+    quizTitle: "Patient Safety Protocols",
+    score: 0.75,
+    completedAt: new Date("2024-01-16T14:20:00Z"),
+  },
+];
+
 export async function POST(request: NextRequest) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
@@ -51,9 +72,45 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      const responsesToReseed = SEEDED_RESPONSES.filter((r) =>
+        userEmails.includes(r.userEmail)
+      );
+
+      let reseededCount = 0;
+      for (const respData of responsesToReseed) {
+        const user = await prisma.user.findFirst({
+          where: { email: respData.userEmail },
+        });
+        const quiz = await prisma.quiz.findFirst({
+          where: { title: respData.quizTitle },
+          include: { Question: { orderBy: { order: "asc" } } },
+        });
+
+        if (user && quiz) {
+          const answers = quiz.Question.map((q, i) => ({
+            questionId: q.id,
+            selectedAnswer:
+              respData.score === 1.0 || i < 3 ? q.correctAnswer : "wrong",
+            isCorrect: respData.score === 1.0 || i < 3,
+          }));
+
+          await prisma.response.create({
+            data: {
+              quizId: quiz.id,
+              userId: user.id,
+              answers,
+              score: respData.score,
+              completedAt: respData.completedAt,
+            },
+          });
+          reseededCount++;
+        }
+      }
+
       return NextResponse.json({
         message: "Gamification cleanup successful",
         usersCleared: userIds.length,
+        responsesReseeded: reseededCount,
       });
     }
 

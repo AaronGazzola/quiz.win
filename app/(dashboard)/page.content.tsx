@@ -380,7 +380,7 @@ export function DashboardPageContent() {
       </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4" suppressHydrationWarning>
-        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_TOTAL_QUIZZES} data-loading={String(metricsLoading || metricsFetching || metrics?.totalQuizzes == null)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
               <BookOpen className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
@@ -407,7 +407,7 @@ export function DashboardPageContent() {
           </div>
         </div>
 
-        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+        <div data-testid={TestId.DASHBOARD_METRIC_COMPLETED_TODAY} data-loading={String(metricsLoading || metricsFetching || metrics?.completedToday == null)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-1.5 sm:p-2 bg-green-500/10 rounded-lg">
               <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
@@ -436,7 +436,7 @@ export function DashboardPageContent() {
 
         {hasAdminAccess && (
           <>
-            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_TEAM_MEMBERS} data-loading={String(metricsLoading || metricsFetching || metrics?.teamMembers == null)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
                   <Users className="h-4 w-4 sm:h-6 sm:w-6 text-purple-600" />
@@ -465,7 +465,7 @@ export function DashboardPageContent() {
               </div>
             </div>
 
-            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={String(metricsLoading || metricsFetching || !metrics)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
+            <div data-testid={TestId.DASHBOARD_METRIC_ACTIVE_INVITES} data-loading={String(metricsLoading || metricsFetching || metrics?.activeInvites == null)} className="rounded-lg border bg-card text-card-foreground shadow-sm p-3 sm:p-6">
               <div className="flex items-center space-x-2 sm:space-x-4">
                 <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg">
                   <Settings className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
@@ -634,6 +634,7 @@ export function DashboardPageContent() {
                     data-quiz-title={quiz.title}
                     data-organization-id={quiz.organizationId}
                     data-organization-name={quiz.organization.name}
+                    data-response-count={quiz._count.Response}
                     className={cn(
                       "transition-colors cursor-pointer",
                       selectedQuizId === quiz.id

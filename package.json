@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
+    "test": "npm run test:e2e:auth; npm run test:e2e:dash; npm run test:e2e:quiz-workflow; npm run test:e2e:game",
     "test:e2e": "playwright test",
     "test:e2e:auth": "playwright test e2e/auth.spec.ts",
     "test:e2e:auth:headed": "playwright test e2e/auth.spec.ts --headed",

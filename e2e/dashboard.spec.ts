@@ -571,8 +571,8 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify HC quiz responses show only HC members', async () => {
-      const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
-      await quizRows.first().click();
+      const quizRowWithResponses = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"][data-response-count]:not([data-response-count="0"])`).first();
+      await quizRowWithResponses.click();
 
       const responsesTable = page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE);
       const responsesVisible = await responsesTable.isVisible().catch(() => false);
@@ -596,8 +596,8 @@ test.describe('Dashboard Role-Based Access Tests', () => {
     });
 
     await logger.step('Verify TC quiz responses show only TC members', async () => {
-      const quizRows = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"]`);
-      await quizRows.first().click();
+      const quizRowWithResponses = page.locator(`[data-testid^="${TestId.DASHBOARD_QUIZ_TABLE_ROW}"][data-response-count]:not([data-response-count="0"])`).first();
+      await quizRowWithResponses.click();
 
       const responsesTable = page.getByTestId(TestId.DASHBOARD_RESPONSES_TABLE);
       const responsesVisible = await responsesTable.isVisible().catch(() => false);
