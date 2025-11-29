@@ -3,13 +3,16 @@
 import { useAppStore } from "@/app/layout.stores";
 import { cn } from "@/lib/shadcn.utils";
 import { TestId } from "@/test.types";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useQuizCreationStore } from "./page.stores";
 import { useCreateQuizWithQuestions, useUpdateQuizMetadata } from "./page.hooks";
-import { useEffect, useState } from "react";
-import { QuizForTaking } from "./page.types";
+import { useEffect, useState, useRef, DragEvent } from "react";
+import { QuizForTaking, QuizImportJSON } from "./page.types";
 import { conditionalLog, LOG_LABELS } from "@/lib/log.util";
+import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { toast } from "sonner";
 
 interface QuizCreationContentProps {
   mode: "create" | "edit";
@@ -43,6 +46,7 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
     removeQuestion,
     initializeForCreate,
     initializeForEdit,
+    populateFromJSON,
     reset,
   } = useQuizCreationStore();
 
@@ -57,6 +61,100 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
     }
     return quiz?.organizationId || "";
   });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [jsonInput, setJsonInput] = useState("");
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const dragCounterRef = useRef(0);
+
+  const validateImportJSON = (data: unknown): data is QuizImportJSON => {
+    if (!data || typeof data !== "object") return false;
+    const json = data as Record<string, unknown>;
+    if (typeof json.title !== "string" || !json.title.trim()) return false;
+    if (!Array.isArray(json.questions) || json.questions.length === 0) return false;
+    for (const q of json.questions) {
+      if (typeof q !== "object" || !q) return false;
+      const question = q as Record<string, unknown>;
+      if (typeof question.question !== "string" || !question.question.trim()) return false;
+      if (!Array.isArray(question.options) || question.options.length < 2 || question.options.length > 6) return false;
+      if (question.options.some((opt: unknown) => typeof opt !== "string" || !(opt as string).trim())) return false;
+      if (typeof question.correctAnswer !== "number" || question.correctAnswer < 0 || question.correctAnswer >= question.options.length) return false;
+    }
+    return true;
+  };
+
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+
+    if (mode !== "create") return;
+
+    const files = Array.from(e.dataTransfer.files);
+    const jsonFile = files.find(f => f.name.endsWith(".json"));
+    if (!jsonFile) {
+      toast.error("Please drop a JSON file");
+      return;
+    }
+
+    try {
+      const text = await jsonFile.text();
+      const data = JSON.parse(text);
+      if (!validateImportJSON(data)) {
+        toast.error("Invalid JSON format. Check the expected structure.");
+        return;
+      }
+      populateFromJSON(data);
+      toast.success(`Imported quiz with ${data.questions.length} questions`);
+    } catch {
+      toast.error("Failed to parse JSON file");
+    }
+  };
+
+  const handleJsonPasteSubmit = () => {
+    if (!jsonInput.trim()) {
+      toast.error("Please paste JSON content");
+      return;
+    }
+
+    try {
+      const data = JSON.parse(jsonInput);
+      if (!validateImportJSON(data)) {
+        toast.error("Invalid JSON format. Check the expected structure.");
+        return;
+      }
+      populateFromJSON(data);
+      toast.success(`Imported quiz with ${data.questions.length} questions`);
+      setJsonInput("");
+      setIsPopoverOpen(false);
+    } catch {
+      toast.error("Failed to parse JSON");
+    }
+  };
 
   useEffect(() => {
     if (mode === "create") {
@@ -198,8 +296,49 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const aiPrompt = `Generate a quiz in JSON format with the following structure:
+
+{
+  "title": "Quiz Title",
+  "description": "Optional description",
+  "questions": [
+    {
+      "question": "What is the question?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": 0
+    }
+  ]
+}
+
+Requirements:
+- title: Required string
+- description: Optional string
+- questions: Array of at least 1 question
+- Each question needs:
+  - question: string (the question text)
+  - options: array of 2-6 strings
+  - correctAnswer: 0-based index of correct option
+
+Example prompt: "Create a 5-question quiz about [topic]"`;
+
   return (
-    <div className="max-w-4xl mx-auto p-6" data-testid={TestId.QUIZ_CREATE_CONTAINER}>
+    <div
+      className="relative max-w-4xl mx-auto p-6"
+      data-testid={TestId.QUIZ_CREATE_CONTAINER}
+      onDragEnter={mode === "create" ? handleDragEnter : undefined}
+      onDragLeave={mode === "create" ? handleDragLeave : undefined}
+      onDragOver={mode === "create" ? handleDragOver : undefined}
+      onDrop={mode === "create" ? handleDrop : undefined}
+    >
+      {isDragging && mode === "create" && (
+        <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none">
+          <div className="text-center">
+            <Upload className="w-12 h-12 mx-auto mb-2 text-primary" />
+            <p className="text-lg font-medium text-primary">Drop JSON file to import quiz</p>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <button
           onClick={() => router.push("/")}
@@ -211,9 +350,59 @@ export function QuizCreationContent({ mode, quiz }: QuizCreationContentProps) {
         </button>
 
         <div className="bg-card border border-border rounded-lg p-6 mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50 mb-4">
-            {mode === "create" ? "Create New Quiz" : "Edit Quiz"}
-          </h1>
+          <div className="flex items-start justify-between mb-4">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+              {mode === "create" ? "Create New Quiz" : "Edit Quiz"}
+            </h1>
+            {mode === "create" && (
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Badge variant="outline" className="cursor-pointer hover:bg-muted gap-1">
+                    <Upload className="w-3 h-3" />
+                    Drop JSON
+                  </Badge>
+                </PopoverTrigger>
+                <PopoverContent className="w-96" align="end">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Paste Quiz JSON</h4>
+                      <textarea
+                        value={jsonInput}
+                        onChange={(e) => setJsonInput(e.target.value)}
+                        className="w-full px-3 py-2 text-xs border border-border rounded-md bg-background text-foreground font-mono h-32 resize-none"
+                        placeholder='{"title": "...", "questions": [...]}'
+                      />
+                      <button
+                        onClick={handleJsonPasteSubmit}
+                        className="w-full px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                      >
+                        Import JSON
+                      </button>
+                    </div>
+
+                    <div className="border-t border-border pt-4 space-y-2">
+                      <h4 className="font-medium">AI Prompt for Quiz Generation</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Copy this prompt and use it with your preferred AI to generate quiz JSON.
+                      </p>
+                      <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-48 whitespace-pre-wrap">
+                        {aiPrompt}
+                      </pre>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(aiPrompt);
+                          toast.success("Prompt copied to clipboard");
+                        }}
+                        className="w-full px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
+                      >
+                        Copy Prompt
+                      </button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
 
           <div className="space-y-4">
             <div>

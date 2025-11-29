@@ -43,6 +43,18 @@ export interface DraftQuestion {
   order: number;
 }
 
+export interface QuizImportQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+}
+
+export interface QuizImportJSON {
+  title: string;
+  description?: string;
+  questions: QuizImportQuestion[];
+}
+
 export interface QuizCreationState {
   mode: QuizMode;
   currentQuestionIndex: number;
@@ -60,5 +72,6 @@ export interface QuizCreationState {
   reorderQuestions: () => void;
   initializeForCreate: () => void;
   initializeForEdit: (quiz: QuizForTaking) => void;
+  populateFromJSON: (data: QuizImportJSON) => void;
   reset: () => void;
 }

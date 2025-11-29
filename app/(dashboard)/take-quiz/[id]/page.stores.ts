@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { QuizPlayerState, QuizCreationState, DraftQuestion, QuizForTaking } from "./page.types";
+import { QuizPlayerState, QuizCreationState, DraftQuestion, QuizForTaking, QuizImportJSON } from "./page.types";
 
 const initialPlayerState = {
   currentQuestionIndex: 0,
@@ -126,6 +126,20 @@ export const useQuizCreationStore = create<QuizCreationState>()((set) => ({
         order: q.order,
       })),
       isSaving: false,
+    }),
+
+  populateFromJSON: (data: QuizImportJSON) =>
+    set({
+      title: data.title,
+      description: data.description || "",
+      questions: data.questions.map((q, index) => ({
+        id: nanoid(),
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        order: index,
+      })),
+      currentQuestionIndex: 0,
     }),
 
   reset: () => set(initialCreationState),

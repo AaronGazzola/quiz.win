@@ -1,0 +1,56 @@
+{
+  "title": "The Ultimate Space Exploration Quiz",
+  "description": "Test your knowledge about humanity's journey beyond Earth, from historic missions to cutting-edge discoveries.",
+  "questions": [
+    {
+      "question": "Which spacecraft was the first to successfully land on Mars and transmit photos back to Earth?",
+      "options": ["Viking 1", "Spirit", "Curiosity", "Pathfinder"],
+      "correctAnswer": 0
+    },
+    {
+      "question": "What is the name of the largest moon in our solar system?",
+      "options": ["Titan", "Europa", "Ganymede", "Callisto"],
+      "correctAnswer": 2
+    },
+    {
+      "question": "How long does it take light from the Sun to reach Earth?",
+      "options": ["About 8 seconds", "About 8 minutes", "About 8 hours", "About 8 days"],
+      "correctAnswer": 1
+    },
+    {
+      "question": "Which space telescope, launched in 2021, is designed to observe the universe in infrared light?",
+      "options": ["Hubble", "Kepler", "James Webb", "Spitzer"],
+      "correctAnswer": 2
+    },
+    {
+      "question": "What was the name of the first human-made object to leave the solar system?",
+      "options": ["Pioneer 10", "Voyager 1", "Voyager 2", "New Horizons"],
+      "correctAnswer": 1
+    },
+    {
+      "question": "On which planet would you find the Great Red Spot?",
+      "options": ["Mars", "Saturn", "Jupiter", "Neptune"],
+      "correctAnswer": 2
+    },
+    {
+      "question": "What is the approximate age of the universe?",
+      "options": ["4.5 billion years", "8.7 billion years", "13.8 billion years", "20.1 billion years"],
+      "correctAnswer": 2
+    },
+    {
+      "question": "Which astronaut famously said 'That's one small step for man, one giant leap for mankind'?",
+      "options": ["Buzz Aldrin", "Neil Armstrong", "John Glenn", "Yuri Gagarin"],
+      "correctAnswer": 1
+    },
+    {
+      "question": "What is the hottest planet in our solar system?",
+      "options": ["Mercury", "Venus", "Mars", "Jupiter"],
+      "correctAnswer": 1
+    },
+    {
+      "question": "Which company successfully launched the first privately-funded spacecraft to reach the International Space Station?",
+      "options": ["Blue Origin", "SpaceX", "Virgin Galactic", "Boeing"],
+      "correctAnswer": 1
+    }
+  ]
+}
