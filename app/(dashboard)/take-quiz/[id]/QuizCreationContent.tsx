@@ -331,7 +331,10 @@ Example prompt: "Create a 5-question quiz about [topic]"`;
       onDrop={mode === "create" ? handleDrop : undefined}
     >
       {isDragging && mode === "create" && (
-        <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none">
+        <div
+          className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center pointer-events-none"
+          data-testid={TestId.QUIZ_CREATE_JSON_DROP_OVERLAY}
+        >
           <div className="text-center">
             <Upload className="w-12 h-12 mx-auto mb-2 text-primary" />
             <p className="text-lg font-medium text-primary">Drop JSON file to import quiz</p>
@@ -357,7 +360,11 @@ Example prompt: "Create a 5-question quiz about [topic]"`;
             {mode === "create" && (
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Badge variant="outline" className="cursor-pointer hover:bg-muted gap-1">
+                  <Badge
+                    variant="outline"
+                    className="cursor-pointer hover:bg-muted gap-1"
+                    data-testid={TestId.QUIZ_CREATE_JSON_IMPORT_BADGE}
+                  >
                     <Upload className="w-3 h-3" />
                     Drop JSON
                   </Badge>
@@ -371,10 +378,12 @@ Example prompt: "Create a 5-question quiz about [topic]"`;
                         onChange={(e) => setJsonInput(e.target.value)}
                         className="w-full px-3 py-2 text-xs border border-border rounded-md bg-background text-foreground font-mono h-32 resize-none"
                         placeholder='{"title": "...", "questions": [...]}'
+                        data-testid={TestId.QUIZ_CREATE_JSON_IMPORT_TEXTAREA}
                       />
                       <button
                         onClick={handleJsonPasteSubmit}
                         className="w-full px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                        data-testid={TestId.QUIZ_CREATE_JSON_IMPORT_BUTTON}
                       >
                         Import JSON
                       </button>
@@ -394,6 +403,7 @@ Example prompt: "Create a 5-question quiz about [topic]"`;
                           toast.success("Prompt copied to clipboard");
                         }}
                         className="w-full px-3 py-1.5 text-sm border border-border rounded-md hover:bg-muted"
+                        data-testid={TestId.QUIZ_CREATE_JSON_IMPORT_COPY_PROMPT_BUTTON}
                       >
                         Copy Prompt
                       </button>

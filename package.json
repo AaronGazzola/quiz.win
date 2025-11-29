@@ -27,6 +27,9 @@
     "test:e2e:game": "playwright test e2e/gamification.spec.ts --workers=1",
     "test:e2e:game:headed": "playwright test e2e/gamification.spec.ts --headed --workers=1",
     "test:e2e:game:trace": "TEST_TRACE=true playwright test e2e/gamification.spec.ts --workers=1",
+    "test:e2e:json-import": "playwright test e2e/json-quiz-import.spec.ts --workers=1",
+    "test:e2e:json-import:headed": "playwright test e2e/json-quiz-import.spec.ts --headed --workers=1",
+    "test:e2e:json-import:trace": "TEST_TRACE=true playwright test e2e/json-quiz-import.spec.ts --workers=1",
     "test:report": "tsx scripts/generate-test-report.ts",
     "test:report:cleanup": "tsx scripts/generate-test-report.ts --cleanup",
     "seed": "prisma migrate reset"

@@ -164,6 +164,11 @@ export enum TestId {
   QUIZ_CREATE_NEXT_BUTTON = "quiz-create-next-button",
   QUIZ_CREATE_CANCEL_BUTTON = "quiz-create-cancel-button",
   QUIZ_CREATE_SAVE_BUTTON = "quiz-create-save-button",
+  QUIZ_CREATE_JSON_IMPORT_BADGE = "quiz-create-json-import-badge",
+  QUIZ_CREATE_JSON_IMPORT_TEXTAREA = "quiz-create-json-import-textarea",
+  QUIZ_CREATE_JSON_IMPORT_BUTTON = "quiz-create-json-import-button",
+  QUIZ_CREATE_JSON_IMPORT_COPY_PROMPT_BUTTON = "quiz-create-json-import-copy-prompt-button",
+  QUIZ_CREATE_JSON_DROP_OVERLAY = "quiz-create-json-drop-overlay",
 
   GAMIFICATION_POINTS_DISPLAY = "gamification-points-display",
   GAMIFICATION_TOTAL_POINTS = "gamification-total-points",

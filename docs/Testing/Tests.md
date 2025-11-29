@@ -34,6 +34,10 @@ Tests focus on **user-facing features and functionality**, validating the comple
 ### Gamification Tests (1 test)
 16. [Gamification workflow with multi-user quiz completion and leaderboard](#16-gamification-workflow-with-multi-user-quiz-completion-and-leaderboard) - `npm run test:e2e:game`
 
+### JSON Quiz Import Tests (2 tests)
+17. [Create quiz from pasted JSON](#17-create-quiz-from-pasted-json) - `npm run test:e2e:json-import`
+18. [Create quiz from dropped JSON file](#18-create-quiz-from-dropped-json-file) - `npm run test:e2e:json-import`
+
 ---
 
 ## Authentication Tests
@@ -394,6 +398,83 @@ Tests focus on **user-facing features and functionality**, validating the comple
 
 ---
 
+## JSON Quiz Import Tests
+
+### 17. Create quiz from pasted JSON
+
+**File:** `e2e/json-quiz-import.spec.ts`
+**Command:** `npm run test:e2e:json-import`
+
+**Pass Conditions:**
+- Sign in as admin user
+- Navigate to quiz creation page via Add Quiz button
+- JSON import badge `quiz-create-json-import-badge` is visible
+- Click badge to open JSON import popover
+- Textarea `quiz-create-json-import-textarea` accepts JSON input
+- Click Import JSON button `quiz-create-json-import-button`
+- Quiz title input populated with JSON title
+- Quiz description input populated with JSON description
+- Question counter shows correct number of questions
+- First question text and options populated correctly
+- Navigate to second question and verify content
+- Save quiz successfully
+- Quiz appears in dashboard
+- Take quiz to verify questions imported correctly
+- Submit quiz with correct answers
+- Verify 100% score in review mode
+
+**Test Data:**
+```json
+{
+  "title": "E2E JSON Paste Quiz {timestamp}",
+  "description": "Test quiz created via JSON import",
+  "questions": [
+    {
+      "question": "What is 2 + 2?",
+      "options": ["3", "4", "5", "6"],
+      "correctAnswer": 1
+    },
+    {
+      "question": "What color is the sky?",
+      "options": ["Red", "Blue", "Green"],
+      "correctAnswer": 1
+    }
+  ]
+}
+```
+
+**Related Test IDs:** `quiz-create-json-import-badge`, `quiz-create-json-import-textarea`, `quiz-create-json-import-button`, `quiz-create-title-input`, `quiz-create-question-input`, `quiz-create-option-input-*`
+
+---
+
+### 18. Create quiz from dropped JSON file
+
+**File:** `e2e/json-quiz-import.spec.ts`
+**Command:** `npm run test:e2e:json-import`
+
+**Pass Conditions:**
+- Sign in as admin user
+- Navigate to quiz creation page
+- Quiz creation container `quiz-create-container` accepts drag events
+- Simulate dropping a .json file onto the container
+- Quiz title input populated with JSON title
+- Quiz description input populated with JSON description
+- Question counter shows correct number of questions
+- First question text populated correctly
+- Save quiz successfully
+- Quiz appears in dashboard
+- Take quiz to verify questions imported correctly
+- Submit quiz with correct answers
+- Verify 100% score in review mode
+
+**Test Data:**
+- Same JSON structure as paste test with different title prefix
+- File simulated via JavaScript DataTransfer API
+
+**Related Test IDs:** `quiz-create-container`, `quiz-create-json-drop-overlay`, `quiz-create-title-input`, `quiz-create-question-input`
+
+---
+
 ## Test Execution
 
 ### Run All Tests
@@ -408,6 +489,7 @@ npm run test:e2e:dash           # Dashboard tests
 npm run test:e2e:quiz-workflow  # Quiz workflow tests
 npm run test:e2e:quiz-taking    # Quiz taking tests
 npm run test:e2e:game           # Gamification tests
+npm run test:e2e:json-import    # JSON quiz import tests
 ```
 
 ### Headed Mode (See Browser)
@@ -417,6 +499,7 @@ npm run test:e2e:dash:headed
 npm run test:e2e:quiz-workflow:headed
 npm run test:e2e:quiz-taking:headed
 npm run test:e2e:game:headed
+npm run test:e2e:json-import:headed
 ```
 
 ### Trace Mode (Full Debugging)
@@ -426,6 +509,7 @@ npm run test:e2e:dash:trace
 npm run test:e2e:quiz-workflow:trace
 npm run test:e2e:quiz-taking:trace
 npm run test:e2e:game:trace
+npm run test:e2e:json-import:trace
 ```
 
 ## Test Reports
@@ -480,5 +564,5 @@ Tests are configured with:
 ---
 
 **Last Updated:** 2025-11-29
-**Total Tests:** 20
+**Total Tests:** 22
 **Version:** 1.0.0
