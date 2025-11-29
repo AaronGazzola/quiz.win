@@ -11,6 +11,12 @@ import {
   useResponseDataStore,
 } from "@/app/(dashboard)/page.stores";
 import { useQuizPlayerStore } from "@/app/(dashboard)/take-quiz/[id]/page.stores";
+import { useGamificationStore } from "@/app/(dashboard)/gamification/gamification.stores";
+import {
+  useUserTableStore,
+  useUserRoleManagementDialogStore,
+  useConfirmationDialogStore,
+} from "@/app/(dashboard)/users/page.stores";
 import { useAdminAccess, useGetUser } from "@/app/layout.hooks";
 import { useAppStore, useRedirectStore } from "@/app/layout.stores";
 import { configuration } from "@/configuration";
@@ -41,6 +47,10 @@ export default function DashboardLayout({
   const { reset: resetDashboardData } = useDashboardDataStore();
   const { reset: resetResponseData } = useResponseDataStore();
   const { resetQuiz } = useQuizPlayerStore();
+  const { reset: resetGamification } = useGamificationStore();
+  const { reset: resetUserTable } = useUserTableStore();
+  const { closeDialog: closeRoleDialog } = useUserRoleManagementDialogStore();
+  const { closeDialog: closeConfirmationDialog } = useConfirmationDialogStore();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -68,6 +78,10 @@ export default function DashboardLayout({
       resetDashboardData();
       resetResponseData();
       resetQuiz();
+      resetGamification();
+      resetUserTable();
+      closeRoleDialog();
+      closeConfirmationDialog();
       conditionalLog({ location: "handleSignOut", status: "stores_reset" }, { label: LOG_LABELS.AUTH });
 
       conditionalLog({ location: "handleSignOut", status: "navigating_to_sign_in" }, { label: LOG_LABELS.AUTH });

@@ -31,6 +31,9 @@ Tests focus on **user-facing features and functionality**, validating the comple
 14. [Review mode with all correct answers](#14-review-mode-with-all-correct-answers) - `npm run test:e2e:quiz-taking`
 15. [Review mode with incorrect answers](#15-review-mode-with-incorrect-answers) - `npm run test:e2e:quiz-taking`
 
+### Gamification Tests (1 test)
+16. [Gamification workflow with multi-user quiz completion and leaderboard](#16-gamification-workflow-with-multi-user-quiz-completion-and-leaderboard) - `npm run test:e2e:game`
+
 ---
 
 ## Authentication Tests
@@ -353,6 +356,44 @@ Tests focus on **user-facing features and functionality**, validating the comple
 
 ---
 
+## Gamification Tests
+
+### 16. Gamification workflow with multi-user quiz completion and leaderboard
+
+**File:** `e2e/gamification.spec.ts`
+**Command:** `npm run test:e2e:game`
+
+**Pass Conditions:**
+- **User 1 (nurse.emily.davis) - 100% Score:**
+  - Sign in and verify initial gamification state shows 0 points
+  - Navigate to "Patient Safety Protocols" quiz
+  - Answer all 4 questions correctly
+  - Submit quiz and verify 100% score in review mode
+  - Return to dashboard and verify points > 0
+  - Verify stats: 1 quiz completed, 1 perfect score, 100% average
+
+- **User 2 (admin.michael.brown) - 50% Score:**
+  - Sign in and verify initial gamification state shows 0 points
+  - Navigate to same quiz
+  - Answer questions 1-2 correctly, questions 3-4 incorrectly
+  - Submit quiz and verify 50% score in review mode
+  - Return to dashboard and verify points > 0 but < User 1
+  - Verify stats: 1 quiz completed, 0 perfect scores, 50% average
+
+- **Leaderboard Verification:**
+  - Verify leaderboard card is visible
+  - Verify at least 2 entries exist
+  - User 1 should be ranked above User 2
+
+**Test Data:**
+- Users: nurse.emily.davis@gazzola.dev, admin.michael.brown@gazzola.dev
+- Quiz: Patient Safety Protocols (4 questions)
+- Cleanup: Gamification data reset before and after each test
+
+**Related Test IDs:** `gamification-total-points`, `gamification-quizzes-completed`, `gamification-perfect-scores`, `gamification-average-score`, `gamification-leaderboard-card`, `gamification-leaderboard-entry-*`
+
+---
+
 ## Test Execution
 
 ### Run All Tests
@@ -366,6 +407,7 @@ npm run test:e2e:auth           # Authentication tests
 npm run test:e2e:dash           # Dashboard tests
 npm run test:e2e:quiz-workflow  # Quiz workflow tests
 npm run test:e2e:quiz-taking    # Quiz taking tests
+npm run test:e2e:game           # Gamification tests
 ```
 
 ### Headed Mode (See Browser)
@@ -374,6 +416,7 @@ npm run test:e2e:auth:headed
 npm run test:e2e:dash:headed
 npm run test:e2e:quiz-workflow:headed
 npm run test:e2e:quiz-taking:headed
+npm run test:e2e:game:headed
 ```
 
 ### Trace Mode (Full Debugging)
@@ -382,6 +425,7 @@ npm run test:e2e:auth:trace
 npm run test:e2e:dash:trace
 npm run test:e2e:quiz-workflow:trace
 npm run test:e2e:quiz-taking:trace
+npm run test:e2e:game:trace
 ```
 
 ## Test Reports
@@ -435,6 +479,6 @@ Tests are configured with:
 
 ---
 
-**Last Updated:** 2025-11-24
-**Total Tests:** 19
+**Last Updated:** 2025-11-29
+**Total Tests:** 20
 **Version:** 1.0.0

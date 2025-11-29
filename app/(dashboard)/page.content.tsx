@@ -339,6 +339,7 @@ export function DashboardPageContent() {
                       data-user-id={entry.userId}
                       data-rank={entry.rank}
                       data-points={entry.totalPoints}
+                      data-is-current-user={isCurrentUser}
                       className={`flex items-center justify-between text-sm ${
                         isCurrentUser ? "bg-primary/5 -mx-2 px-2 py-1 rounded" : ""
                       }`}

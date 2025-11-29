@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, cleanupOrphanedOrgs, quizTitlePrefix, cleanupSeededOrgQuizzes, cleanupGamification, userEmails } =
+    const { email, cleanupOrphanedOrgs, quizTitlePrefix, cleanupSeededOrgQuizzes, cleanupGamification, userEmails, skipReseed } =
       await request.json();
 
     if (cleanupGamification && userEmails && Array.isArray(userEmails)) {
@@ -72,38 +72,40 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      const responsesToReseed = SEEDED_RESPONSES.filter((r) =>
-        userEmails.includes(r.userEmail)
-      );
-
       let reseededCount = 0;
-      for (const respData of responsesToReseed) {
-        const user = await prisma.user.findFirst({
-          where: { email: respData.userEmail },
-        });
-        const quiz = await prisma.quiz.findFirst({
-          where: { title: respData.quizTitle },
-          include: { Question: { orderBy: { order: "asc" } } },
-        });
+      if (!skipReseed) {
+        const responsesToReseed = SEEDED_RESPONSES.filter((r) =>
+          userEmails.includes(r.userEmail)
+        );
 
-        if (user && quiz) {
-          const answers = quiz.Question.map((q, i) => ({
-            questionId: q.id,
-            selectedAnswer:
-              respData.score === 1.0 || i < 3 ? q.correctAnswer : "wrong",
-            isCorrect: respData.score === 1.0 || i < 3,
-          }));
-
-          await prisma.response.create({
-            data: {
-              quizId: quiz.id,
-              userId: user.id,
-              answers,
-              score: respData.score,
-              completedAt: respData.completedAt,
-            },
+        for (const respData of responsesToReseed) {
+          const user = await prisma.user.findFirst({
+            where: { email: respData.userEmail },
           });
-          reseededCount++;
+          const quiz = await prisma.quiz.findFirst({
+            where: { title: respData.quizTitle },
+            include: { Question: { orderBy: { order: "asc" } } },
+          });
+
+          if (user && quiz) {
+            const answers = quiz.Question.map((q, i) => ({
+              questionId: q.id,
+              selectedAnswer:
+                respData.score === 1.0 || i < 3 ? q.correctAnswer : "wrong",
+              isCorrect: respData.score === 1.0 || i < 3,
+            }));
+
+            await prisma.response.create({
+              data: {
+                quizId: quiz.id,
+                userId: user.id,
+                answers,
+                score: respData.score,
+                completedAt: respData.completedAt,
+              },
+            });
+            reseededCount++;
+          }
         }
       }
 

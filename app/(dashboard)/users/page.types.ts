@@ -32,6 +32,7 @@ export interface UserTableState {
   toggleSelected: (id: string) => void;
   selectAll: (items: UserWithDetails[]) => void;
   clearSelection: () => void;
+  reset: () => void;
 }
 
 export interface BulkOperationState {
@@ -39,6 +40,7 @@ export interface BulkOperationState {
   isLoading: boolean;
   setVisible: (visible: boolean) => void;
   setLoading: (loading: boolean) => void;
+  reset: () => void;
 }
 
 export interface OrganizationRole {

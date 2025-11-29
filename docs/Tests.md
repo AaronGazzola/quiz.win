@@ -21,6 +21,7 @@ Generates report and removes old test result directories (keeps only latest per 
 1. [Authentication](e2e/auth.spec.ts) - `npm run test:e2e:auth`
 2. [Dashboard Role-Based Access](e2e/dashboard.spec.ts) - `npm run test:e2e:dash`
 3. [Quiz Workflow](e2e/quiz-workflow.spec.ts) - `npm run test:e2e:quiz-workflow`
+4. [Gamification](e2e/gamification.spec.ts) - `npm run test:e2e:game`
 
 ---
 
@@ -140,6 +141,30 @@ Based on `prisma/seed.ts`:
 - should handle incorrect answers correctly in review mode
   - User answers questions incorrectly
   - Review mode shows proper incorrect/correct indicators
+
+---
+
+## 4. Gamification Tests
+
+**File:** `e2e/gamification.spec.ts`
+
+**Commands:**
+- Standard: `npm run test:e2e:game`
+- Headed mode: `npm run test:e2e:game:headed`
+- Trace mode: `npm run test:e2e:game:trace`
+
+### Test Cases
+
+- should update gamification data and leaderboard after quiz completion by two users
+  - User 1 completes quiz with 100% score, earns points, stats show 1 quiz completed, 1 perfect score, 100% average
+  - User 2 completes same quiz with 50% score, earns fewer points than User 1, stats show 1 quiz completed, 0 perfect scores, 50% average
+  - Leaderboard shows both users with User 1 ranked higher
+
+### Test Data References
+
+- Users: nurse.emily.davis@gazzola.dev, admin.michael.brown@gazzola.dev
+- Quiz: Patient Safety Protocols (4 questions)
+- Cleanup: Gamification data reset before and after each test
 
 ---
 
